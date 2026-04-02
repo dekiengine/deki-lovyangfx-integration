@@ -1,0 +1,17 @@
+{
+  "id": "deki:lovyangfx",
+  "displayName": "LovyanGFX Integration",
+  "buildDefine": "DEKI_MODULE_LOVYANGFX",
+  "features": [
+    {"id": "display", "displayName": "Display Panel", "buildDefine": "DEKI_FEATURE_LGFX_DISPLAY_PANEL", "defaultEnabled": true, "componentGuids": ["a7e1d3f0-8b4c-4e2a-9f61-3c8d2b5a7e90"]},
+    {"id": "touch", "displayName": "Touch Panel", "buildDefine": "DEKI_FEATURE_LGFX_TOUCH_PANEL", "defaultEnabled": true, "componentGuids": ["9c79bf8d-6ba3-48b8-80da-1e775d818ad3"]}
+  ],
+  "dependencies": {
+    "default": [
+      {"name": "LovyanGFX", "version": "1.2.19", "git": "https://github.com/lovyan03/LovyanGFX.git"}
+    ],
+    "espidf": [
+      {"name": "LovyanGFX", "version": "1.2.19", "git": "https://github.com/lovyan03/LovyanGFX.git"}
+    ]
+  }
+}
