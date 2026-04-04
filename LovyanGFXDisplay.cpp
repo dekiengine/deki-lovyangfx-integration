@@ -5,7 +5,7 @@
 
 #include "DekiLogSystem.h"
 #include "providers/DekiMemoryProvider.h"
-#include "../rendering/QuadBlit.h"
+#include "deki-rendering/QuadBlit.h"
 
 // ESP32-specific includes for DMA memory allocation and cache management
 #ifdef ESP32

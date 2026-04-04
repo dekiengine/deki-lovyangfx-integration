@@ -11,7 +11,7 @@
 
 #include "LovyanGFXModule.h"
 #include "interop/DekiPlugin.h"
-#include "modules/DekiModuleFeatureMeta.h"
+#include "DekiModuleFeatureMeta.h"
 #include "LGFXDisplayPanel.h"
 #include "LGFXTouchPanel.h"
 #include "reflection/ComponentRegistry.h"
