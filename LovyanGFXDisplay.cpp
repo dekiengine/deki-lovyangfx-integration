@@ -29,6 +29,7 @@ LovyanGFXDisplay::LovyanGFXDisplay()
 , dma_in_flight(false)
 , m_UsePSRAM(false)
 , m_DoubleBuffer(false)
+, m_SwapBytes(false)
 , active_overlay(nullptr)
 {
 }
@@ -43,61 +44,18 @@ static uint16_t* AllocateDisplayBuffer(size_t buffer_bytes, bool usePSRAM, const
     uint16_t* buf = nullptr;
 
 #ifdef ESP32
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
-    // esp_dma_malloc ensures cache-line alignment (required for esp_cache_msync)
-    // and works for both internal RAM and PSRAM on ESP32-S3
     if (usePSRAM)
     {
-        // Allocate cache-aligned buffer in PSRAM
-        // esp_dma_malloc with MALLOC_CAP_SPIRAM ensures proper alignment
-        buf = (uint16_t*)heap_caps_aligned_alloc(64, buffer_bytes, MALLOC_CAP_SPIRAM);
-        if (buf)
-        {
-            DEKI_LOG_DEBUG("LovyanGFX: Allocated %s in PSRAM cache-aligned (%zu bytes)", label, buffer_bytes);
-        }
-    }
-    else
-    {
-        esp_err_t dma_result = esp_dma_malloc(buffer_bytes, 0, (void**)&buf, NULL);
-        if (dma_result == ESP_OK && buf)
-        {
-            DEKI_LOG_DEBUG("LovyanGFX: Allocated %s DMA+cache-aligned (%zu bytes)", label, buffer_bytes);
-        }
-        else
-        {
-            buf = (uint16_t*)heap_caps_malloc(buffer_bytes, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
-            if (buf)
-            {
-                DEKI_LOG_WARNING("LovyanGFX: esp_dma_malloc failed for %s, using heap_caps_malloc (%zu bytes)", label, buffer_bytes);
-            }
-        }
-    }
-#else
-    if (usePSRAM)
-    {
-        buf = (uint16_t*)heap_caps_malloc(buffer_bytes, MALLOC_CAP_SPIRAM);
-        if (buf)
-        {
-            DEKI_LOG_DEBUG("LovyanGFX: Allocated %s in PSRAM (%zu bytes)", label, buffer_bytes);
-        }
+        buf = (uint16_t*)heap_caps_aligned_alloc(64, buffer_bytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
     }
     else
     {
         buf = (uint16_t*)heap_caps_malloc(buffer_bytes, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
-        if (buf)
-        {
-            DEKI_LOG_DEBUG("LovyanGFX: Allocated %s in internal RAM (%zu bytes)", label, buffer_bytes);
-        }
     }
-#endif
 
-    if (!buf)
+    if (buf)
     {
-        buf = (uint16_t*)malloc(buffer_bytes);
-        if (buf)
-        {
-            DEKI_LOG_WARNING("LovyanGFX: Fallback malloc for %s (%zu bytes)", label, buffer_bytes);
-        }
+        DEKI_LOG_DEBUG("LovyanGFX: Allocated %s (%zu bytes, psram=%d)", label, buffer_bytes, usePSRAM);
     }
 #else
     buf = (uint16_t*)malloc(buffer_bytes);
@@ -107,7 +65,7 @@ static uint16_t* AllocateDisplayBuffer(size_t buffer_bytes, bool usePSRAM, const
 }
 
 bool LovyanGFXDisplay::InitializeWithDevice(lgfx::LGFX_Device* device, int32_t width, int32_t height,
-                                             bool usePSRAM, bool doubleBuffer)
+                                             bool swapBytes, bool usePSRAM, bool doubleBuffer)
 {
     if (initialized)
         return true;
@@ -123,32 +81,36 @@ bool LovyanGFXDisplay::InitializeWithDevice(lgfx::LGFX_Device* device, int32_t w
     display_height = height;
     m_UsePSRAM = usePSRAM;
     m_DoubleBuffer = doubleBuffer;
+    m_SwapBytes = swapBytes;
     buffer_pixel_count = width * height;
-    size_t buffer_bytes = buffer_pixel_count * sizeof(uint16_t);
 
-    // Allocate primary buffer
-    buffers[0] = AllocateDisplayBuffer(buffer_bytes, usePSRAM, "buffer[0]");
-    if (!buffers[0])
+    if (usePSRAM || doubleBuffer)
     {
-        DEKI_LOG_ERROR("LovyanGFX: Failed to allocate primary buffer (%zu bytes)", buffer_bytes);
-        return false;
-    }
-    memset(buffers[0], 0, buffer_bytes);
+        size_t buffer_bytes = buffer_pixel_count * sizeof(uint16_t);
 
-    // Allocate secondary buffer for double buffering (async DMA)
-    if (doubleBuffer)
-    {
-        buffers[1] = AllocateDisplayBuffer(buffer_bytes, usePSRAM, "buffer[1]");
-        if (!buffers[1])
+        buffers[0] = AllocateDisplayBuffer(buffer_bytes, usePSRAM, "buffer[0]");
+        if (!buffers[0])
         {
-            DEKI_LOG_WARNING("LovyanGFX: Failed to allocate second buffer, falling back to single-buffer mode");
-            m_DoubleBuffer = false;
+            DEKI_LOG_ERROR("LovyanGFX: Failed to allocate primary buffer (%zu bytes)", buffer_bytes);
+            return false;
         }
-        else
+        memset(buffers[0], 0, buffer_bytes);
+
+        if (doubleBuffer)
         {
-            memset(buffers[1], 0, buffer_bytes);
+            buffers[1] = AllocateDisplayBuffer(buffer_bytes, usePSRAM, "buffer[1]");
+            if (!buffers[1])
+            {
+                DEKI_LOG_WARNING("LovyanGFX: Failed to allocate second buffer, falling back to single-buffer mode");
+                m_DoubleBuffer = false;
+            }
+            else
+            {
+                memset(buffers[1], 0, buffer_bytes);
+            }
         }
     }
+    // else: passthrough mode — no display buffers, Present pushes framebuffer directly
 
     render_index = 0;
     dma_in_flight = false;
@@ -212,9 +174,16 @@ void LovyanGFXDisplay::Present(const uint8_t* framebuffer, int width, int height
 void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, int width, int height, int format)
 {
     uint16_t* conversion_buffer = buffers[render_index];
-    if (!conversion_buffer)
+
+    // Passthrough mode: no display buffer, push framebuffer directly (RGB565 only)
+    const bool passthrough = (!conversion_buffer && format == 0);
+    if (passthrough)
     {
-        DEKI_LOG_ERROR("LovyanGFX: Buffer not allocated");
+        conversion_buffer = (uint16_t*)framebuffer;
+    }
+    else if (!conversion_buffer)
+    {
+        DEKI_LOG_ERROR("LovyanGFX: Buffer not allocated and format is not RGB565");
         return;
     }
 
@@ -222,15 +191,15 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
     static int present_count = 0;
     if (present_count == 0)
     {
-        DEKI_LOG_DEBUG("LovyanGFX First Present: fmt=%d size=%dx%d overlay=%s double_buffer=%d psram=%d",
+        DEKI_LOG_DEBUG("LovyanGFX First Present: fmt=%d size=%dx%d overlay=%s double_buffer=%d psram=%d passthrough=%d",
                      format, width, height,
                      (active_overlay && active_overlay->buffer) ? "YES" : "NO",
-                     m_DoubleBuffer ? 1 : 0, m_UsePSRAM ? 1 : 0);
+                     m_DoubleBuffer ? 1 : 0, m_UsePSRAM ? 1 : 0, passthrough ? 1 : 0);
     }
     present_count++;
 
-    // Fast path: framebuffer IS the current render buffer (direct rendering, no copy needed)
-    const bool directBuffer = (format == 0 && (const uint16_t*)framebuffer == conversion_buffer);
+    // Fast path: framebuffer IS the output buffer (direct rendering or passthrough)
+    const bool directBuffer = passthrough || (format == 0 && (const uint16_t*)framebuffer == conversion_buffer);
 
     if (directBuffer)
     {
@@ -243,12 +212,16 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
     if (!directBuffer)
     {
 
-    // CRITICAL: Flush PSRAM framebuffer from CPU cache to RAM BEFORE we read from it
+    // Flush source framebuffer from CPU cache if it resides in PSRAM
 #if defined(ESP32) && ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+    if (esp_ptr_external_ram(framebuffer))
     {
         size_t bytes_per_pixel = (format == 2) ? 4 : (format == 1) ? 3 : 2;
-        size_t framebuffer_size = width * height * bytes_per_pixel;
-        esp_cache_msync((void*)framebuffer, framebuffer_size, ESP_CACHE_MSYNC_FLAG_DIR_C2M);
+        uintptr_t addr = (uintptr_t)framebuffer;
+        uintptr_t aligned_addr = addr & ~63;
+        size_t raw_bytes = width * height * bytes_per_pixel;
+        size_t aligned_bytes = ((addr - aligned_addr) + raw_bytes + 63) & ~63;
+        esp_cache_msync((void*)aligned_addr, aligned_bytes, ESP_CACHE_MSYNC_FLAG_DIR_C2M);
     }
 #endif
 
@@ -515,33 +488,48 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
         }
     }
 
+    // Flush PSRAM display buffer from CPU cache before DMA reads it
+#if defined(ESP32) && ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+    if (m_UsePSRAM)
+    {
+        uintptr_t addr = (uintptr_t)conversion_buffer;
+        uintptr_t aligned_addr = addr & ~63;
+        size_t raw_bytes = buffer_pixel_count * sizeof(uint16_t);
+        size_t aligned_bytes = ((addr - aligned_addr) + raw_bytes + 63) & ~63;
+        esp_cache_msync((void*)aligned_addr, aligned_bytes, ESP_CACHE_MSYNC_FLAG_DIR_C2M);
+    }
+#endif
+
+    // Bulk byte swap for display controllers that expect big-endian RGB565.
+    // Done as a single tight loop — faster than per-pixel swap during rendering
+    // or LovyanGFX's pixelcopy path.
+    if (m_SwapBytes)
+    {
+        uint32_t* buf32 = (uint32_t*)conversion_buffer;
+        size_t count32 = buffer_pixel_count / 2;
+        for (size_t i = 0; i < count32; i++)
+        {
+            uint32_t v = buf32[i];
+            buf32[i] = ((v >> 8) & 0x00FF00FF) | ((v & 0x00FF00FF) << 8);
+        }
+    }
+
     if (m_DoubleBuffer)
     {
-        // Standard double-buffer mode: both buffers in PSRAM, swap between them
         if (dma_in_flight)
         {
             tft->waitDMA();
         }
-
-#if defined(ESP32) && ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
-        if (m_UsePSRAM)
-        {
-            size_t buffer_bytes = (buffer_pixel_count * sizeof(uint16_t) + 63) & ~63;
-            esp_cache_msync((void*)conversion_buffer, buffer_bytes, ESP_CACHE_MSYNC_FLAG_DIR_C2M);
-        }
-#endif
 
         tft->startWrite();
         tft->pushImage(0, 0, display_width, display_height, conversion_buffer);
         tft->endWrite();
         dma_in_flight = true;
 
-        // Swap to the other buffer for next frame's render
         render_index = 1 - render_index;
     }
     else
     {
-        // Single-buffer mode: blocking DMA
         tft->startWrite();
         tft->pushImage(0, 0, display_width, display_height, conversion_buffer);
         tft->endWrite();
@@ -692,6 +680,13 @@ void LovyanGFXDisplay::ClearActiveUIOverlay()
 
 uint8_t* LovyanGFXDisplay::GetRenderBuffer(int32_t* width, int32_t* height)
 {
+    // When using PSRAM, don't offer the display buffer for direct rendering.
+    // PSRAM is slow for random-access pixel operations (blending, blitting).
+    // Let DekiRenderSystem allocate in fast internal RAM instead;
+    // Present() will do a fast sequential memcpy to the PSRAM DMA buffer.
+    if (m_UsePSRAM)
+        return nullptr;
+
     if (!initialized || !buffers[render_index])
         return nullptr;
     if (width) *width = display_width;
@@ -703,9 +698,9 @@ uint8_t* LovyanGFXDisplay::GetRenderBuffer(int32_t* width, int32_t* height)
 // Non-ESP32 stub implementation
 LovyanGFXDisplay::LovyanGFXDisplay() : tft(nullptr), display_width(0), display_height(0), initialized(false),
     buffers{nullptr, nullptr}, buffer_pixel_count(0), render_index(0), dma_in_flight(false),
-    m_UsePSRAM(false), m_DoubleBuffer(false), active_overlay(nullptr) {}
+    m_UsePSRAM(false), m_DoubleBuffer(false), m_SwapBytes(false), active_overlay(nullptr) {}
 LovyanGFXDisplay::~LovyanGFXDisplay() {}
-bool LovyanGFXDisplay::InitializeWithDevice(lgfx::LGFX_Device*, int32_t, int32_t, bool, bool) { return false; }
+bool LovyanGFXDisplay::InitializeWithDevice(lgfx::LGFX_Device*, int32_t, int32_t, bool, bool, bool) { return false; }
 bool LovyanGFXDisplay::Initialize(int32_t width, int32_t height) { return false; }
 void LovyanGFXDisplay::Shutdown() {}
 void LovyanGFXDisplay::Present(const uint8_t* framebuffer, int width, int height, int format) {}

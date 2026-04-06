@@ -28,6 +28,7 @@ class LovyanGFXDisplay : public IDekiDisplay
     bool dma_in_flight;
     bool m_UsePSRAM;
     bool m_DoubleBuffer;
+    bool m_SwapBytes;
 
     // UI overlay support
     struct UIOverlay
@@ -44,7 +45,7 @@ class LovyanGFXDisplay : public IDekiDisplay
 
     // Initialize with a pre-configured LGFX device (created by LGFXDisplayPanel)
     bool InitializeWithDevice(lgfx::LGFX_Device* device, int32_t width, int32_t height,
-                              bool usePSRAM = false, bool doubleBuffer = false);
+                              bool swapBytes = false, bool usePSRAM = false, bool doubleBuffer = false);
 
     // IPlatformDisplay interface
     bool Initialize(int32_t width, int32_t height) override;
