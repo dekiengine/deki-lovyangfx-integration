@@ -20,7 +20,6 @@ class LovyanGFXDisplay : public IDekiDisplay
     int32_t display_width;
     int32_t display_height;
     bool initialized;
-    bool m_SwapBytes;
 
     // Double-buffer support for async DMA
     uint16_t* buffers[2];        // [0] = primary, [1] = secondary (null if single-buffer)
@@ -45,7 +44,7 @@ class LovyanGFXDisplay : public IDekiDisplay
 
     // Initialize with a pre-configured LGFX device (created by LGFXDisplayPanel)
     bool InitializeWithDevice(lgfx::LGFX_Device* device, int32_t width, int32_t height,
-                              bool swapBytes, bool usePSRAM = false, bool doubleBuffer = false);
+                              bool usePSRAM = false, bool doubleBuffer = false);
 
     // IPlatformDisplay interface
     bool Initialize(int32_t width, int32_t height) override;

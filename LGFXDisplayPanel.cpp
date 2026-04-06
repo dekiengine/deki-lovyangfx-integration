@@ -250,6 +250,8 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
     }
 
     device->setRotation(rotation);
+    if (swap_bytes)
+        device->setSwapBytes(true);
     ESP_LOGI(TAG, "Display initialized (%dx%d, rotation=%d)", (int)panel_width, (int)panel_height, (int)rotation);
 
     // Store for static accessor
@@ -257,7 +259,7 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
 
     // Create LovyanGFXDisplay wrapper and register with display backend
     auto display = std::make_unique<LovyanGFXDisplay>();
-    if (!display->InitializeWithDevice(device, device->width(), device->height(), swap_bytes, use_psram, double_buffer))
+    if (!display->InitializeWithDevice(device, device->width(), device->height(), use_psram, double_buffer))
     {
         DEKI_LOG_ERROR("LGFXDisplayPanel: Failed to initialize display wrapper");
         onComplete(false);
