@@ -13,6 +13,18 @@ enum class TouchDriverType : uint8_t
     XPT2046 = 3
 };
 
+enum class TouchRotation : uint8_t
+{
+    None = 0,
+    CW_90 = 1,
+    CW_180 = 2,
+    CW_270 = 3,
+    Mirror = 4,
+    Mirror_CW_90 = 5,
+    Mirror_CW_180 = 6,
+    Mirror_CW_270 = 7
+};
+
 /**
  * @brief Component to configure and initialize a touch panel at runtime
  *
@@ -111,9 +123,8 @@ public:
 
     DEKI_GROUP("Advanced")
     DEKI_EXPORT
-    DEKI_TOOLTIP("Touch coordinate rotation (0-7), must match display rotation")
-    DEKI_RANGE(0, 7)
-    int32_t offset_rotation = 0;
+    DEKI_TOOLTIP("Touch coordinate rotation, must match display rotation")
+    TouchRotation offset_rotation = TouchRotation::None;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Enable if touch shares the SPI bus with the display")

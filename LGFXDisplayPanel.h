@@ -14,7 +14,8 @@ enum class DisplayPanelType : uint8_t
     ST7789 = 1,
     ST7735 = 2,
     GC9A01 = 3,
-    SSD1351 = 4
+    SSD1351 = 4,
+    ST7789P3 = 5
 };
 
 enum class DisplayBusType : uint8_t
@@ -22,6 +23,18 @@ enum class DisplayBusType : uint8_t
     SPI = 0,
     Parallel8bit = 1,
     Parallel16bit = 2
+};
+
+enum class DisplayRotation : uint8_t
+{
+    Portrait = 0,
+    Landscape = 1,
+    Portrait_180 = 2,
+    Landscape_270 = 3,
+    Portrait_Mirror = 4,
+    Landscape_Mirror = 5,
+    Portrait_180_Mirror = 6,
+    Landscape_270_Mirror = 7
 };
 
 /**
@@ -62,9 +75,8 @@ public:
     int32_t panel_height = 240;
 
     DEKI_EXPORT
-    DEKI_TOOLTIP("Display rotation (0-3)")
-    DEKI_RANGE(0, 3)
-    int32_t rotation = 1;
+    DEKI_TOOLTIP("Display rotation")
+    DisplayRotation rotation = DisplayRotation::Landscape;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Pixel offset X (for panels with non-zero origin)")

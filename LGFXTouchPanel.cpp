@@ -63,7 +63,7 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             cfg.i2c_port = resolved_i2c_port;
             cfg.freq = resolved_i2c_freq;
             cfg.bus_shared = bus_shared;
-            cfg.offset_rotation = offset_rotation;
+            cfg.offset_rotation = static_cast<uint8_t>(offset_rotation);
             t->config(cfg);
             touch = t;
             DEKI_LOG_INFO("LGFXTouchPanel: Using FT5x06 driver (I2C addr=0x%02X%s)", (unsigned)resolved_i2c_addr, i2c_override ? " override" : "");
@@ -85,7 +85,7 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             cfg.i2c_port = resolved_i2c_port;
             cfg.freq = resolved_i2c_freq;
             cfg.bus_shared = bus_shared;
-            cfg.offset_rotation = offset_rotation;
+            cfg.offset_rotation = static_cast<uint8_t>(offset_rotation);
             t->config(cfg);
             touch = t;
             DEKI_LOG_INFO("LGFXTouchPanel: Using GT911 driver (I2C addr=0x%02X%s)", (unsigned)resolved_i2c_addr, i2c_override ? " override" : "");
@@ -107,7 +107,7 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             cfg.i2c_port = resolved_i2c_port;
             cfg.freq = resolved_i2c_freq;
             cfg.bus_shared = bus_shared;
-            cfg.offset_rotation = offset_rotation;
+            cfg.offset_rotation = static_cast<uint8_t>(offset_rotation);
             t->config(cfg);
             touch = t;
             DEKI_LOG_INFO("LGFXTouchPanel: Using CST816S driver (I2C addr=0x%02X%s)", (unsigned)resolved_i2c_addr, i2c_override ? " override" : "");
@@ -128,7 +128,7 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             cfg.pin_miso = spi_miso;
             cfg.pin_sclk = spi_clk;
             cfg.bus_shared = bus_shared;
-            cfg.offset_rotation = offset_rotation;
+            cfg.offset_rotation = static_cast<uint8_t>(offset_rotation);
             t->config(cfg);
             touch = t;
             DEKI_LOG_INFO("LGFXTouchPanel: Using XPT2046 driver (SPI)");

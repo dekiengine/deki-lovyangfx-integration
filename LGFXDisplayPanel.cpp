@@ -30,6 +30,28 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
 
     auto* device = new lgfx::LGFX_Device();
 
+    // Dump all config so we can verify the msgpack prefab contents
+    ESP_LOGI(TAG, "Panel config: invert=%d, rgb_order=%d, swap_bytes=%d",
+             (int)invert_color, (int)rgb_order, (int)swap_bytes);
+    ESP_LOGI(TAG, "Memory: %dx%d, offset: %d,%d, rotation=%d",
+             (int)memory_width, (int)memory_height, (int)offset_x, (int)offset_y, (int)rotation);
+    ESP_LOGI(TAG, "Control pins: CS=%d, RST=%d, BL=%d",
+             (int)pin_cs, (int)pin_rst, (int)bl_pin);
+    if (busType == DisplayBusType::Parallel8bit || busType == DisplayBusType::Parallel16bit)
+    {
+        ESP_LOGI(TAG, "Parallel pins: RS=%d, WR=%d, RD=%d",
+                 (int)rs_pin, (int)wr_pin, (int)rd_pin);
+        ESP_LOGI(TAG, "Data pins: D0=%d D1=%d D2=%d D3=%d D4=%d D5=%d D6=%d D7=%d",
+                 (int)d0_pin, (int)d1_pin, (int)d2_pin, (int)d3_pin,
+                 (int)d4_pin, (int)d5_pin, (int)d6_pin, (int)d7_pin);
+    }
+    else if (busType == DisplayBusType::SPI)
+    {
+        ESP_LOGI(TAG, "SPI pins: MOSI=%d, MISO=%d, CLK=%d, DC=%d, host=%d, freq=%d",
+                 (int)spi_mosi, (int)spi_miso, (int)spi_clk, (int)spi_dc,
+                 (int)spi_host, (int)spi_freq_write);
+    }
+
     // --- Configure Bus ---
     if (busType == DisplayBusType::SPI)
     {
@@ -51,11 +73,12 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         lgfx::Panel_Device* panel = nullptr;
         switch (panelType)
         {
-            case DisplayPanelType::ILI9341: panel = new lgfx::Panel_ILI9341(); break;
-            case DisplayPanelType::ST7789:  panel = new lgfx::Panel_ST7789();  break;
-            case DisplayPanelType::ST7735:  panel = new lgfx::Panel_ST7735();  break;
-            case DisplayPanelType::GC9A01:  panel = new lgfx::Panel_GC9A01();  break;
-            case DisplayPanelType::SSD1351: panel = new lgfx::Panel_SSD1351(); break;
+            case DisplayPanelType::ILI9341:  panel = new lgfx::Panel_ILI9341();  break;
+            case DisplayPanelType::ST7789:   panel = new lgfx::Panel_ST7789();   break;
+            case DisplayPanelType::ST7735:   panel = new lgfx::Panel_ST7735();   break;
+            case DisplayPanelType::GC9A01:   panel = new lgfx::Panel_GC9A01();   break;
+            case DisplayPanelType::SSD1351:  panel = new lgfx::Panel_SSD1351();  break;
+            case DisplayPanelType::ST7789P3: panel = new lgfx::Panel_ST7789P3(); break;
             default:
                 DEKI_LOG_ERROR("LGFXDisplayPanel: Unknown panel type %d", static_cast<int>(panelType));
                 delete bus;
@@ -119,11 +142,12 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         lgfx::Panel_Device* panel = nullptr;
         switch (panelType)
         {
-            case DisplayPanelType::ILI9341: panel = new lgfx::Panel_ILI9341(); break;
-            case DisplayPanelType::ST7789:  panel = new lgfx::Panel_ST7789();  break;
-            case DisplayPanelType::ST7735:  panel = new lgfx::Panel_ST7735();  break;
-            case DisplayPanelType::GC9A01:  panel = new lgfx::Panel_GC9A01();  break;
-            case DisplayPanelType::SSD1351: panel = new lgfx::Panel_SSD1351(); break;
+            case DisplayPanelType::ILI9341:  panel = new lgfx::Panel_ILI9341();  break;
+            case DisplayPanelType::ST7789:   panel = new lgfx::Panel_ST7789();   break;
+            case DisplayPanelType::ST7735:   panel = new lgfx::Panel_ST7735();   break;
+            case DisplayPanelType::GC9A01:   panel = new lgfx::Panel_GC9A01();   break;
+            case DisplayPanelType::SSD1351:  panel = new lgfx::Panel_SSD1351();  break;
+            case DisplayPanelType::ST7789P3: panel = new lgfx::Panel_ST7789P3(); break;
             default:
                 DEKI_LOG_ERROR("LGFXDisplayPanel: Unknown panel type %d", static_cast<int>(panelType));
                 delete bus;
@@ -194,11 +218,12 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         lgfx::Panel_Device* panel = nullptr;
         switch (panelType)
         {
-            case DisplayPanelType::ILI9341: panel = new lgfx::Panel_ILI9341(); break;
-            case DisplayPanelType::ST7789:  panel = new lgfx::Panel_ST7789();  break;
-            case DisplayPanelType::ST7735:  panel = new lgfx::Panel_ST7735();  break;
-            case DisplayPanelType::GC9A01:  panel = new lgfx::Panel_GC9A01();  break;
-            case DisplayPanelType::SSD1351: panel = new lgfx::Panel_SSD1351(); break;
+            case DisplayPanelType::ILI9341:  panel = new lgfx::Panel_ILI9341();  break;
+            case DisplayPanelType::ST7789:   panel = new lgfx::Panel_ST7789();   break;
+            case DisplayPanelType::ST7735:   panel = new lgfx::Panel_ST7735();   break;
+            case DisplayPanelType::GC9A01:   panel = new lgfx::Panel_GC9A01();   break;
+            case DisplayPanelType::SSD1351:  panel = new lgfx::Panel_SSD1351();  break;
+            case DisplayPanelType::ST7789P3: panel = new lgfx::Panel_ST7789P3(); break;
             default:
                 DEKI_LOG_ERROR("LGFXDisplayPanel: Unknown panel type %d", static_cast<int>(panelType));
                 delete bus;
@@ -249,7 +274,7 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         return;
     }
 
-    device->setRotation(rotation);
+    device->setRotation(static_cast<uint8_t>(rotation));
     ESP_LOGI(TAG, "Display initialized (%dx%d, rotation=%d)", (int)panel_width, (int)panel_height, (int)rotation);
 
     // Store for static accessor
