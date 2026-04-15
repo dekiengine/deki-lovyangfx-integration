@@ -29,11 +29,11 @@ LovyanGFXTouch::~LovyanGFXTouch()
 
 bool LovyanGFXTouch::Initialize()
 {
-    DEKI_LOG_DEBUG("LovyanGFXTouch::Initialize() ENTRY - initialized=%d", initialized);
+    DEKI_LOG_INTERNAL("LovyanGFXTouch::Initialize() ENTRY - initialized=%d", initialized);
 
     if (initialized)
     {
-        DEKI_LOG_DEBUG("LovyanGFXTouch: Already initialized, returning true");
+        DEKI_LOG_INTERNAL("LovyanGFXTouch: Already initialized, returning true");
         return true;
     }
 
@@ -54,7 +54,7 @@ bool LovyanGFXTouch::Initialize()
     }
 
     initialized = true;
-    DEKI_LOG_DEBUG("LovyanGFXTouch: Touch panel initialized successfully!");
+    DEKI_LOG_INTERNAL("LovyanGFXTouch: Touch panel initialized successfully!");
 
     return true;
 }
@@ -70,7 +70,7 @@ void LovyanGFXTouch::Shutdown()
     gfx = nullptr;
     initialized = false;
 
-    DEKI_LOG_DEBUG("LovyanGFXTouch: Shutdown complete");
+    DEKI_LOG_INTERNAL("LovyanGFXTouch: Shutdown complete");
 }
 
 void LovyanGFXTouch::SetPinInt(int32_t pin)
@@ -200,7 +200,7 @@ void LovyanGFXTouch::NotifyCallbacks(const InputEvent& event)
 void LovyanGFXTouch::RegisterEventCallback(const InputEventCallback& callback)
 {
     event_callbacks.push_back(callback);
-    DEKI_LOG_DEBUG("LovyanGFXTouch: Callback registered (total: %d callbacks)", event_callbacks.size());
+    DEKI_LOG_INTERNAL("LovyanGFXTouch: Callback registered (total: %d callbacks)", event_callbacks.size());
 }
 
 bool LovyanGFXTouch::IsInitialized() const

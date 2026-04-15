@@ -55,7 +55,7 @@ static uint16_t* AllocateDisplayBuffer(size_t buffer_bytes, bool usePSRAM, const
 
     if (buf)
     {
-        DEKI_LOG_DEBUG("LovyanGFX: Allocated %s (%zu bytes, psram=%d)", label, buffer_bytes, usePSRAM);
+        DEKI_LOG_INTERNAL("LovyanGFX: Allocated %s (%zu bytes, psram=%d)", label, buffer_bytes, usePSRAM);
     }
 #else
     buf = (uint16_t*)malloc(buffer_bytes);
@@ -116,7 +116,7 @@ bool LovyanGFXDisplay::InitializeWithDevice(lgfx::LGFX_Device* device, int32_t w
     dma_in_flight = false;
 
     initialized = true;
-    DEKI_LOG_DEBUG("LovyanGFX display initialized %dx%d (psram=%d, double_buffer=%d)",
+    DEKI_LOG_INTERNAL("LovyanGFX display initialized %dx%d (psram=%d, double_buffer=%d)",
                    width, height, usePSRAM ? 1 : 0, m_DoubleBuffer ? 1 : 0);
 
     return true;
@@ -156,7 +156,7 @@ void LovyanGFXDisplay::Shutdown()
         }
     }
     buffer_pixel_count = 0;
-    DEKI_LOG_DEBUG("LovyanGFX: Freed display buffers");
+    DEKI_LOG_INTERNAL("LovyanGFX: Freed display buffers");
 
     initialized = false;
 }
@@ -191,7 +191,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
     static int present_count = 0;
     if (present_count == 0)
     {
-        DEKI_LOG_DEBUG("LovyanGFX First Present: fmt=%d size=%dx%d overlay=%s double_buffer=%d psram=%d passthrough=%d",
+        DEKI_LOG_INTERNAL("LovyanGFX First Present: fmt=%d size=%dx%d overlay=%s double_buffer=%d psram=%d passthrough=%d",
                      format, width, height,
                      (active_overlay && active_overlay->buffer) ? "YES" : "NO",
                      m_DoubleBuffer ? 1 : 0, m_UsePSRAM ? 1 : 0, passthrough ? 1 : 0);
@@ -205,7 +205,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
     {
         if (present_count == 1)
         {
-            DEKI_LOG_DEBUG("LovyanGFX: Direct render buffer — skipping memcpy");
+            DEKI_LOG_INTERNAL("LovyanGFX: Direct render buffer — skipping memcpy");
         }
     }
 
@@ -589,7 +589,7 @@ void* LovyanGFXDisplay::CreateUIOverlay(int32_t width, int32_t height)
 
     memset(overlay->buffer, 0, buffer_size);
 
-    DEKI_LOG_DEBUG("LovyanGFXDisplay: Created UI overlay %dx%d (%zu bytes, ARGB8888 format)", width, height, buffer_size);
+    DEKI_LOG_INTERNAL("LovyanGFXDisplay: Created UI overlay %dx%d (%zu bytes, ARGB8888 format)", width, height, buffer_size);
     return overlay;
 }
 
@@ -650,7 +650,7 @@ void LovyanGFXDisplay::DestroyUIOverlay(void* overlay)
 
     delete ui_overlay;
 
-    DEKI_LOG_DEBUG("LovyanGFXDisplay: Destroyed UI overlay");
+    DEKI_LOG_INTERNAL("LovyanGFXDisplay: Destroyed UI overlay");
 }
 
 void LovyanGFXDisplay::SetActiveUIOverlay(void* overlay)
@@ -659,11 +659,11 @@ void LovyanGFXDisplay::SetActiveUIOverlay(void* overlay)
 
     if (active_overlay)
     {
-        DEKI_LOG_DEBUG("LovyanGFXDisplay: Set active UI overlay %dx%d", active_overlay->width, active_overlay->height);
+        DEKI_LOG_INTERNAL("LovyanGFXDisplay: Set active UI overlay %dx%d", active_overlay->width, active_overlay->height);
     }
     else
     {
-        DEKI_LOG_DEBUG("LovyanGFXDisplay: Cleared active UI overlay");
+        DEKI_LOG_INTERNAL("LovyanGFXDisplay: Cleared active UI overlay");
     }
 }
 
