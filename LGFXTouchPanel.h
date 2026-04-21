@@ -53,19 +53,14 @@ public:
 
     // ========== Pins ==========
 
+    DEKI_GROUP("I2C (capacitive touch)")
+    DEKI_EXPORT
+    DEKI_TOOLTIP("I2C bus port (must match an I2CBusComponent in the boot prefab)")
+    DEKI_VISIBLE_WHEN(driverType, FT5x06, GT911, CST816S)
+    DEKI_RANGE(0, 3)
+    int32_t i2c_port = 0;
+
     DEKI_GROUP("Pins")
-    DEKI_EXPORT
-    DEKI_TOOLTIP("I2C data pin for capacitive touch")
-    DEKI_VISIBLE_WHEN(driverType, FT5x06, GT911, CST816S)
-    DEKI_RANGE(-1, 48)
-    int32_t sda_pin = 21;
-
-    DEKI_EXPORT
-    DEKI_TOOLTIP("I2C clock pin for capacitive touch")
-    DEKI_VISIBLE_WHEN(driverType, FT5x06, GT911, CST816S)
-    DEKI_RANGE(-1, 48)
-    int32_t scl_pin = 20;
-
     DEKI_EXPORT
     DEKI_TOOLTIP("SPI chip select pin (-1 = not used)")
     DEKI_VISIBLE_WHEN(driverType, XPT2046)
@@ -129,26 +124,6 @@ public:
     DEKI_EXPORT
     DEKI_TOOLTIP("Enable if touch shares the SPI bus with the display")
     bool bus_shared = false;
-
-    DEKI_EXPORT
-    DEKI_TOOLTIP("Override default I2C settings (address, port, frequency)")
-    DEKI_VISIBLE_WHEN(driverType, FT5x06, GT911, CST816S)
-    bool i2c_override = false;
-
-    DEKI_EXPORT
-    DEKI_TOOLTIP("I2C device address (e.g. 0x38 for FT5x06, 0x5D for GT911)")
-    DEKI_VISIBLE_WHEN(i2c_override, 1)
-    int32_t i2c_addr = 0x38;
-
-    DEKI_EXPORT
-    DEKI_TOOLTIP("I2C peripheral port number (0 or 1)")
-    DEKI_VISIBLE_WHEN(i2c_override, 1)
-    int32_t i2c_port = 0;
-
-    DEKI_EXPORT
-    DEKI_TOOLTIP("I2C bus frequency in Hz (default 100000)")
-    DEKI_VISIBLE_WHEN(i2c_override, 1)
-    int32_t i2c_freq = 100000;
 
     // ========== SetupComponent Implementation ==========
 
