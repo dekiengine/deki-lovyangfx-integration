@@ -13,7 +13,7 @@ lgfx::LGFX_Device* LGFXDisplayPanel::GetLGFXDevice()
 
 #include <LovyanGFX.hpp>
 #include "LovyanGFXDisplay.h"
-#include "providers/DekiDisplayProvider.h"
+#include "providers/DekiDisplay.h"
 #include "DekiEngine.h"
 #include "PrefabSystem.h"
 #include "esp_log.h"
@@ -289,7 +289,7 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         return;
     }
 
-    DekiDisplayProvider::SetDisplay(std::move(display), "LovyanGFX");
+    DekiDisplay::SetDisplay(std::move(display), "LovyanGFX");
 
     // Mark owner as Persistent so display persists across prefab changes
     if (GetOwner())

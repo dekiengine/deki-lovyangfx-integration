@@ -4,7 +4,7 @@
 #include <cstring>
 
 #include "DekiLogSystem.h"
-#include "providers/DekiMemoryProvider.h"
+#include "providers/DekiMemory.h"
 // ESP32-specific includes for DMA memory allocation and cache management
 #ifdef ESP32
 #include <esp_heap_caps.h>
@@ -578,7 +578,7 @@ void* LovyanGFXDisplay::CreateUIOverlay(int32_t width, int32_t height)
     overlay->height = height;
 
     size_t buffer_size = width * height * sizeof(uint32_t);
-    overlay->buffer = (uint32_t*)DekiMemoryProvider::Allocate(buffer_size, true, "UIOverlay-ARGB8888");
+    overlay->buffer = (uint32_t*)DekiMemory::Allocate(buffer_size, true, "UIOverlay-ARGB8888");
 
     if (!overlay->buffer)
     {
@@ -644,7 +644,7 @@ void LovyanGFXDisplay::DestroyUIOverlay(void* overlay)
 
     if (ui_overlay->buffer)
     {
-        DekiMemoryProvider::Free(ui_overlay->buffer, "UIOverlay-ARGB8888");
+        DekiMemory::Free(ui_overlay->buffer, "UIOverlay-ARGB8888");
         ui_overlay->buffer = nullptr;
     }
 
