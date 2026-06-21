@@ -2,9 +2,9 @@
 #include "DekiLogSystem.h"
 #include "DekiEngine.h"
 #include "PrefabSystem.h"
-#include "providers/DekiInput.h"
-#include "providers/DekiI2C.h"
-#include "providers/IDekiI2C.h"
+#include "DekiInput.h"  // from deki-input
+#include "DekiI2C.h"   // from deki-i2c
+#include "IDekiI2C.h"  // from deki-i2c
 
 #if defined(ESP32)
 

@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "providers/IDekiInput.h"
+#include "IDekiInput.h"  // from deki-input
 
 // Forward declaration (must match LovyanGFX's inline namespace)
 namespace lgfx { inline namespace v1 { class LGFX_Device; } }

@@ -694,6 +694,12 @@ uint8_t* LovyanGFXDisplay::GetRenderBuffer(int32_t* width, int32_t* height)
     return (uint8_t*)buffers[render_index];
 }
 
+void LovyanGFXDisplay::SetBacklight(bool on)
+{
+    if (!tft) return;
+    tft->setBrightness(on ? 255 : 0);
+}
+
 #else
 // Non-ESP32 stub implementation
 LovyanGFXDisplay::LovyanGFXDisplay() : tft(nullptr), display_width(0), display_height(0), initialized(false),
@@ -720,4 +726,5 @@ void LovyanGFXDisplay::DestroyUIOverlay(void* overlay) {}
 void LovyanGFXDisplay::SetActiveUIOverlay(void* overlay) {}
 void LovyanGFXDisplay::ClearActiveUIOverlay() {}
 uint8_t* LovyanGFXDisplay::GetRenderBuffer(int32_t*, int32_t*) { return nullptr; }
+void LovyanGFXDisplay::SetBacklight(bool) {}
 #endif

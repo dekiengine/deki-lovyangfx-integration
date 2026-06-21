@@ -68,6 +68,7 @@ class LovyanGFXDisplay : public IDekiDisplay
     void SetActiveUIOverlay(void* overlay) override;
     void ClearActiveUIOverlay() override;
     uint8_t* GetRenderBuffer(int32_t* width, int32_t* height) override;
+    void SetBacklight(bool on) override;
 
     // LovyanGFX-specific methods
     lgfx::LGFX_Device* GetTFT() const { return tft; }

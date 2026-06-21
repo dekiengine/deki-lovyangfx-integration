@@ -13,11 +13,14 @@ lgfx::LGFX_Device* LGFXDisplayPanel::GetLGFXDevice()
 
 #include <LovyanGFX.hpp>
 #include "LovyanGFXDisplay.h"
-#include "providers/DekiDisplay.h"
 #include "DekiEngine.h"
 #include "PrefabSystem.h"
 #include "esp_log.h"
 static const char* TAG = "LGFXDisplay";
+
+// Module owns the LovyanGFXDisplay lifetime now. File-scope unique_ptr keeps
+// it alive for the program's lifetime.
+static std::unique_ptr<LovyanGFXDisplay> s_LovyanGFXDisplay;
 
 void LGFXDisplayPanel::Setup(SetupCallback onComplete)
 {
@@ -280,16 +283,17 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
     // Store for static accessor
     s_LGFXDevice = device;
 
-    // Create LovyanGFXDisplay wrapper and register with display backend
-    auto display = std::make_unique<LovyanGFXDisplay>();
-    if (!display->InitializeWithDevice(device, device->width(), device->height(), swap_bytes, use_psram, double_buffer))
+    // Create LovyanGFXDisplay wrapper and register with engine
+    s_LovyanGFXDisplay = std::make_unique<LovyanGFXDisplay>();
+    if (!s_LovyanGFXDisplay->InitializeWithDevice(device, device->width(), device->height(), swap_bytes, use_psram, double_buffer))
     {
         DEKI_LOG_ERROR("LGFXDisplayPanel: Failed to initialize display wrapper");
+        s_LovyanGFXDisplay.reset();
         onComplete(false);
         return;
     }
 
-    DekiDisplay::SetDisplay(std::move(display), "LovyanGFX");
+    DekiEngine::GetInstance().SetDisplay(s_LovyanGFXDisplay.get(), "LovyanGFX");
 
     // Mark owner as Persistent so display persists across prefab changes
     if (GetOwner())
