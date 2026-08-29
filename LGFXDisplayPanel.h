@@ -40,7 +40,7 @@ enum class DisplayRotation : uint8_t
 /**
  * @brief Component to configure and initialize a LovyanGFX display at runtime
  *
- * Add this component to your boot prefab to set up display hardware.
+ * Add this component to your boot scene to set up display hardware.
  * Configure the display panel type, bus type, and pin mappings in the Inspector.
  * Replaces the compile-time LGFX_Config.h approach with runtime configuration.
  *
@@ -49,7 +49,7 @@ enum class DisplayRotation : uint8_t
  * Must run BEFORE LGFXTouchPanel in the boot sequence.
  *
  * Usage:
- * 1. Add LGFXDisplayPanel to your boot prefab
+ * 1. Add LGFXDisplayPanel to your boot scene
  * 2. Configure panel type, bus, and pins in Inspector
  * 3. Add to PlatformSetupComponent's setup_components list (before touch)
  */

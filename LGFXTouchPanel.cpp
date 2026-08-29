@@ -1,7 +1,7 @@
 #include "LGFXTouchPanel.h"
 #include "DekiLogSystem.h"
 #include "DekiEngine.h"
-#include "PrefabSystem.h"
+#include "SceneSystem.h"
 #include "DekiInput.h"  // from deki-input
 #include "DekiI2C.h"   // from deki-i2c
 #include "IDekiI2C.h"  // from deki-i2c
@@ -41,7 +41,7 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
         IDekiI2C* bus = DekiI2C::GetBus(i2c_port);
         if (!bus)
         {
-            DEKI_LOG_ERROR("LGFXTouchPanel: no I2C bus on port %d — add I2CBusComponent before LGFXTouchPanel in boot prefab", (int)i2c_port);
+            DEKI_LOG_ERROR("LGFXTouchPanel: no I2C bus on port %d — add I2CBusComponent before LGFXTouchPanel in boot scene", (int)i2c_port);
             onComplete(false);
             return;
         }
@@ -195,10 +195,10 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             }
         }
 
-        // Mark owner as Persistent so touch persists across prefab changes
+        // Mark owner as Persistent so touch persists across scene changes
         if (GetOwner())
         {
-            DekiEngine::GetInstance().GetPrefabSystem().MarkPersistent(GetOwner());
+            DekiEngine::GetInstance().GetSceneSystem().MarkPersistent(GetOwner());
         }
 
         onComplete(true);

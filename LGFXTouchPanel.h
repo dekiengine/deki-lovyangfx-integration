@@ -28,7 +28,7 @@ enum class TouchRotation : uint8_t
 /**
  * @brief Component to configure and initialize a touch panel at runtime
  *
- * Add this component to your boot prefab to enable touch input.
+ * Add this component to your boot scene to enable touch input.
  * Supports multiple LovyanGFX touch drivers: FT5x06, GT911, XPT2046, CST816S.
  *
  * Inherits from SetupComponent to participate in boot sequence.
@@ -36,7 +36,7 @@ enum class TouchRotation : uint8_t
  * and attach it to the LovyanGFX display panel.
  *
  * Usage:
- * 1. Add LGFXTouchPanel to your boot prefab
+ * 1. Add LGFXTouchPanel to your boot scene
  * 2. Set driver type and pin values in Inspector
  * 3. Add to PlatformSetupComponent's setup_components list
  */
@@ -56,7 +56,7 @@ public:
 
     DEKI_GROUP("I2C (capacitive touch)")
     DEKI_EXPORT
-    DEKI_TOOLTIP("I2C bus port (must match an I2CBusComponent in the boot prefab)")
+    DEKI_TOOLTIP("I2C bus port (must match an I2CBusComponent in the boot scene)")
     DEKI_VISIBLE_WHEN(driverType, FT5x06, GT911, CST816S)
     DEKI_RANGE(0, 3)
     int32_t i2c_port = 0;

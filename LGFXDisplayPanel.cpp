@@ -14,7 +14,7 @@ lgfx::LGFX_Device* LGFXDisplayPanel::GetLGFXDevice()
 #include <LovyanGFX.hpp>
 #include "LovyanGFXDisplay.h"
 #include "DekiEngine.h"
-#include "PrefabSystem.h"
+#include "SceneSystem.h"
 #include "esp_log.h"
 static const char* TAG = "LGFXDisplay";
 
@@ -33,7 +33,7 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
 
     auto* device = new lgfx::LGFX_Device();
 
-    // Dump all config so we can verify the msgpack prefab contents
+    // Dump all config so we can verify the msgpack scene contents
     ESP_LOGI(TAG, "Panel config: invert=%d, rgb_order=%d, swap_bytes=%d",
              (int)invert_color, (int)rgb_order, (int)swap_bytes);
     ESP_LOGI(TAG, "Memory: %dx%d, offset: %d,%d, rotation=%d",
@@ -295,10 +295,10 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
 
     DekiEngine::GetInstance().SetDisplay(s_LovyanGFXDisplay.get(), "LovyanGFX");
 
-    // Mark owner as Persistent so display persists across prefab changes
+    // Mark owner as Persistent so display persists across scene changes
     if (GetOwner())
     {
-        DekiEngine::GetInstance().GetPrefabSystem().MarkPersistent(GetOwner());
+        DekiEngine::GetInstance().GetSceneSystem().MarkPersistent(GetOwner());
     }
 
     onComplete(true);
