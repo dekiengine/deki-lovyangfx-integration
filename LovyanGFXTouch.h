@@ -36,15 +36,15 @@ private:
 #if defined(ESP32)
     lgfx::LGFX_Device* gfx;
     bool initialized;
-    bool touch_pressed;
-    int32_t touch_x;
-    int32_t touch_y;
-    int32_t last_touch_x;
-    int32_t last_touch_y;
-    int32_t pin_int;
-    int32_t stale_frame_count;
+    bool m_TouchPressed;
+    int32_t m_TouchX;
+    int32_t m_TouchY;
+    int32_t m_LastTouchX;
+    int32_t m_LastTouchY;
+    int32_t m_PinInt;
+    int32_t m_StaleFrameCount;
     static constexpr int STALE_THRESHOLD = 3;
-    std::vector<InputEventCallback> event_callbacks;
+    std::vector<InputEventCallback> m_EventCallbacks;
 
     void NotifyCallbacks(const InputEvent& event);
 #else

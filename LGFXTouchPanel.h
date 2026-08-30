@@ -89,7 +89,7 @@ public:
     DEKI_EXPORT
     DEKI_TOOLTIP("Interrupt pin for touch events (-1 = polling mode)")
     DEKI_RANGE(-1, 48)
-    int32_t pin_int = -1;
+    int32_t m_PinInt = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Reset pin for touch controller (-1 = not connected)")

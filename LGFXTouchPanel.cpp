@@ -63,7 +63,7 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             cfg.x_max = x_max;
             cfg.y_min = y_min;
             cfg.y_max = y_max;
-            cfg.pin_int = pin_int;
+            cfg.m_PinInt = m_PinInt;
             cfg.pin_rst = pin_rst;
             cfg.pin_sda = bus_sda;
             cfg.pin_scl = bus_scl;
@@ -85,7 +85,7 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             cfg.x_max = x_max;
             cfg.y_min = y_min;
             cfg.y_max = y_max;
-            cfg.pin_int = pin_int;
+            cfg.m_PinInt = m_PinInt;
             cfg.pin_rst = pin_rst;
             cfg.pin_sda = bus_sda;
             cfg.pin_scl = bus_scl;
@@ -107,7 +107,7 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             cfg.x_max = x_max;
             cfg.y_min = y_min;
             cfg.y_max = y_max;
-            cfg.pin_int = pin_int;
+            cfg.m_PinInt = m_PinInt;
             cfg.pin_rst = pin_rst;
             cfg.pin_sda = bus_sda;
             cfg.pin_scl = bus_scl;
@@ -129,7 +129,7 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             cfg.x_max = x_max;
             cfg.y_min = y_min;
             cfg.y_max = y_max;
-            cfg.pin_int = pin_int;
+            cfg.m_PinInt = m_PinInt;
             cfg.pin_rst = pin_rst;
             cfg.pin_cs = spi_cs;
             cfg.pin_mosi = spi_mosi;
@@ -183,7 +183,7 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
         {
             // Create and register LovyanGFXTouch with input backend
             auto input = std::make_unique<LovyanGFXTouch>();
-            input->SetPinInt(pin_int);
+            input->SetPinInt(m_PinInt);
             if (input->Initialize())
             {
                 DekiInput::SetInput(std::move(input), "LovyanGFXTouch");

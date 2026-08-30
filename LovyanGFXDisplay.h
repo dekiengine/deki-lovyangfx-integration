@@ -17,15 +17,15 @@ class LovyanGFXDisplay : public IDekiDisplay
 {
    private:
     lgfx::LGFX_Device* tft;
-    int32_t display_width;
-    int32_t display_height;
+    int32_t m_DisplayWidth;
+    int32_t m_DisplayHeight;
     bool initialized;
 
     // Double-buffer support for async DMA
     uint16_t* buffers[2];        // [0] = primary, [1] = secondary (null if single-buffer)
-    size_t buffer_pixel_count;
-    int render_index;            // Index of buffer currently being rendered to
-    bool dma_in_flight;
+    size_t m_BufferPixelCount;
+    int m_RenderIndex;            // Index of buffer currently being rendered to
+    bool m_DmaInFlight;
     bool m_UsePSRAM;
     bool m_DoubleBuffer;
     bool m_SwapBytes;
@@ -37,7 +37,7 @@ class LovyanGFXDisplay : public IDekiDisplay
         int32_t width;
         int32_t height;
     };
-    UIOverlay* active_overlay;
+    UIOverlay* m_ActiveOverlay;
 
    public:
     LovyanGFXDisplay();

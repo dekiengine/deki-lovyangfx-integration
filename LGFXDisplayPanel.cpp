@@ -98,8 +98,8 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         panel_cfg.panel_height = panel_height;
         panel_cfg.memory_width = memory_width;
         panel_cfg.memory_height = memory_height;
-        panel_cfg.offset_x = offset_x;
-        panel_cfg.offset_y = offset_y;
+        panel_cfg.offsetX = offset_x;
+        panel_cfg.offsetY = offset_y;
         panel_cfg.offset_rotation = 0;
         panel_cfg.readable = true;
         panel_cfg.invert = invert_color;
@@ -166,8 +166,8 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         panel_cfg.panel_height = panel_height;
         panel_cfg.memory_width = memory_width;
         panel_cfg.memory_height = memory_height;
-        panel_cfg.offset_x = offset_x;
-        panel_cfg.offset_y = offset_y;
+        panel_cfg.offsetX = offset_x;
+        panel_cfg.offsetY = offset_y;
         panel_cfg.offset_rotation = 0;
         panel_cfg.readable = true;
         panel_cfg.invert = invert_color;
@@ -243,8 +243,8 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         panel_cfg.panel_height = panel_height;
         panel_cfg.memory_width = memory_width;
         panel_cfg.memory_height = memory_height;
-        panel_cfg.offset_x = offset_x;
-        panel_cfg.offset_y = offset_y;
+        panel_cfg.offsetX = offset_x;
+        panel_cfg.offsetY = offset_y;
         panel_cfg.offset_rotation = 0;
         panel_cfg.readable = true;
         panel_cfg.invert = invert_color;

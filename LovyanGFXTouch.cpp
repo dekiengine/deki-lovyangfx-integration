@@ -12,13 +12,13 @@ using lgfx::v1::millis;
 LovyanGFXTouch::LovyanGFXTouch()
 : gfx(nullptr)
 , initialized(false)
-, touch_pressed(false)
-, touch_x(0)
-, touch_y(0)
-, last_touch_x(0)
-, last_touch_y(0)
-, pin_int(-1)
-, stale_frame_count(0)
+, m_TouchPressed(false)
+, m_TouchX(0)
+, m_TouchY(0)
+, m_LastTouchX(0)
+, m_LastTouchY(0)
+, m_PinInt(-1)
+, m_StaleFrameCount(0)
 {
 }
 
@@ -66,7 +66,7 @@ void LovyanGFXTouch::Shutdown()
         return;
     }
 
-    event_callbacks.clear();
+    m_EventCallbacks.clear();
     gfx = nullptr;
     initialized = false;
 
@@ -75,7 +75,7 @@ void LovyanGFXTouch::Shutdown()
 
 void LovyanGFXTouch::SetPinInt(int32_t pin)
 {
-    pin_int = pin;
+    m_PinInt = pin;
 }
 
 void LovyanGFXTouch::Update()
@@ -97,15 +97,15 @@ void LovyanGFXTouch::Update()
 
     if (!is_touching)
     {
-        stale_frame_count = 0;
-        if (touch_pressed)
+        m_StaleFrameCount = 0;
+        if (m_TouchPressed)
         {
-            touch_pressed = false;
+            m_TouchPressed = false;
 
             InputEvent event;
             event.type = InputEventType::MOUSE_BUTTON_UP;
-            event.x = touch_x;
-            event.y = touch_y;
+            event.x = m_TouchX;
+            event.y = m_TouchY;
             event.pressed = false;
             event.timestamp = millis();
 
@@ -120,20 +120,20 @@ void LovyanGFXTouch::Update()
     // Software release detection when no INT pin is wired.
     // Without INT, the FT5x06 driver can report stale touch data after
     // finger lift. Detect this by checking for unchanged position.
-    if (pin_int == -1 && touch_pressed)
+    if (m_PinInt == -1 && m_TouchPressed)
     {
-        if (screen_x == last_touch_x && screen_y == last_touch_y)
+        if (screen_x == m_LastTouchX && screen_y == m_LastTouchY)
         {
-            stale_frame_count++;
-            if (stale_frame_count >= STALE_THRESHOLD)
+            m_StaleFrameCount++;
+            if (m_StaleFrameCount >= STALE_THRESHOLD)
             {
-                touch_pressed = false;
-                stale_frame_count = 0;
+                m_TouchPressed = false;
+                m_StaleFrameCount = 0;
 
                 InputEvent event;
                 event.type = InputEventType::MOUSE_BUTTON_UP;
-                event.x = touch_x;
-                event.y = touch_y;
+                event.x = m_TouchX;
+                event.y = m_TouchY;
                 event.pressed = false;
                 event.timestamp = millis();
 
@@ -143,18 +143,18 @@ void LovyanGFXTouch::Update()
         }
         else
         {
-            stale_frame_count = 0;
+            m_StaleFrameCount = 0;
         }
     }
 
-    if (!touch_pressed)
+    if (!m_TouchPressed)
     {
-        touch_pressed = true;
-        stale_frame_count = 0;
-        touch_x = screen_x;
-        touch_y = screen_y;
-        last_touch_x = screen_x;
-        last_touch_y = screen_y;
+        m_TouchPressed = true;
+        m_StaleFrameCount = 0;
+        m_TouchX = screen_x;
+        m_TouchY = screen_y;
+        m_LastTouchX = screen_x;
+        m_LastTouchY = screen_y;
 
         InputEvent event;
         event.type = InputEventType::MOUSE_BUTTON_DOWN;
@@ -167,10 +167,10 @@ void LovyanGFXTouch::Update()
     }
     else
     {
-        if (screen_x != last_touch_x || screen_y != last_touch_y)
+        if (screen_x != m_LastTouchX || screen_y != m_LastTouchY)
         {
-            touch_x = screen_x;
-            touch_y = screen_y;
+            m_TouchX = screen_x;
+            m_TouchY = screen_y;
 
             InputEvent event;
             event.type = InputEventType::MOUSE_MOVE;
@@ -180,15 +180,15 @@ void LovyanGFXTouch::Update()
 
             NotifyCallbacks(event);
 
-            last_touch_x = screen_x;
-            last_touch_y = screen_y;
+            m_LastTouchX = screen_x;
+            m_LastTouchY = screen_y;
         }
     }
 }
 
 void LovyanGFXTouch::NotifyCallbacks(const InputEvent& event)
 {
-    for (const auto& callback : event_callbacks)
+    for (const auto& callback : m_EventCallbacks)
     {
         if (callback)
         {
@@ -199,8 +199,8 @@ void LovyanGFXTouch::NotifyCallbacks(const InputEvent& event)
 
 void LovyanGFXTouch::RegisterEventCallback(const InputEventCallback& callback)
 {
-    event_callbacks.push_back(callback);
-    DEKI_LOG_INTERNAL("LovyanGFXTouch: Callback registered (total: %d callbacks)", event_callbacks.size());
+    m_EventCallbacks.push_back(callback);
+    DEKI_LOG_INTERNAL("LovyanGFXTouch: Callback registered (total: %d callbacks)", m_EventCallbacks.size());
 }
 
 bool LovyanGFXTouch::IsInitialized() const
@@ -210,9 +210,9 @@ bool LovyanGFXTouch::IsInitialized() const
 
 bool LovyanGFXTouch::GetPointerPosition(int32_t* x, int32_t* y) const
 {
-    if (x) *x = touch_x;
-    if (y) *y = touch_y;
-    return touch_pressed;
+    if (x) *x = m_TouchX;
+    if (y) *y = m_TouchY;
+    return m_TouchPressed;
 }
 
 bool LovyanGFXTouch::IsKeyPressed(uint32_t key) const

@@ -20,17 +20,17 @@
 
 LovyanGFXDisplay::LovyanGFXDisplay()
 : tft(nullptr)
-, display_width(320)
-, display_height(240)
+, m_DisplayWidth(320)
+, m_DisplayHeight(240)
 , initialized(false)
 , buffers{nullptr, nullptr}
-, buffer_pixel_count(0)
-, render_index(0)
-, dma_in_flight(false)
+, m_BufferPixelCount(0)
+, m_RenderIndex(0)
+, m_DmaInFlight(false)
 , m_UsePSRAM(false)
 , m_DoubleBuffer(false)
 , m_SwapBytes(false)
-, active_overlay(nullptr)
+, m_ActiveOverlay(nullptr)
 {
 }
 
@@ -77,16 +77,16 @@ bool LovyanGFXDisplay::InitializeWithDevice(lgfx::LGFX_Device* device, int32_t w
     }
 
     tft = device;
-    display_width = width;
-    display_height = height;
+    m_DisplayWidth = width;
+    m_DisplayHeight = height;
     m_UsePSRAM = usePSRAM;
     m_DoubleBuffer = doubleBuffer;
     m_SwapBytes = swapBytes;
-    buffer_pixel_count = width * height;
+    m_BufferPixelCount = width * height;
 
     if (usePSRAM || doubleBuffer)
     {
-        size_t buffer_bytes = buffer_pixel_count * sizeof(uint16_t);
+        size_t buffer_bytes = m_BufferPixelCount * sizeof(uint16_t);
 
         buffers[0] = AllocateDisplayBuffer(buffer_bytes, usePSRAM, "buffer[0]");
         if (!buffers[0])
@@ -112,8 +112,8 @@ bool LovyanGFXDisplay::InitializeWithDevice(lgfx::LGFX_Device* device, int32_t w
     }
     // else: passthrough mode — no display buffers, Present pushes framebuffer directly
 
-    render_index = 0;
-    dma_in_flight = false;
+    m_RenderIndex = 0;
+    m_DmaInFlight = false;
 
     initialized = true;
     DEKI_LOG_INTERNAL("LovyanGFX display initialized %dx%d (psram=%d, double_buffer=%d)",
@@ -137,10 +137,10 @@ void LovyanGFXDisplay::Shutdown()
     }
 
     // Wait for any in-flight DMA before freeing buffers
-    if (dma_in_flight && tft)
+    if (m_DmaInFlight && tft)
     {
         tft->waitDMA();
-        dma_in_flight = false;
+        m_DmaInFlight = false;
     }
 
     for (int i = 0; i < 2; i++)
@@ -155,7 +155,7 @@ void LovyanGFXDisplay::Shutdown()
             buffers[i] = nullptr;
         }
     }
-    buffer_pixel_count = 0;
+    m_BufferPixelCount = 0;
     DEKI_LOG_INTERNAL("LovyanGFX: Freed display buffers");
 
     initialized = false;
@@ -173,7 +173,7 @@ void LovyanGFXDisplay::Present(const uint8_t* framebuffer, int width, int height
 
 void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, int width, int height, int format)
 {
-    uint16_t* conversion_buffer = buffers[render_index];
+    uint16_t* conversion_buffer = buffers[m_RenderIndex];
 
     // Passthrough mode: no display buffer, push framebuffer directly (RGB565 only)
     const bool passthrough = (!conversion_buffer && format == 0);
@@ -193,7 +193,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
     {
         DEKI_LOG_INTERNAL("LovyanGFX First Present: fmt=%d size=%dx%d overlay=%s double_buffer=%d psram=%d passthrough=%d",
                      format, width, height,
-                     (active_overlay && active_overlay->buffer) ? "YES" : "NO",
+                     (m_ActiveOverlay && m_ActiveOverlay->buffer) ? "YES" : "NO",
                      m_DoubleBuffer ? 1 : 0, m_UsePSRAM ? 1 : 0, passthrough ? 1 : 0);
     }
     present_count++;
@@ -226,8 +226,8 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
 #endif
 
     // Optimized conversion using direct pointer arithmetic
-    int effective_width = (width < display_width) ? width : display_width;
-    int effective_height = (height < display_height) ? height : display_height;
+    int effective_width = (width < m_DisplayWidth) ? width : m_DisplayWidth;
+    int effective_height = (height < m_DisplayHeight) ? height : m_DisplayHeight;
     size_t pixel_count = effective_width * effective_height;
 
     if (format == 2)  // ARGB8888 - most common path
@@ -235,7 +235,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
         const uint32_t* src = (const uint32_t*)framebuffer;
         uint16_t* dst = conversion_buffer;
 
-        if (width == display_width && height == display_height)
+        if (width == m_DisplayWidth && height == m_DisplayHeight)
         {
             for (size_t i = 0; i < pixel_count; i++)
             {
@@ -251,7 +251,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
             for (int y = 0; y < effective_height; y++)
             {
                 const uint32_t* src_row = src + y * width;
-                uint16_t* dst_row = dst + y * display_width;
+                uint16_t* dst_row = dst + y * m_DisplayWidth;
 
                 for (int x = 0; x < effective_width; x++)
                 {
@@ -269,7 +269,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
         const uint16_t* src = (const uint16_t*)framebuffer;
         uint16_t* dst = conversion_buffer;
 
-        if (width == display_width && height == display_height)
+        if (width == m_DisplayWidth && height == m_DisplayHeight)
         {
             memcpy(dst, src, pixel_count * sizeof(uint16_t));
         }
@@ -277,7 +277,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
         {
             for (int y = 0; y < effective_height; y++)
             {
-                memcpy(dst + y * display_width, src + y * width, effective_width * sizeof(uint16_t));
+                memcpy(dst + y * m_DisplayWidth, src + y * width, effective_width * sizeof(uint16_t));
             }
         }
     }
@@ -289,7 +289,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
         for (int y = 0; y < effective_height; y++)
         {
             const uint8_t* src_row = src + y * width * 3;
-            uint16_t* dst_row = dst + y * display_width;
+            uint16_t* dst_row = dst + y * m_DisplayWidth;
 
             for (int x = 0; x < effective_width; x++)
             {
@@ -310,18 +310,18 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
     } // if (!directBuffer)
 
     // Composite UI overlay on top if active (ARGB8888 format)
-    if (active_overlay && active_overlay->buffer)
+    if (m_ActiveOverlay && m_ActiveOverlay->buffer)
     {
-        int overlay_width = active_overlay->width < display_width ? active_overlay->width : display_width;
-        int overlay_height = active_overlay->height < display_height ? active_overlay->height : display_height;
+        int overlay_width = m_ActiveOverlay->width < m_DisplayWidth ? m_ActiveOverlay->width : m_DisplayWidth;
+        int overlay_height = m_ActiveOverlay->height < m_DisplayHeight ? m_ActiveOverlay->height : m_DisplayHeight;
 
-        const uint32_t* overlay_base = active_overlay->buffer;
+        const uint32_t* overlay_base = m_ActiveOverlay->buffer;
         uint16_t* dst_base = conversion_buffer;
 
         for (int y = 0; y < overlay_height; y++)
         {
-            const uint32_t* overlay_row = overlay_base + y * active_overlay->width;
-            uint16_t* dst_row = dst_base + y * display_width;
+            const uint32_t* overlay_row = overlay_base + y * m_ActiveOverlay->width;
+            uint16_t* dst_row = dst_base + y * m_DisplayWidth;
 
             // Process 4 pixels at a time when possible (unrolled loop for better CPU pipelining)
             int x = 0;
@@ -494,7 +494,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
     {
         uintptr_t addr = (uintptr_t)conversion_buffer;
         uintptr_t aligned_addr = addr & ~63;
-        size_t raw_bytes = buffer_pixel_count * sizeof(uint16_t);
+        size_t raw_bytes = m_BufferPixelCount * sizeof(uint16_t);
         size_t aligned_bytes = ((addr - aligned_addr) + raw_bytes + 63) & ~63;
         esp_cache_msync((void*)aligned_addr, aligned_bytes, ESP_CACHE_MSYNC_FLAG_DIR_C2M);
     }
@@ -506,7 +506,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
     if (m_SwapBytes)
     {
         uint32_t* buf32 = (uint32_t*)conversion_buffer;
-        size_t count32 = buffer_pixel_count / 2;
+        size_t count32 = m_BufferPixelCount / 2;
         for (size_t i = 0; i < count32; i++)
         {
             uint32_t v = buf32[i];
@@ -516,22 +516,22 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
 
     if (m_DoubleBuffer)
     {
-        if (dma_in_flight)
+        if (m_DmaInFlight)
         {
             tft->waitDMA();
         }
 
         tft->startWrite();
-        tft->pushImage(0, 0, display_width, display_height, conversion_buffer);
+        tft->pushImage(0, 0, m_DisplayWidth, m_DisplayHeight, conversion_buffer);
         tft->endWrite();
-        dma_in_flight = true;
+        m_DmaInFlight = true;
 
-        render_index = 1 - render_index;
+        m_RenderIndex = 1 - m_RenderIndex;
     }
     else
     {
         tft->startWrite();
-        tft->pushImage(0, 0, display_width, display_height, conversion_buffer);
+        tft->pushImage(0, 0, m_DisplayWidth, m_DisplayHeight, conversion_buffer);
         tft->endWrite();
         tft->waitDMA();
     }
@@ -539,8 +539,8 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
 
 void LovyanGFXDisplay::GetDisplaySize(int32_t* width, int32_t* height) const
 {
-    if (width) *width = display_width;
-    if (height) *height = display_height;
+    if (width) *width = m_DisplayWidth;
+    if (height) *height = m_DisplayHeight;
 }
 
 bool LovyanGFXDisplay::IsInitialized() const
@@ -637,9 +637,9 @@ void LovyanGFXDisplay::DestroyUIOverlay(void* overlay)
 
     UIOverlay* ui_overlay = (UIOverlay*)overlay;
 
-    if (ui_overlay == active_overlay)
+    if (ui_overlay == m_ActiveOverlay)
     {
-        active_overlay = nullptr;
+        m_ActiveOverlay = nullptr;
     }
 
     if (ui_overlay->buffer)
@@ -655,11 +655,11 @@ void LovyanGFXDisplay::DestroyUIOverlay(void* overlay)
 
 void LovyanGFXDisplay::SetActiveUIOverlay(void* overlay)
 {
-    active_overlay = (UIOverlay*)overlay;
+    m_ActiveOverlay = (UIOverlay*)overlay;
 
-    if (active_overlay)
+    if (m_ActiveOverlay)
     {
-        DEKI_LOG_INTERNAL("LovyanGFXDisplay: Set active UI overlay %dx%d", active_overlay->width, active_overlay->height);
+        DEKI_LOG_INTERNAL("LovyanGFXDisplay: Set active UI overlay %dx%d", m_ActiveOverlay->width, m_ActiveOverlay->height);
     }
     else
     {
@@ -669,13 +669,13 @@ void LovyanGFXDisplay::SetActiveUIOverlay(void* overlay)
 
 void LovyanGFXDisplay::ClearActiveUIOverlay()
 {
-    if (!active_overlay || !active_overlay->buffer)
+    if (!m_ActiveOverlay || !m_ActiveOverlay->buffer)
     {
         return;
     }
 
-    size_t buffer_size = active_overlay->width * active_overlay->height * sizeof(uint32_t);
-    memset(active_overlay->buffer, 0, buffer_size);
+    size_t buffer_size = m_ActiveOverlay->width * m_ActiveOverlay->height * sizeof(uint32_t);
+    memset(m_ActiveOverlay->buffer, 0, buffer_size);
 }
 
 uint8_t* LovyanGFXDisplay::GetRenderBuffer(int32_t* width, int32_t* height)
@@ -687,11 +687,11 @@ uint8_t* LovyanGFXDisplay::GetRenderBuffer(int32_t* width, int32_t* height)
     if (m_UsePSRAM)
         return nullptr;
 
-    if (!initialized || !buffers[render_index])
+    if (!initialized || !buffers[m_RenderIndex])
         return nullptr;
-    if (width) *width = display_width;
-    if (height) *height = display_height;
-    return (uint8_t*)buffers[render_index];
+    if (width) *width = m_DisplayWidth;
+    if (height) *height = m_DisplayHeight;
+    return (uint8_t*)buffers[m_RenderIndex];
 }
 
 void LovyanGFXDisplay::SetBacklight(bool on)
@@ -702,9 +702,9 @@ void LovyanGFXDisplay::SetBacklight(bool on)
 
 #else
 // Non-ESP32 stub implementation
-LovyanGFXDisplay::LovyanGFXDisplay() : tft(nullptr), display_width(0), display_height(0), initialized(false),
-    buffers{nullptr, nullptr}, buffer_pixel_count(0), render_index(0), dma_in_flight(false),
-    m_UsePSRAM(false), m_DoubleBuffer(false), m_SwapBytes(false), active_overlay(nullptr) {}
+LovyanGFXDisplay::LovyanGFXDisplay() : tft(nullptr), m_DisplayWidth(0), m_DisplayHeight(0), initialized(false),
+    buffers{nullptr, nullptr}, m_BufferPixelCount(0), m_RenderIndex(0), m_DmaInFlight(false),
+    m_UsePSRAM(false), m_DoubleBuffer(false), m_SwapBytes(false), m_ActiveOverlay(nullptr) {}
 LovyanGFXDisplay::~LovyanGFXDisplay() {}
 bool LovyanGFXDisplay::InitializeWithDevice(lgfx::LGFX_Device*, int32_t, int32_t, bool, bool, bool) { return false; }
 bool LovyanGFXDisplay::Initialize(int32_t width, int32_t height) { return false; }
