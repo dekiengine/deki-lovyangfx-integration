@@ -38,10 +38,10 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
 
     if (is_i2c_driver)
     {
-        IDekiI2C* bus = DekiI2C::GetBus(i2c_port);
+        IDekiI2C* bus = DekiI2C::GetBus(i2cPort);
         if (!bus)
         {
-            DEKI_LOG_ERROR("LGFXTouchPanel: no I2C bus on port %d — add I2CBusComponent before LGFXTouchPanel in boot scene", (int)i2c_port);
+            DEKI_LOG_ERROR("LGFXTouchPanel: no I2C bus on port %d — add I2CBusComponent before LGFXTouchPanel in boot scene", (int)i2cPort);
             onComplete(false);
             return;
         }
@@ -59,84 +59,84 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
         {
             auto* t = new lgfx::Touch_FT5x06();
             auto cfg = t->config();
-            cfg.x_min = x_min;
-            cfg.x_max = x_max;
-            cfg.y_min = y_min;
-            cfg.y_max = y_max;
+            cfg.xMin = xMin;
+            cfg.xMax = xMax;
+            cfg.yMin = yMin;
+            cfg.yMax = yMax;
             cfg.m_PinInt = m_PinInt;
-            cfg.pin_rst = pin_rst;
+            cfg.pinRst = pinRst;
             cfg.pin_sda = bus_sda;
             cfg.pin_scl = bus_scl;
             cfg.i2c_addr = 0x38;
-            cfg.i2c_port = i2c_port;
+            cfg.i2cPort = i2cPort;
             cfg.freq = bus_freq;
-            cfg.bus_shared = true;
-            cfg.offset_rotation = static_cast<uint8_t>(offset_rotation);
+            cfg.busShared = true;
+            cfg.offsetRotation = static_cast<uint8_t>(offsetRotation);
             t->config(cfg);
             touch = t;
-            DEKI_LOG_INFO("LGFXTouchPanel: FT5x06 on I2C port %d (SDA=%d SCL=%d freq=%d)", (int)i2c_port, bus_sda, bus_scl, bus_freq);
+            DEKI_LOG_INFO("LGFXTouchPanel: FT5x06 on I2C port %d (SDA=%d SCL=%d freq=%d)", (int)i2cPort, bus_sda, bus_scl, bus_freq);
             break;
         }
         case TouchDriverType::GT911:
         {
             auto* t = new lgfx::Touch_GT911();
             auto cfg = t->config();
-            cfg.x_min = x_min;
-            cfg.x_max = x_max;
-            cfg.y_min = y_min;
-            cfg.y_max = y_max;
+            cfg.xMin = xMin;
+            cfg.xMax = xMax;
+            cfg.yMin = yMin;
+            cfg.yMax = yMax;
             cfg.m_PinInt = m_PinInt;
-            cfg.pin_rst = pin_rst;
+            cfg.pinRst = pinRst;
             cfg.pin_sda = bus_sda;
             cfg.pin_scl = bus_scl;
             cfg.i2c_addr = 0x5D;
-            cfg.i2c_port = i2c_port;
+            cfg.i2cPort = i2cPort;
             cfg.freq = bus_freq;
-            cfg.bus_shared = true;
-            cfg.offset_rotation = static_cast<uint8_t>(offset_rotation);
+            cfg.busShared = true;
+            cfg.offsetRotation = static_cast<uint8_t>(offsetRotation);
             t->config(cfg);
             touch = t;
-            DEKI_LOG_INFO("LGFXTouchPanel: GT911 on I2C port %d (SDA=%d SCL=%d freq=%d)", (int)i2c_port, bus_sda, bus_scl, bus_freq);
+            DEKI_LOG_INFO("LGFXTouchPanel: GT911 on I2C port %d (SDA=%d SCL=%d freq=%d)", (int)i2cPort, bus_sda, bus_scl, bus_freq);
             break;
         }
         case TouchDriverType::CST816S:
         {
             auto* t = new lgfx::Touch_CST816S();
             auto cfg = t->config();
-            cfg.x_min = x_min;
-            cfg.x_max = x_max;
-            cfg.y_min = y_min;
-            cfg.y_max = y_max;
+            cfg.xMin = xMin;
+            cfg.xMax = xMax;
+            cfg.yMin = yMin;
+            cfg.yMax = yMax;
             cfg.m_PinInt = m_PinInt;
-            cfg.pin_rst = pin_rst;
+            cfg.pinRst = pinRst;
             cfg.pin_sda = bus_sda;
             cfg.pin_scl = bus_scl;
             cfg.i2c_addr = 0x15;
-            cfg.i2c_port = i2c_port;
+            cfg.i2cPort = i2cPort;
             cfg.freq = bus_freq;
-            cfg.bus_shared = true;
-            cfg.offset_rotation = static_cast<uint8_t>(offset_rotation);
+            cfg.busShared = true;
+            cfg.offsetRotation = static_cast<uint8_t>(offsetRotation);
             t->config(cfg);
             touch = t;
-            DEKI_LOG_INFO("LGFXTouchPanel: CST816S on I2C port %d (SDA=%d SCL=%d freq=%d)", (int)i2c_port, bus_sda, bus_scl, bus_freq);
+            DEKI_LOG_INFO("LGFXTouchPanel: CST816S on I2C port %d (SDA=%d SCL=%d freq=%d)", (int)i2cPort, bus_sda, bus_scl, bus_freq);
             break;
         }
         case TouchDriverType::XPT2046:
         {
             auto* t = new lgfx::Touch_XPT2046();
             auto cfg = t->config();
-            cfg.x_min = x_min;
-            cfg.x_max = x_max;
-            cfg.y_min = y_min;
-            cfg.y_max = y_max;
+            cfg.xMin = xMin;
+            cfg.xMax = xMax;
+            cfg.yMin = yMin;
+            cfg.yMax = yMax;
             cfg.m_PinInt = m_PinInt;
-            cfg.pin_rst = pin_rst;
-            cfg.pin_cs = spi_cs;
-            cfg.pin_mosi = spi_mosi;
-            cfg.pin_miso = spi_miso;
-            cfg.pin_sclk = spi_clk;
-            cfg.bus_shared = bus_shared;
-            cfg.offset_rotation = static_cast<uint8_t>(offset_rotation);
+            cfg.pinRst = pinRst;
+            cfg.pinCs = spiCs;
+            cfg.pin_mosi = spiMosi;
+            cfg.pin_miso = spiMiso;
+            cfg.pin_sclk = spiClk;
+            cfg.busShared = busShared;
+            cfg.offsetRotation = static_cast<uint8_t>(offsetRotation);
             t->config(cfg);
             touch = t;
             DEKI_LOG_INFO("LGFXTouchPanel: Using XPT2046 driver (SPI)");

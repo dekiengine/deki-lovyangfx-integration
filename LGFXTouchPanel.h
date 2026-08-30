@@ -59,32 +59,32 @@ public:
     DEKI_TOOLTIP("I2C bus port (must match an I2CBusComponent in the boot scene)")
     DEKI_VISIBLE_WHEN(driverType, FT5x06, GT911, CST816S)
     DEKI_RANGE(0, 3)
-    int32_t i2c_port = 0;
+    int32_t i2cPort = 0;
 
     DEKI_GROUP("Pins")
     DEKI_EXPORT
     DEKI_TOOLTIP("SPI chip select pin (-1 = not used)")
     DEKI_VISIBLE_WHEN(driverType, XPT2046)
     DEKI_RANGE(-1, 48)
-    int32_t spi_cs = -1;
+    int32_t spiCs = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("SPI MOSI pin (-1 = not used)")
     DEKI_VISIBLE_WHEN(driverType, XPT2046)
     DEKI_RANGE(-1, 48)
-    int32_t spi_mosi = -1;
+    int32_t spiMosi = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("SPI MISO pin (-1 = not used)")
     DEKI_VISIBLE_WHEN(driverType, XPT2046)
     DEKI_RANGE(-1, 48)
-    int32_t spi_miso = -1;
+    int32_t spiMiso = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("SPI clock pin (-1 = not used)")
     DEKI_VISIBLE_WHEN(driverType, XPT2046)
     DEKI_RANGE(-1, 48)
-    int32_t spi_clk = -1;
+    int32_t spiClk = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Interrupt pin for touch events (-1 = polling mode)")
@@ -94,37 +94,37 @@ public:
     DEKI_EXPORT
     DEKI_TOOLTIP("Reset pin for touch controller (-1 = not connected)")
     DEKI_RANGE(-1, 48)
-    int32_t pin_rst = -1;
+    int32_t pinRst = -1;
 
     // ========== Touch Panel Bounds ==========
 
     DEKI_GROUP("Touch Panel Bounds")
     DEKI_EXPORT
     DEKI_TOOLTIP("Minimum raw X value from touch controller")
-    int32_t x_min = 0;
+    int32_t xMin = 0;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Maximum raw X value from touch controller")
-    int32_t x_max = 239;
+    int32_t xMax = 239;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Minimum raw Y value from touch controller")
-    int32_t y_min = 0;
+    int32_t yMin = 0;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Maximum raw Y value from touch controller")
-    int32_t y_max = 319;
+    int32_t yMax = 319;
 
     // ========== Advanced ==========
 
     DEKI_GROUP("Advanced")
     DEKI_EXPORT
     DEKI_TOOLTIP("Touch coordinate rotation, must match display rotation")
-    TouchRotation offset_rotation = TouchRotation::None;
+    TouchRotation offsetRotation = TouchRotation::None;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Enable if touch shares the SPI bus with the display")
-    bool bus_shared = false;
+    bool busShared = false;
 
     // ========== SetupComponent Implementation ==========
 

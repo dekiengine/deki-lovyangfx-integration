@@ -116,7 +116,7 @@ bool LovyanGFXDisplay::InitializeWithDevice(lgfx::LGFX_Device* device, int32_t w
     m_DmaInFlight = false;
 
     initialized = true;
-    DEKI_LOG_INTERNAL("LovyanGFX display initialized %dx%d (psram=%d, double_buffer=%d)",
+    DEKI_LOG_INTERNAL("LovyanGFX display initialized %dx%d (psram=%d, doubleBuffer=%d)",
                    width, height, usePSRAM ? 1 : 0, m_DoubleBuffer ? 1 : 0);
 
     return true;
@@ -191,7 +191,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
     static int present_count = 0;
     if (present_count == 0)
     {
-        DEKI_LOG_INTERNAL("LovyanGFX First Present: fmt=%d size=%dx%d overlay=%s double_buffer=%d psram=%d passthrough=%d",
+        DEKI_LOG_INTERNAL("LovyanGFX First Present: fmt=%d size=%dx%d overlay=%s doubleBuffer=%d psram=%d passthrough=%d",
                      format, width, height,
                      (m_ActiveOverlay && m_ActiveOverlay->buffer) ? "YES" : "NO",
                      m_DoubleBuffer ? 1 : 0, m_UsePSRAM ? 1 : 0, passthrough ? 1 : 0);

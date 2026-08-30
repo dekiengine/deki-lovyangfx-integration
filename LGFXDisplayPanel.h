@@ -68,12 +68,12 @@ public:
     DEKI_EXPORT
     DEKI_TOOLTIP("Display width in pixels")
     DEKI_RANGE(1, 1024)
-    int32_t panel_width = 320;
+    int32_t panelWidth = 320;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Display height in pixels")
     DEKI_RANGE(1, 1024)
-    int32_t panel_height = 240;
+    int32_t panelHeight = 240;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Display rotation")
@@ -81,19 +81,19 @@ public:
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Pixel offset X (for panels with non-zero origin)")
-    int32_t offset_x = 0;
+    int32_t offsetX = 0;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Pixel offset Y (for panels with non-zero origin)")
-    int32_t offset_y = 0;
+    int32_t offsetY = 0;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Invert display colors")
-    bool invert_color = false;
+    bool invertColor = false;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Swap R and B color channels (RGB vs BGR)")
-    bool rgb_order = false;
+    bool rgbOrder = false;
 
     // ========== Bus ==========
 
@@ -108,109 +108,109 @@ public:
     DEKI_TOOLTIP("SPI MOSI pin")
     DEKI_VISIBLE_WHEN(busType, SPI)
     DEKI_RANGE(-1, 48)
-    int32_t spi_mosi = -1;
+    int32_t spiMosi = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("SPI MISO pin (-1 = not used)")
     DEKI_VISIBLE_WHEN(busType, SPI)
     DEKI_RANGE(-1, 48)
-    int32_t spi_miso = -1;
+    int32_t spiMiso = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("SPI clock pin")
     DEKI_VISIBLE_WHEN(busType, SPI)
     DEKI_RANGE(-1, 48)
-    int32_t spi_clk = -1;
+    int32_t spiClk = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("SPI data/command pin")
     DEKI_VISIBLE_WHEN(busType, SPI)
     DEKI_RANGE(-1, 48)
-    int32_t spi_dc = -1;
+    int32_t spiDc = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("SPI host (0=VSPI, 1=HSPI)")
     DEKI_VISIBLE_WHEN(busType, SPI)
     DEKI_RANGE(0, 1)
-    int32_t spi_host = 0;
+    int32_t spiHost = 0;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("SPI write frequency in Hz")
     DEKI_VISIBLE_WHEN(busType, SPI)
-    int32_t spi_freq_write = 40000000;
+    int32_t spiFreqWrite = 40000000;
 
     // --- Parallel Bus Pins (8-bit and 16-bit) ---
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Parallel bus write frequency in Hz")
     DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
-    int32_t par_freq_write = 40000000;
+    int32_t parFreqWrite = 40000000;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Register select / data-command pin (RS/DC)")
     DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
     DEKI_RANGE(-1, 48)
-    int32_t rs_pin = -1;
+    int32_t rsPin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Parallel bus write strobe pin")
     DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
     DEKI_RANGE(-1, 48)
-    int32_t wr_pin = -1;
+    int32_t wrPin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Parallel bus read strobe pin (-1 = not used)")
     DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
     DEKI_RANGE(-1, 48)
-    int32_t rd_pin = -1;
+    int32_t rdPin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Parallel data pin D0")
     DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
     DEKI_RANGE(-1, 48)
-    int32_t d0_pin = -1;
+    int32_t d0Pin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Parallel data pin D1")
     DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
     DEKI_RANGE(-1, 48)
-    int32_t d1_pin = -1;
+    int32_t d1Pin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Parallel data pin D2")
     DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
     DEKI_RANGE(-1, 48)
-    int32_t d2_pin = -1;
+    int32_t d2Pin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Parallel data pin D3")
     DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
     DEKI_RANGE(-1, 48)
-    int32_t d3_pin = -1;
+    int32_t d3Pin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Parallel data pin D4")
     DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
     DEKI_RANGE(-1, 48)
-    int32_t d4_pin = -1;
+    int32_t d4Pin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Parallel data pin D5")
     DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
     DEKI_RANGE(-1, 48)
-    int32_t d5_pin = -1;
+    int32_t d5Pin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Parallel data pin D6")
     DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
     DEKI_RANGE(-1, 48)
-    int32_t d6_pin = -1;
+    int32_t d6Pin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Parallel data pin D7")
     DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
     DEKI_RANGE(-1, 48)
-    int32_t d7_pin = -1;
+    int32_t d7Pin = -1;
 
     // --- 16-bit only data pins ---
 
@@ -218,49 +218,49 @@ public:
     DEKI_TOOLTIP("Parallel data pin D8")
     DEKI_VISIBLE_WHEN(busType, Parallel16bit)
     DEKI_RANGE(-1, 48)
-    int32_t d8_pin = -1;
+    int32_t d8Pin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Parallel data pin D9")
     DEKI_VISIBLE_WHEN(busType, Parallel16bit)
     DEKI_RANGE(-1, 48)
-    int32_t d9_pin = -1;
+    int32_t d9Pin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Parallel data pin D10")
     DEKI_VISIBLE_WHEN(busType, Parallel16bit)
     DEKI_RANGE(-1, 48)
-    int32_t d10_pin = -1;
+    int32_t d10Pin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Parallel data pin D11")
     DEKI_VISIBLE_WHEN(busType, Parallel16bit)
     DEKI_RANGE(-1, 48)
-    int32_t d11_pin = -1;
+    int32_t d11Pin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Parallel data pin D12")
     DEKI_VISIBLE_WHEN(busType, Parallel16bit)
     DEKI_RANGE(-1, 48)
-    int32_t d12_pin = -1;
+    int32_t d12Pin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Parallel data pin D13")
     DEKI_VISIBLE_WHEN(busType, Parallel16bit)
     DEKI_RANGE(-1, 48)
-    int32_t d13_pin = -1;
+    int32_t d13Pin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Parallel data pin D14")
     DEKI_VISIBLE_WHEN(busType, Parallel16bit)
     DEKI_RANGE(-1, 48)
-    int32_t d14_pin = -1;
+    int32_t d14Pin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Parallel data pin D15")
     DEKI_VISIBLE_WHEN(busType, Parallel16bit)
     DEKI_RANGE(-1, 48)
-    int32_t d15_pin = -1;
+    int32_t d15Pin = -1;
 
     // ========== Control Pins ==========
 
@@ -268,12 +268,12 @@ public:
     DEKI_EXPORT
     DEKI_TOOLTIP("Chip select pin (-1 = not used)")
     DEKI_RANGE(-1, 48)
-    int32_t pin_cs = -1;
+    int32_t pinCs = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Reset pin (-1 = not connected)")
     DEKI_RANGE(-1, 48)
-    int32_t pin_rst = -1;
+    int32_t pinRst = -1;
 
     // ========== Backlight ==========
 
@@ -281,41 +281,41 @@ public:
     DEKI_EXPORT
     DEKI_TOOLTIP("Backlight pin (-1 = none)")
     DEKI_RANGE(-1, 48)
-    int32_t bl_pin = -1;
+    int32_t blPin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("PWM channel for backlight")
     DEKI_RANGE(0, 15)
-    int32_t bl_pwm_channel = 0;
+    int32_t blPwmChannel = 0;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Invert backlight signal (active low)")
-    bool bl_invert = false;
+    bool blInvert = false;
 
     // ========== Advanced ==========
 
     DEKI_GROUP("Advanced")
     DEKI_EXPORT
     DEKI_TOOLTIP("Swap RGB565 byte order for display transfer")
-    bool swap_bytes = false;
+    bool swapBytes = false;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Panel memory width (may differ from visible width)")
     DEKI_RANGE(1, 1024)
-    int32_t memory_width = 320;
+    int32_t memoryWidth = 320;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Panel memory height (may differ from visible height)")
     DEKI_RANGE(1, 1024)
-    int32_t memory_height = 240;
+    int32_t memoryHeight = 240;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Allocate display buffers in PSRAM instead of internal RAM")
-    bool use_psram = false;
+    bool usePsram = false;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Use double buffering for async DMA (overlaps render and display transfer)")
-    bool double_buffer = false;
+    bool doubleBuffer = false;
 
     // ========== SetupComponent Implementation ==========
 
