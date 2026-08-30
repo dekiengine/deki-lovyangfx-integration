@@ -3,7 +3,7 @@
 #include <cstdint>
 #include "SetupComponent.h"
 #include "reflection/DekiProperty.h"
-#include "LovyanGFXModule.h"
+#include "LovyanGFXPackage.h"
 
 enum class TouchDriverType : uint8_t
 {

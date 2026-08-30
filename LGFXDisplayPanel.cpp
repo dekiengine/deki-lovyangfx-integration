@@ -18,7 +18,7 @@ lgfx::LGFX_Device* LGFXDisplayPanel::GetLGFXDevice()
 #include "esp_log.h"
 static const char* TAG = "LGFXDisplay";
 
-// Module owns the LovyanGFXDisplay lifetime now. File-scope unique_ptr keeps
+// Package owns the LovyanGFXDisplay lifetime now. File-scope unique_ptr keeps
 // it alive for the program's lifetime.
 static std::unique_ptr<LovyanGFXDisplay> s_LovyanGFXDisplay;
 

@@ -1,6 +1,6 @@
 /**
- * @file LovyanGFXModule.cpp
- * @brief Module entry point for deki-lovyangfx DLL
+ * @file LovyanGFXPackage.cpp
+ * @brief Package entry point for deki-lovyangfx DLL
  *
  * This file exports the standard Deki plugin interface so the editor
  * can load deki-lovyangfx.dll and discover available LovyanGFX components.
@@ -9,9 +9,9 @@
  * must be called from the main executable to trigger the static initializers.
  */
 
-#include "LovyanGFXModule.h"
+#include "LovyanGFXPackage.h"
 #include "interop/DekiPlugin.h"
-#include "DekiModuleFeatureMeta.h"
+#include "DekiPackageFeatureMeta.h"
 #include "LGFXDisplayPanel.h"
 #include "LGFXTouchPanel.h"
 #include "reflection/ComponentRegistry.h"
@@ -30,12 +30,12 @@ static bool s_LovyanGFXRegistered = false;
 extern "C" {
 
 /**
- * @brief Ensure deki-lovyangfx module is loaded and components are registered
+ * @brief Ensure deki-lovyangfx package is loaded and components are registered
  *
  * Call this from the editor at startup. Simply calling this function is enough
  * to force the linker to include the DLL and trigger static initializers.
  *
- * @return Number of components registered by this module
+ * @return Number of components registered by this package
  */
 DEKI_LOVYANGFX_API int DekiLovyanGFX_EnsureRegistered(void)
 {
@@ -55,13 +55,13 @@ DEKI_LOVYANGFX_API int DekiLovyanGFX_EnsureRegistered(void)
 
 DEKI_PLUGIN_API const char* DekiPlugin_GetName(void)
 {
-    return "Deki LovyanGFX Module";
+    return "Deki LovyanGFX Package";
 }
 
 DEKI_PLUGIN_API const char* DekiPlugin_GetVersion(void)
 {
-#ifdef DEKI_MODULE_VERSION
-    return DEKI_MODULE_VERSION;
+#ifdef DEKI_PACKAGE_VERSION
+    return DEKI_PACKAGE_VERSION;
 #else
     return "0.0.0-dev";
 #endif
@@ -98,10 +98,10 @@ DEKI_PLUGIN_API void DekiPlugin_RegisterComponents(void)
 }
 
 // =============================================================================
-// Module Feature API
+// Package Feature API
 // =============================================================================
 
-static const DekiModuleFeatureInfo s_Features[] = {
+static const DekiPackageFeatureInfo s_Features[] = {
     {"display", "Display Panel", "Configure LovyanGFX display hardware", false},
     {"touch", "Touch Panel", "Enable LovyanGFX touch panel support", false},
 };
@@ -111,7 +111,7 @@ DEKI_PLUGIN_API int DekiPlugin_GetFeatureCount(void)
     return sizeof(s_Features) / sizeof(s_Features[0]);
 }
 
-DEKI_PLUGIN_API const DekiModuleFeatureInfo* DekiPlugin_GetFeature(int index)
+DEKI_PLUGIN_API const DekiPackageFeatureInfo* DekiPlugin_GetFeature(int index)
 {
     if (index < 0 || index >= DekiPlugin_GetFeatureCount())
         return nullptr;
@@ -119,7 +119,7 @@ DEKI_PLUGIN_API const DekiModuleFeatureInfo* DekiPlugin_GetFeature(int index)
 }
 
 // =============================================================================
-// Module-specific feature API (for linked DLL access without name conflicts)
+// Package-specific feature API (for linked DLL access without name conflicts)
 // =============================================================================
 
 DEKI_LOVYANGFX_API const char* DekiLovyanGFX_GetName(void)
@@ -132,7 +132,7 @@ DEKI_LOVYANGFX_API int DekiLovyanGFX_GetFeatureCount(void)
     return DekiPlugin_GetFeatureCount();
 }
 
-DEKI_LOVYANGFX_API const DekiModuleFeatureInfo* DekiLovyanGFX_GetFeature(int index)
+DEKI_LOVYANGFX_API const DekiPackageFeatureInfo* DekiLovyanGFX_GetFeature(int index)
 {
     return DekiPlugin_GetFeature(index);
 }

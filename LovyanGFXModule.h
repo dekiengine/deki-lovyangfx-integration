@@ -1,10 +1,10 @@
 #pragma once
 
 /**
- * @file LovyanGFXModule.h
- * @brief Central header for the Deki LovyanGFX Module
+ * @file LovyanGFXPackage.h
+ * @brief Central header for the Deki LovyanGFX Package
  *
- * This module provides LovyanGFX-specific components:
+ * This package provides LovyanGFX-specific components:
  * - Display panel configuration (SPI/Parallel bus, panel type, backlight)
  * - Touch panel configuration (capacitive/resistive)
  */

@@ -3,7 +3,7 @@
 #include <cstdint>
 #include "SetupComponent.h"
 #include "reflection/DekiProperty.h"
-#include "LovyanGFXModule.h"
+#include "LovyanGFXPackage.h"
 
 // Forward declaration (must match LovyanGFX's inline namespace)
 namespace lgfx { inline namespace v1 { class LGFX_Device; } }

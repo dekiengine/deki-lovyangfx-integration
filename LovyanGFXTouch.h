@@ -9,7 +9,7 @@
 namespace lgfx { inline namespace v1 { class LGFX_Device; } }
 
 /**
- * @brief LovyanGFX Touch input module
+ * @brief LovyanGFX Touch input package
  *
  * Implements IDekiInput interface using LovyanGFX's built-in touch support.
  * Works with any touch controller supported by LovyanGFX (XPT2046, FT5x06, etc.).
