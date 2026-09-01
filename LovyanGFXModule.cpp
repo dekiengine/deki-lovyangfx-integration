@@ -11,7 +11,6 @@
 
 #include "LovyanGFXPackage.h"
 #include "interop/DekiPlugin.h"
-#include "DekiPackageFeatureMeta.h"
 #include "LGFXDisplayPanel.h"
 #include "LGFXTouchPanel.h"
 #include "reflection/ComponentRegistry.h"
@@ -67,11 +66,6 @@ DEKI_PLUGIN_API const char* DekiPlugin_GetVersion(void)
 #endif
 }
 
-DEKI_PLUGIN_API const char* DekiPlugin_GetReflectionJson(void)
-{
-    return "{}";
-}
-
 DEKI_PLUGIN_API int DekiPlugin_Init(void)
 {
     return 0;
@@ -98,43 +92,12 @@ DEKI_PLUGIN_API void DekiPlugin_RegisterComponents(void)
 }
 
 // =============================================================================
-// Package Feature API
-// =============================================================================
-
-static const DekiPackageFeatureInfo s_Features[] = {
-    {"display", "Display Panel", "Configure LovyanGFX display hardware", false},
-    {"touch", "Touch Panel", "Enable LovyanGFX touch panel support", false},
-};
-
-DEKI_PLUGIN_API int DekiPlugin_GetFeatureCount(void)
-{
-    return sizeof(s_Features) / sizeof(s_Features[0]);
-}
-
-DEKI_PLUGIN_API const DekiPackageFeatureInfo* DekiPlugin_GetFeature(int index)
-{
-    if (index < 0 || index >= DekiPlugin_GetFeatureCount())
-        return nullptr;
-    return &s_Features[index];
-}
-
-// =============================================================================
 // Package-specific feature API (for linked DLL access without name conflicts)
 // =============================================================================
 
 DEKI_LOVYANGFX_API const char* DekiLovyanGFX_GetName(void)
 {
     return "LovyanGFX";
-}
-
-DEKI_LOVYANGFX_API int DekiLovyanGFX_GetFeatureCount(void)
-{
-    return DekiPlugin_GetFeatureCount();
-}
-
-DEKI_LOVYANGFX_API const DekiPackageFeatureInfo* DekiLovyanGFX_GetFeature(int index)
-{
-    return DekiPlugin_GetFeature(index);
 }
 
 } // extern "C"
