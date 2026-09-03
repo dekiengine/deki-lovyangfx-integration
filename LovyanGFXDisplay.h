@@ -5,6 +5,8 @@
 #include "providers/IDekiDisplay.h"
 
 // Forward declaration (must match LovyanGFX's inline namespace)
+#include <vector>
+
 namespace lgfx { inline namespace v1 { class LGFX_Device; } }
 
 /**
@@ -39,6 +41,16 @@ class LovyanGFXDisplay : public IDekiDisplay
     };
     UIOverlay* m_ActiveOverlay;
 
+    // Partial present: rows are pushed through two small DMA-capable staging
+    // bands (converted to RGB565 and byte-swapped for the panel there, so the
+    // engine's framebuffer is never mutated). Rows per band is a policy:
+    // larger bands mean fewer pushes and width * rows * 4 bytes of internal
+    // RAM for the pair.
+    static constexpr int kBandRows = 8;
+    uint16_t* m_Band[2] = { nullptr, nullptr };
+    int m_BandIndex = 0;
+    std::vector<DekiRect> m_BandScratch;
+
    public:
     LovyanGFXDisplay();
     virtual ~LovyanGFXDisplay();
@@ -51,6 +63,9 @@ class LovyanGFXDisplay : public IDekiDisplay
     bool Initialize(int32_t width, int32_t height) override;
     void Shutdown() override;
     void Present(const uint8_t* framebuffer, int width, int height, int format) override;
+    bool SupportsPartialPresent() const override;
+    void PresentRegions(const uint8_t* framebuffer, int width, int height, int format,
+                        const DekiRect* rects, int32_t count) override;
     void GetDisplaySize(int32_t* width, int32_t* height) const override;
     bool IsInitialized() const override;
     void RequestFullRefresh() override;
@@ -75,4 +90,10 @@ class LovyanGFXDisplay : public IDekiDisplay
 
    private:
     void ConvertAndRenderFramebuffer(const uint8_t* framebuffer, int width, int height, int format);
+    bool EnsureBands();
+    void FreeBands();
+    // Convert rows [y0, y1) of the framebuffer into staging bands and push them.
+    void PushRows(const uint8_t* framebuffer, int width, int height, int format, int y0, int y1);
+    // Flip the render buffer (double buffering) / wait for DMA (single).
+    void FinishPresent();
 };

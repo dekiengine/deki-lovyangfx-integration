@@ -1,6 +1,7 @@
 #include "LovyanGFXDisplay.h"
 
 #ifdef ESP32
+#include <algorithm>
 #include <cstring>
 
 #include "DekiLogSystem.h"
@@ -155,6 +156,7 @@ void LovyanGFXDisplay::Shutdown()
             buffers[i] = nullptr;
         }
     }
+    FreeBands();
     m_BufferPixelCount = 0;
     DEKI_LOG_INTERNAL("LovyanGFX: Freed display buffers");
 
@@ -169,6 +171,181 @@ void LovyanGFXDisplay::Present(const uint8_t* framebuffer, int width, int height
     }
 
     ConvertAndRenderFramebuffer(framebuffer, width, height, format);
+}
+
+bool LovyanGFXDisplay::SupportsPartialPresent() const
+{
+    return true;
+}
+
+// ---- Partial present ------------------------------------------------------
+// UNTESTED ON HARDWARE (September 2026): written against the LovyanGFX API
+// used by the full path above (pushImage / startWrite / endWrite / waitDMA)
+// and compile-checked only. Please run a scene with dirty-rect tracking on and
+// report.
+
+bool LovyanGFXDisplay::EnsureBands()
+{
+    if (m_Band[0] && m_Band[1])
+        return true;
+    const size_t bytes = static_cast<size_t>(m_DisplayWidth) * kBandRows * sizeof(uint16_t);
+    for (int i = 0; i < 2; ++i)
+    {
+        if (m_Band[i]) continue;
+        m_Band[i] = static_cast<uint16_t*>(heap_caps_malloc(bytes, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL));
+        if (!m_Band[i])
+        {
+            DEKI_LOG_ERROR("LovyanGFX: cannot allocate a %zu-byte staging band; partial present off", bytes);
+            FreeBands();
+            return false;
+        }
+    }
+    return true;
+}
+
+void LovyanGFXDisplay::FreeBands()
+{
+    for (int i = 0; i < 2; ++i)
+    {
+        if (m_Band[i]) heap_caps_free(m_Band[i]);
+        m_Band[i] = nullptr;
+    }
+}
+
+static inline uint16_t SwapBytes16(uint16_t v)
+{
+    return static_cast<uint16_t>((v >> 8) | (v << 8));
+}
+
+void LovyanGFXDisplay::PushRows(const uint8_t* framebuffer, int width, int height, int format, int y0, int y1)
+{
+    if (!EnsureBands()) return;
+    const int w = (width < m_DisplayWidth) ? width : m_DisplayWidth;
+    y0 = y0 < 0 ? 0 : y0;
+    y1 = y1 > height ? height : y1;
+    y1 = y1 > m_DisplayHeight ? m_DisplayHeight : y1;
+
+    for (int y = y0; y < y1; y += kBandRows)
+    {
+        const int rows = (y1 - y < kBandRows) ? (y1 - y) : kBandRows;
+        uint16_t* band = m_Band[m_BandIndex];
+
+        // The band we are about to fill may still be read by the DMA of the
+        // push before last. waitDMA waits for every transfer, which costs
+        // the overlap between conversion and transfer; correct first.
+        if (m_DmaInFlight)
+        {
+            tft->waitDMA();
+            m_DmaInFlight = false;
+        }
+
+        for (int i = 0; i < rows; ++i)
+        {
+            uint16_t* dst = band + static_cast<size_t>(i) * w;
+            const int sy = y + i;
+            if (format == 0)  // RGB565
+            {
+                const uint16_t* src = reinterpret_cast<const uint16_t*>(framebuffer) + static_cast<size_t>(sy) * width;
+                if (m_SwapBytes)
+                    for (int x = 0; x < w; ++x) dst[x] = SwapBytes16(src[x]);
+                else
+                    memcpy(dst, src, static_cast<size_t>(w) * sizeof(uint16_t));
+            }
+            else if (format == 2)  // ARGB8888
+            {
+                const uint32_t* src = reinterpret_cast<const uint32_t*>(framebuffer) + static_cast<size_t>(sy) * width;
+                for (int x = 0; x < w; ++x)
+                {
+                    const uint32_t p = src[x];
+                    const uint16_t v = static_cast<uint16_t>((((p >> 16) & 0xF8) << 8) | (((p >> 8) & 0xFC) << 3) | ((p & 0xFF) >> 3));
+                    dst[x] = m_SwapBytes ? SwapBytes16(v) : v;
+                }
+            }
+            else if (format == 1)  // RGB888
+            {
+                const uint8_t* src = framebuffer + static_cast<size_t>(sy) * width * 3;
+                for (int x = 0; x < w; ++x)
+                {
+                    const uint16_t v = static_cast<uint16_t>(((src[x * 3] & 0xF8) << 8) | ((src[x * 3 + 1] & 0xFC) << 3) | (src[x * 3 + 2] >> 3));
+                    dst[x] = m_SwapBytes ? SwapBytes16(v) : v;
+                }
+            }
+            else
+            {
+                memset(dst, 0, static_cast<size_t>(w) * sizeof(uint16_t));
+            }
+        }
+
+        tft->startWrite();
+        tft->pushImage(0, y, w, rows, band);
+        tft->endWrite();
+        m_DmaInFlight = true;
+        m_BandIndex = 1 - m_BandIndex;
+    }
+}
+
+void LovyanGFXDisplay::FinishPresent()
+{
+    if (m_DoubleBuffer)
+    {
+        // The engine renders the next frame into the other buffer while the
+        // last band's DMA finishes (the bands are private, so this is safe
+        // even in direct-render mode).
+        m_RenderIndex = 1 - m_RenderIndex;
+    }
+    else if (m_DmaInFlight)
+    {
+        tft->waitDMA();
+        m_DmaInFlight = false;
+    }
+}
+
+void LovyanGFXDisplay::PresentRegions(const uint8_t* framebuffer, int width, int height, int format,
+                                      const DekiRect* rects, int32_t count)
+{
+    if (!initialized || !framebuffer)
+        return;
+    if (count == 0)
+        return;  // nothing changed on the panel
+
+    // The overlay is composited over the whole frame by the full path.
+    if (m_ActiveOverlay && m_ActiveOverlay->buffer)
+    {
+        Present(framebuffer, width, height, format);
+        return;
+    }
+
+    // pushImage takes a packed rectangle and the framebuffer's rows are only
+    // contiguous at full width, so rectangles collapse to row bands.
+    m_BandScratch.clear();
+    for (int32_t i = 0; i < count; ++i)
+    {
+        const DekiRect& r = rects[i];
+        if (r.Empty()) continue;
+        m_BandScratch.push_back(DekiRect{ 0, r.top, width, r.bottom });
+    }
+    std::sort(m_BandScratch.begin(), m_BandScratch.end(),
+              [](const DekiRect& a, const DekiRect& b) { return a.top < b.top; });
+
+    size_t out = 0;
+    for (size_t i = 0; i < m_BandScratch.size(); ++i)
+    {
+        if (out > 0 && m_BandScratch[i].top <= m_BandScratch[out - 1].bottom)
+        {
+            if (m_BandScratch[i].bottom > m_BandScratch[out - 1].bottom)
+                m_BandScratch[out - 1].bottom = m_BandScratch[i].bottom;
+        }
+        else
+        {
+            m_BandScratch[out++] = m_BandScratch[i];
+        }
+    }
+    m_BandScratch.resize(out);
+
+    for (const DekiRect& band : m_BandScratch)
+        PushRows(framebuffer, width, height, format, band.top, band.bottom);
+
+    FinishPresent();
 }
 
 void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, int width, int height, int format)
@@ -206,6 +383,18 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
         if (present_count == 1)
         {
             DEKI_LOG_INTERNAL("LovyanGFX: Direct render buffer — skipping memcpy");
+        }
+
+        // A direct or passthrough buffer belongs to the engine: it renders
+        // into it and blends against its contents next frame, so the byte
+        // swap for big-endian panels must not happen in place (it used to,
+        // which only worked because every pixel was redrawn every frame).
+        // Push through the staging bands, which swap while copying.
+        if (m_SwapBytes && !(m_ActiveOverlay && m_ActiveOverlay->buffer))
+        {
+            PushRows(framebuffer, width, height, format, 0, height);
+            FinishPresent();
+            return;
         }
     }
 
@@ -710,6 +899,12 @@ bool LovyanGFXDisplay::InitializeWithDevice(lgfx::LGFX_Device*, int32_t, int32_t
 bool LovyanGFXDisplay::Initialize(int32_t width, int32_t height) { return false; }
 void LovyanGFXDisplay::Shutdown() {}
 void LovyanGFXDisplay::Present(const uint8_t* framebuffer, int width, int height, int format) {}
+bool LovyanGFXDisplay::SupportsPartialPresent() const { return false; }
+void LovyanGFXDisplay::PresentRegions(const uint8_t*, int, int, int, const DekiRect*, int32_t) {}
+bool LovyanGFXDisplay::EnsureBands() { return false; }
+void LovyanGFXDisplay::FreeBands() {}
+void LovyanGFXDisplay::PushRows(const uint8_t*, int, int, int, int, int) {}
+void LovyanGFXDisplay::FinishPresent() {}
 void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, int width, int height, int format) {}
 void LovyanGFXDisplay::GetDisplaySize(int32_t* width, int32_t* height) const {}
 bool LovyanGFXDisplay::IsInitialized() const { return false; }
