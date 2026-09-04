@@ -2,7 +2,7 @@
 
 LovyanGFX display and touch panel driver integration for the Deki Engine.
 
-Part of the [Deki Engine](https://github.com/ATeam-Dekiru/deki-engine) package ecosystem.
+Part of the [Deki Engine](https://github.com/dekiengine/deki-engine) package ecosystem.
 
 ## Installation
 
