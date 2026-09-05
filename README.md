@@ -1,5 +1,7 @@
 # Deki LovyanGFX Integration
 
+Documentation: https://dekiengine.github.io/deki-lovyangfx-integration/ (components and properties, generated from the code)
+
 LovyanGFX display and touch panel driver integration for the Deki Engine.
 
 Part of the [Deki Engine](https://github.com/dekiengine/deki-engine) package ecosystem.
