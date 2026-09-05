@@ -12,10 +12,10 @@ namespace lgfx { inline namespace v1 { class LGFX_Device; } }
 /**
  * @brief LovyanGFX implementation of display interface
  *
- * Wraps a pre-configured lgfx::LGFX_Device to implement IDekiDisplay.
+ * Wraps a pre-configured lgfx::LGFX_Device to implement Deki::IDisplay.
  * The LGFX device is created and configured by LGFXDisplayPanel component.
  */
-class LovyanGFXDisplay : public IDekiDisplay
+class LovyanGFXDisplay : public Deki::IDisplay
 {
    private:
     lgfx::LGFX_Device* tft;
@@ -49,7 +49,7 @@ class LovyanGFXDisplay : public IDekiDisplay
     static constexpr int kBandRows = 8;
     uint16_t* m_Band[2] = { nullptr, nullptr };
     int m_BandIndex = 0;
-    std::vector<DekiRect> m_BandScratch;
+    std::vector<Deki::Rect> m_BandScratch;
 
    public:
     LovyanGFXDisplay();
@@ -65,7 +65,7 @@ class LovyanGFXDisplay : public IDekiDisplay
     void Present(const uint8_t* framebuffer, int width, int height, int format) override;
     bool SupportsPartialPresent() const override;
     void PresentRegions(const uint8_t* framebuffer, int width, int height, int format,
-                        const DekiRect* rects, int32_t count) override;
+                        const Deki::Rect* rects, int32_t count) override;
     void GetDisplaySize(int32_t* width, int32_t* height) const override;
     bool IsInitialized() const override;
     void RequestFullRefresh() override;

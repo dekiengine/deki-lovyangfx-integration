@@ -301,7 +301,7 @@ void LovyanGFXDisplay::FinishPresent()
 }
 
 void LovyanGFXDisplay::PresentRegions(const uint8_t* framebuffer, int width, int height, int format,
-                                      const DekiRect* rects, int32_t count)
+                                      const Deki::Rect* rects, int32_t count)
 {
     if (!initialized || !framebuffer)
         return;
@@ -320,12 +320,12 @@ void LovyanGFXDisplay::PresentRegions(const uint8_t* framebuffer, int width, int
     m_BandScratch.clear();
     for (int32_t i = 0; i < count; ++i)
     {
-        const DekiRect& r = rects[i];
+        const Deki::Rect& r = rects[i];
         if (r.Empty()) continue;
-        m_BandScratch.push_back(DekiRect{ 0, r.top, width, r.bottom });
+        m_BandScratch.push_back(Deki::Rect{ 0, r.top, width, r.bottom });
     }
     std::sort(m_BandScratch.begin(), m_BandScratch.end(),
-              [](const DekiRect& a, const DekiRect& b) { return a.top < b.top; });
+              [](const Deki::Rect& a, const Deki::Rect& b) { return a.top < b.top; });
 
     size_t out = 0;
     for (size_t i = 0; i < m_BandScratch.size(); ++i)
@@ -342,7 +342,7 @@ void LovyanGFXDisplay::PresentRegions(const uint8_t* framebuffer, int width, int
     }
     m_BandScratch.resize(out);
 
-    for (const DekiRect& band : m_BandScratch)
+    for (const Deki::Rect& band : m_BandScratch)
         PushRows(framebuffer, width, height, format, band.top, band.bottom);
 
     FinishPresent();
@@ -767,7 +767,7 @@ void* LovyanGFXDisplay::CreateUIOverlay(int32_t width, int32_t height)
     overlay->height = height;
 
     size_t buffer_size = width * height * sizeof(uint32_t);
-    overlay->buffer = (uint32_t*)DekiMemory::Allocate(buffer_size, true, "UIOverlay-ARGB8888");
+    overlay->buffer = (uint32_t*)Deki::Memory::Allocate(buffer_size, true, "UIOverlay-ARGB8888");
 
     if (!overlay->buffer)
     {
@@ -833,7 +833,7 @@ void LovyanGFXDisplay::DestroyUIOverlay(void* overlay)
 
     if (ui_overlay->buffer)
     {
-        DekiMemory::Free(ui_overlay->buffer, "UIOverlay-ARGB8888");
+        Deki::Memory::Free(ui_overlay->buffer, "UIOverlay-ARGB8888");
         ui_overlay->buffer = nullptr;
     }
 
@@ -900,7 +900,7 @@ bool LovyanGFXDisplay::Initialize(int32_t width, int32_t height) { return false;
 void LovyanGFXDisplay::Shutdown() {}
 void LovyanGFXDisplay::Present(const uint8_t* framebuffer, int width, int height, int format) {}
 bool LovyanGFXDisplay::SupportsPartialPresent() const { return false; }
-void LovyanGFXDisplay::PresentRegions(const uint8_t*, int, int, int, const DekiRect*, int32_t) {}
+void LovyanGFXDisplay::PresentRegions(const uint8_t*, int, int, int, const Deki::Rect*, int32_t) {}
 bool LovyanGFXDisplay::EnsureBands() { return false; }
 void LovyanGFXDisplay::FreeBands() {}
 void LovyanGFXDisplay::PushRows(const uint8_t*, int, int, int, int, int) {}

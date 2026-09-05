@@ -293,12 +293,12 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         return;
     }
 
-    DekiEngine::GetInstance().SetDisplay(s_LovyanGFXDisplay.get(), "LovyanGFX");
+    Deki::Engine::GetInstance().SetDisplay(s_LovyanGFXDisplay.get(), "LovyanGFX");
 
     // Mark owner as Persistent so display persists across scene changes
     if (GetOwner())
     {
-        DekiEngine::GetInstance().GetSceneSystem().MarkPersistent(GetOwner());
+        Deki::Engine::GetInstance().GetSceneSystem().MarkPersistent(GetOwner());
     }
 
     onComplete(true);

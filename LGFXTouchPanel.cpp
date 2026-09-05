@@ -198,7 +198,7 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
         // Mark owner as Persistent so touch persists across scene changes
         if (GetOwner())
         {
-            DekiEngine::GetInstance().GetSceneSystem().MarkPersistent(GetOwner());
+            Deki::Engine::GetInstance().GetSceneSystem().MarkPersistent(GetOwner());
         }
 
         onComplete(true);

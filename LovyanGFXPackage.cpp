@@ -21,7 +21,7 @@
 // Auto-generated registration helpers
 extern void DekiLovyanGFX_RegisterComponents();
 extern int DekiLovyanGFX_GetAutoComponentCount();
-extern const DekiComponentMeta* DekiLovyanGFX_GetAutoComponentMeta(int index);
+extern const Deki::ComponentMeta* DekiLovyanGFX_GetAutoComponentMeta(int index);
 
 // Track if already registered to avoid duplicates
 static bool s_LovyanGFXRegistered = false;
@@ -81,7 +81,7 @@ DEKI_PLUGIN_API int DekiPlugin_GetComponentCount(void)
     return DekiLovyanGFX_GetAutoComponentCount();
 }
 
-DEKI_PLUGIN_API const DekiComponentMeta* DekiPlugin_GetComponentMeta(int index)
+DEKI_PLUGIN_API const Deki::ComponentMeta* DekiPlugin_GetComponentMeta(int index)
 {
     return DekiLovyanGFX_GetAutoComponentMeta(index);
 }
