@@ -28,8 +28,8 @@ var NAVTREE =
     [ "Components", "index.html#autotoc_md0", null ],
     [ "Feature flags", "index.html#autotoc_md1", null ],
     [ "Component reference", "index.html#autotoc_md2", [
-      [ "LGFXDisplayPanel (LGFX Display Panel)", "index.html#c-lgfxdisplaypanel", null ],
-      [ "LGFXTouchPanel (LGFX Touch Panel)", "index.html#c-lgfxtouchpanel", null ]
+      [ "LGFXDisplayPanel", "index.html#c-lgfxdisplaypanel", null ],
+      [ "LGFXTouchPanel", "index.html#c-lgfxtouchpanel", null ]
     ] ]
   ] ]
 ];
