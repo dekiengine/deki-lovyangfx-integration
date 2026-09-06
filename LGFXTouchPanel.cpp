@@ -1,0 +1,222 @@
+#include "LGFXTouchPanel.h"
+#include <deki/LogSystem.h>
+#include <deki/Engine.h>
+#include <deki/SceneSystem.h>
+#include "DekiInput.h"  // from deki-input
+#include "DekiI2C.h"   // from deki-i2c
+#include "IDekiI2C.h"  // from deki-i2c
+
+#if defined(ESP32)
+
+#include <LovyanGFX.hpp>
+#include "LGFXDisplayPanel.h"
+#include "LovyanGFXTouch.h"
+#include "esp_log.h"
+static const char* TAG = "LGFXTouch";
+
+void LGFXTouchPanel::Setup(SetupCallback onComplete)
+{
+    ESP_LOGI(TAG, "Setting up touch (driver=%d)", static_cast<int>(driverType));
+    DEKI_LOG_INFO("LGFXTouchPanel: Setting up touch panel (driver=%d)", static_cast<int>(driverType));
+
+    lgfx::LGFX_Device* gfxDevice = LGFXDisplayPanel::GetLGFXDevice();
+    if (!gfxDevice)
+    {
+        DEKI_LOG_ERROR("LGFXTouchPanel: No LGFX device available (LGFXDisplayPanel not setup yet?)");
+        onComplete(false);
+        return;
+    }
+
+    // Resolve shared I2C bus (only for capacitive drivers; XPT2046 is SPI).
+    int      bus_sda  = -1;
+    int      bus_scl  = -1;
+    int      bus_freq = 0;
+    const bool is_i2c_driver =
+        driverType == TouchDriverType::FT5x06 ||
+        driverType == TouchDriverType::GT911  ||
+        driverType == TouchDriverType::CST816S;
+
+    if (is_i2c_driver)
+    {
+        IDekiI2C* bus = DekiI2C::GetBus(i2cPort);
+        if (!bus)
+        {
+            DEKI_LOG_ERROR("LGFXTouchPanel: no I2C bus on port %d — add I2CBusComponent before LGFXTouchPanel in boot scene", (int)i2cPort);
+            onComplete(false);
+            return;
+        }
+        bus_sda  = bus->GetSdaPin();
+        bus_scl  = bus->GetSclPin();
+        bus_freq = bus->GetFrequencyHz();
+    }
+
+    lgfx::ITouch* touch = nullptr;
+
+    // Create the appropriate touch driver
+    switch (driverType)
+    {
+        case TouchDriverType::FT5x06:
+        {
+            auto* t = new lgfx::Touch_FT5x06();
+            auto cfg = t->config();
+            cfg.xMin = xMin;
+            cfg.xMax = xMax;
+            cfg.yMin = yMin;
+            cfg.yMax = yMax;
+            cfg.m_PinInt = m_PinInt;
+            cfg.pinRst = pinRst;
+            cfg.pin_sda = bus_sda;
+            cfg.pin_scl = bus_scl;
+            cfg.i2c_addr = 0x38;
+            cfg.i2cPort = i2cPort;
+            cfg.freq = bus_freq;
+            cfg.busShared = true;
+            cfg.offsetRotation = static_cast<uint8_t>(offsetRotation);
+            t->config(cfg);
+            touch = t;
+            DEKI_LOG_INFO("LGFXTouchPanel: FT5x06 on I2C port %d (SDA=%d SCL=%d freq=%d)", (int)i2cPort, bus_sda, bus_scl, bus_freq);
+            break;
+        }
+        case TouchDriverType::GT911:
+        {
+            auto* t = new lgfx::Touch_GT911();
+            auto cfg = t->config();
+            cfg.xMin = xMin;
+            cfg.xMax = xMax;
+            cfg.yMin = yMin;
+            cfg.yMax = yMax;
+            cfg.m_PinInt = m_PinInt;
+            cfg.pinRst = pinRst;
+            cfg.pin_sda = bus_sda;
+            cfg.pin_scl = bus_scl;
+            cfg.i2c_addr = 0x5D;
+            cfg.i2cPort = i2cPort;
+            cfg.freq = bus_freq;
+            cfg.busShared = true;
+            cfg.offsetRotation = static_cast<uint8_t>(offsetRotation);
+            t->config(cfg);
+            touch = t;
+            DEKI_LOG_INFO("LGFXTouchPanel: GT911 on I2C port %d (SDA=%d SCL=%d freq=%d)", (int)i2cPort, bus_sda, bus_scl, bus_freq);
+            break;
+        }
+        case TouchDriverType::CST816S:
+        {
+            auto* t = new lgfx::Touch_CST816S();
+            auto cfg = t->config();
+            cfg.xMin = xMin;
+            cfg.xMax = xMax;
+            cfg.yMin = yMin;
+            cfg.yMax = yMax;
+            cfg.m_PinInt = m_PinInt;
+            cfg.pinRst = pinRst;
+            cfg.pin_sda = bus_sda;
+            cfg.pin_scl = bus_scl;
+            cfg.i2c_addr = 0x15;
+            cfg.i2cPort = i2cPort;
+            cfg.freq = bus_freq;
+            cfg.busShared = true;
+            cfg.offsetRotation = static_cast<uint8_t>(offsetRotation);
+            t->config(cfg);
+            touch = t;
+            DEKI_LOG_INFO("LGFXTouchPanel: CST816S on I2C port %d (SDA=%d SCL=%d freq=%d)", (int)i2cPort, bus_sda, bus_scl, bus_freq);
+            break;
+        }
+        case TouchDriverType::XPT2046:
+        {
+            auto* t = new lgfx::Touch_XPT2046();
+            auto cfg = t->config();
+            cfg.xMin = xMin;
+            cfg.xMax = xMax;
+            cfg.yMin = yMin;
+            cfg.yMax = yMax;
+            cfg.m_PinInt = m_PinInt;
+            cfg.pinRst = pinRst;
+            cfg.pinCs = spiCs;
+            cfg.pin_mosi = spiMosi;
+            cfg.pin_miso = spiMiso;
+            cfg.pin_sclk = spiClk;
+            cfg.busShared = busShared;
+            cfg.offsetRotation = static_cast<uint8_t>(offsetRotation);
+            t->config(cfg);
+            touch = t;
+            DEKI_LOG_INFO("LGFXTouchPanel: Using XPT2046 driver (SPI)");
+            break;
+        }
+        default:
+            DEKI_LOG_ERROR("LGFXTouchPanel: Unknown driver type %d", static_cast<int>(driverType));
+            onComplete(false);
+            return;
+    }
+
+    // Attach touch controller to the display panel
+    auto* panel = gfxDevice->getPanel();
+    if (panel)
+    {
+        panel->setTouch(touch);
+        ESP_LOGI(TAG, "Touch panel attached OK");
+
+        // Explicitly initialize touch hardware. device->init() called
+        // panel->initTouch() earlier, but touch was null at that point.
+        // We must call it now to perform I2C bus init, hardware reset,
+        // and touch controller register validation.
+        // The FT5x06 may need time after I2C bus init to respond,
+        // so retry with delays if the first attempt fails.
+        bool touchOk = false;
+        for (int attempt = 0; attempt < 5; attempt++)
+        {
+            if (panel->initTouch())
+            {
+                ESP_LOGI(TAG, "Touch controller initialized (attempt %d)", attempt + 1);
+                touchOk = true;
+                break;
+            }
+            ESP_LOGW(TAG, "initTouch() attempt %d failed, retrying...", attempt + 1);
+            lgfx::delay(50);
+        }
+        if (!touchOk)
+        {
+            ESP_LOGE(TAG, "Touch controller failed to initialize after all retries");
+            // Don't register touch input — polling a non-responsive I2C device
+            // causes ~7ms timeout per frame, killing performance
+        }
+        else
+        {
+            // Create and register LovyanGFXTouch with input backend
+            auto input = std::make_unique<LovyanGFXTouch>();
+            input->SetPinInt(m_PinInt);
+            if (input->Initialize())
+            {
+                DekiInput::SetInput(std::move(input), "LovyanGFXTouch");
+                DEKI_LOG_INFO("LGFXTouchPanel: Touch input registered with DekiInput");
+            }
+            else
+            {
+                DEKI_LOG_WARNING("LGFXTouchPanel: Failed to initialize LovyanGFXTouch");
+            }
+        }
+
+        // Mark owner as Persistent so touch persists across scene changes
+        if (GetOwner())
+        {
+            Deki::Engine::GetInstance().GetSceneSystem().MarkPersistent(GetOwner());
+        }
+
+        onComplete(true);
+    }
+    else
+    {
+        DEKI_LOG_ERROR("LGFXTouchPanel: No display panel available");
+        delete touch;
+        onComplete(false);
+    }
+}
+
+#else // !ESP32 (Editor build)
+
+void LGFXTouchPanel::Setup(SetupCallback onComplete)
+{
+    // Touch panel is hardware-only; in editor, just report success
+    onComplete(true);
+}
+
+#endif

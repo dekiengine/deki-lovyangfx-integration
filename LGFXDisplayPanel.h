@@ -1,0 +1,335 @@
+#pragma once
+
+#include <cstdint>
+#include <deki/SetupComponent.h>
+#include <deki/reflection/Property.h>
+#include "LovyanGFXPackage.h"
+
+// Forward declaration (must match LovyanGFX's inline namespace)
+namespace lgfx { inline namespace v1 { class LGFX_Device; } }
+
+enum class DisplayPanelType : uint8_t
+{
+    ILI9341 = 0,
+    ST7789 = 1,
+    ST7735 = 2,
+    GC9A01 = 3,
+    SSD1351 = 4,
+    ST7789P3 = 5
+};
+
+enum class DisplayBusType : uint8_t
+{
+    SPI = 0,
+    Parallel8bit = 1,
+    Parallel16bit = 2
+};
+
+enum class DisplayRotation : uint8_t
+{
+    Portrait = 0,
+    Landscape = 1,
+    Portrait_180 = 2,
+    Landscape_270 = 3,
+    Portrait_Mirror = 4,
+    Landscape_Mirror = 5,
+    Portrait_180_Mirror = 6,
+    Landscape_270_Mirror = 7
+};
+
+/**
+ * @brief Component to configure and initialize a LovyanGFX display at runtime
+ *
+ * Add this component to your boot scene to set up display hardware.
+ * Configure the display panel type, bus type, and pin mappings in the Inspector.
+ * Replaces the compile-time LGFX_Config.h approach with runtime configuration.
+ *
+ * Inherits from SetupComponent to participate in boot sequence.
+ * PlatformSetupComponent calls Setup() to initialize the display.
+ * Must run BEFORE LGFXTouchPanel in the boot sequence.
+ *
+ * Usage:
+ * 1. Add LGFXDisplayPanel to your boot scene
+ * 2. Configure panel type, bus, and pins in Inspector
+ * 3. Add to PlatformSetupComponent's setup_components list (before touch)
+ */
+class DEKI_LOVYANGFX_API LGFXDisplayPanel : public Deki::SetupComponent
+{
+public:
+    DEKI_COMPONENT(LGFXDisplayPanel, Deki::SetupComponent, "LovyanGFX", "a7e1d3f0-8b4c-4e2a-9f61-3c8d2b5a7e90", "DEKI_FEATURE_LGFX_DISPLAY_PANEL")
+    DEKI_DESCRIPTION("Drives an SPI display panel (ILI9341, ST7789, GC9A01, ...) through LovyanGFX.")
+
+    // ========== Panel ==========
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Display panel driver IC")
+    DisplayPanelType panelType = DisplayPanelType::ILI9341;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Display width in pixels")
+    DEKI_RANGE(1, 1024)
+    int32_t panelWidth = 320;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Display height in pixels")
+    DEKI_RANGE(1, 1024)
+    int32_t panelHeight = 240;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Display rotation")
+    DisplayRotation rotation = DisplayRotation::Landscape;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Pixel offset X (for panels with non-zero origin)")
+    int32_t offsetX = 0;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Pixel offset Y (for panels with non-zero origin)")
+    int32_t offsetY = 0;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Invert display colors")
+    bool invertColor = false;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Swap R and B color channels (RGB vs BGR)")
+    bool rgbOrder = false;
+
+    // ========== Bus ==========
+
+    DEKI_GROUP("Bus")
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Display bus type")
+    DisplayBusType busType = DisplayBusType::Parallel8bit;
+
+    // --- SPI Bus Pins ---
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("SPI MOSI pin")
+    DEKI_VISIBLE_WHEN(busType, SPI)
+    DEKI_RANGE(-1, 48)
+    int32_t spiMosi = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("SPI MISO pin (-1 = not used)")
+    DEKI_VISIBLE_WHEN(busType, SPI)
+    DEKI_RANGE(-1, 48)
+    int32_t spiMiso = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("SPI clock pin")
+    DEKI_VISIBLE_WHEN(busType, SPI)
+    DEKI_RANGE(-1, 48)
+    int32_t spiClk = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("SPI data/command pin")
+    DEKI_VISIBLE_WHEN(busType, SPI)
+    DEKI_RANGE(-1, 48)
+    int32_t spiDc = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("SPI host (0=VSPI, 1=HSPI)")
+    DEKI_VISIBLE_WHEN(busType, SPI)
+    DEKI_RANGE(0, 1)
+    int32_t spiHost = 0;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("SPI write frequency in Hz")
+    DEKI_VISIBLE_WHEN(busType, SPI)
+    int32_t spiFreqWrite = 40000000;
+
+    // --- Parallel Bus Pins (8-bit and 16-bit) ---
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Parallel bus write frequency in Hz")
+    DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
+    int32_t parFreqWrite = 40000000;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Register select / data-command pin (RS/DC)")
+    DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
+    DEKI_RANGE(-1, 48)
+    int32_t rsPin = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Parallel bus write strobe pin")
+    DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
+    DEKI_RANGE(-1, 48)
+    int32_t wrPin = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Parallel bus read strobe pin (-1 = not used)")
+    DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
+    DEKI_RANGE(-1, 48)
+    int32_t rdPin = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Parallel data pin D0")
+    DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
+    DEKI_RANGE(-1, 48)
+    int32_t d0Pin = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Parallel data pin D1")
+    DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
+    DEKI_RANGE(-1, 48)
+    int32_t d1Pin = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Parallel data pin D2")
+    DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
+    DEKI_RANGE(-1, 48)
+    int32_t d2Pin = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Parallel data pin D3")
+    DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
+    DEKI_RANGE(-1, 48)
+    int32_t d3Pin = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Parallel data pin D4")
+    DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
+    DEKI_RANGE(-1, 48)
+    int32_t d4Pin = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Parallel data pin D5")
+    DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
+    DEKI_RANGE(-1, 48)
+    int32_t d5Pin = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Parallel data pin D6")
+    DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
+    DEKI_RANGE(-1, 48)
+    int32_t d6Pin = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Parallel data pin D7")
+    DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
+    DEKI_RANGE(-1, 48)
+    int32_t d7Pin = -1;
+
+    // --- 16-bit only data pins ---
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Parallel data pin D8")
+    DEKI_VISIBLE_WHEN(busType, Parallel16bit)
+    DEKI_RANGE(-1, 48)
+    int32_t d8Pin = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Parallel data pin D9")
+    DEKI_VISIBLE_WHEN(busType, Parallel16bit)
+    DEKI_RANGE(-1, 48)
+    int32_t d9Pin = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Parallel data pin D10")
+    DEKI_VISIBLE_WHEN(busType, Parallel16bit)
+    DEKI_RANGE(-1, 48)
+    int32_t d10Pin = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Parallel data pin D11")
+    DEKI_VISIBLE_WHEN(busType, Parallel16bit)
+    DEKI_RANGE(-1, 48)
+    int32_t d11Pin = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Parallel data pin D12")
+    DEKI_VISIBLE_WHEN(busType, Parallel16bit)
+    DEKI_RANGE(-1, 48)
+    int32_t d12Pin = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Parallel data pin D13")
+    DEKI_VISIBLE_WHEN(busType, Parallel16bit)
+    DEKI_RANGE(-1, 48)
+    int32_t d13Pin = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Parallel data pin D14")
+    DEKI_VISIBLE_WHEN(busType, Parallel16bit)
+    DEKI_RANGE(-1, 48)
+    int32_t d14Pin = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Parallel data pin D15")
+    DEKI_VISIBLE_WHEN(busType, Parallel16bit)
+    DEKI_RANGE(-1, 48)
+    int32_t d15Pin = -1;
+
+    // ========== Control Pins ==========
+
+    DEKI_GROUP("Control Pins")
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Chip select pin (-1 = not used)")
+    DEKI_RANGE(-1, 48)
+    int32_t pinCs = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Reset pin (-1 = not connected)")
+    DEKI_RANGE(-1, 48)
+    int32_t pinRst = -1;
+
+    // ========== Backlight ==========
+
+    DEKI_GROUP("Backlight")
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Backlight pin (-1 = none)")
+    DEKI_RANGE(-1, 48)
+    int32_t blPin = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("PWM channel for backlight")
+    DEKI_RANGE(0, 15)
+    int32_t blPwmChannel = 0;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Invert backlight signal (active low)")
+    bool blInvert = false;
+
+    // ========== Advanced ==========
+
+    DEKI_GROUP("Advanced")
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Swap RGB565 byte order for display transfer")
+    bool swapBytes = false;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Panel memory width (may differ from visible width)")
+    DEKI_RANGE(1, 1024)
+    int32_t memoryWidth = 320;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Panel memory height (may differ from visible height)")
+    DEKI_RANGE(1, 1024)
+    int32_t memoryHeight = 240;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Allocate display buffers in PSRAM instead of internal RAM")
+    bool usePsram = false;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Use double buffering for async DMA (overlaps render and display transfer)")
+    bool doubleBuffer = false;
+
+    // ========== SetupComponent Implementation ==========
+
+    void Setup(SetupCallback onComplete) override;
+    const char* GetSetupName() const override { return "Display Panel"; }
+
+    // ========== Static Accessor ==========
+
+    /**
+     * @brief Get the initialized LGFX device instance
+     * @return Pointer to device, or nullptr if not yet initialized
+     */
+    static lgfx::LGFX_Device* GetLGFXDevice();
+};
+
+// Generated property metadata
+#include "generated/LGFXDisplayPanel.gen.h"

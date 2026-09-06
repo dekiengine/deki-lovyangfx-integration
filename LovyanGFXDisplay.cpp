@@ -1,0 +1,925 @@
+#include "LovyanGFXDisplay.h"
+
+#ifdef ESP32
+#include <algorithm>
+#include <cstring>
+
+#include <deki/LogSystem.h>
+#include <deki/providers/Memory.h>
+// ESP32-specific includes for DMA memory allocation and cache management
+#ifdef ESP32
+#include <esp_heap_caps.h>
+#include <esp_idf_version.h>
+#include <esp_task_wdt.h>  // For watchdog feeding during long display writes
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+#include <esp_cache.h>
+#include <esp_dma_utils.h>  // For esp_dma_malloc (ensures DMA + cache alignment)
+#endif
+#endif
+
+#include <LovyanGFX.hpp>
+
+LovyanGFXDisplay::LovyanGFXDisplay()
+: tft(nullptr)
+, m_DisplayWidth(320)
+, m_DisplayHeight(240)
+, initialized(false)
+, buffers{nullptr, nullptr}
+, m_BufferPixelCount(0)
+, m_RenderIndex(0)
+, m_DmaInFlight(false)
+, m_UsePSRAM(false)
+, m_DoubleBuffer(false)
+, m_SwapBytes(false)
+, m_ActiveOverlay(nullptr)
+{
+}
+
+LovyanGFXDisplay::~LovyanGFXDisplay()
+{
+    Shutdown();
+}
+
+static uint16_t* AllocateDisplayBuffer(size_t buffer_bytes, bool usePSRAM, const char* label)
+{
+    uint16_t* buf = nullptr;
+
+#ifdef ESP32
+    if (usePSRAM)
+    {
+        buf = (uint16_t*)heap_caps_aligned_alloc(64, buffer_bytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    }
+    else
+    {
+        buf = (uint16_t*)heap_caps_malloc(buffer_bytes, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    }
+
+    if (buf)
+    {
+        DEKI_LOG_INTERNAL("LovyanGFX: Allocated %s (%zu bytes, psram=%d)", label, buffer_bytes, usePSRAM);
+    }
+#else
+    buf = (uint16_t*)malloc(buffer_bytes);
+#endif
+
+    return buf;
+}
+
+bool LovyanGFXDisplay::InitializeWithDevice(lgfx::LGFX_Device* device, int32_t width, int32_t height,
+                                             bool swapBytes, bool usePSRAM, bool doubleBuffer)
+{
+    if (initialized)
+        return true;
+
+    if (!device)
+    {
+        DEKI_LOG_ERROR("LovyanGFXDisplay::InitializeWithDevice: device is null");
+        return false;
+    }
+
+    tft = device;
+    m_DisplayWidth = width;
+    m_DisplayHeight = height;
+    m_UsePSRAM = usePSRAM;
+    m_DoubleBuffer = doubleBuffer;
+    m_SwapBytes = swapBytes;
+    m_BufferPixelCount = width * height;
+
+    if (usePSRAM || doubleBuffer)
+    {
+        size_t buffer_bytes = m_BufferPixelCount * sizeof(uint16_t);
+
+        buffers[0] = AllocateDisplayBuffer(buffer_bytes, usePSRAM, "buffer[0]");
+        if (!buffers[0])
+        {
+            DEKI_LOG_ERROR("LovyanGFX: Failed to allocate primary buffer (%zu bytes)", buffer_bytes);
+            return false;
+        }
+        memset(buffers[0], 0, buffer_bytes);
+
+        if (doubleBuffer)
+        {
+            buffers[1] = AllocateDisplayBuffer(buffer_bytes, usePSRAM, "buffer[1]");
+            if (!buffers[1])
+            {
+                DEKI_LOG_WARNING("LovyanGFX: Failed to allocate second buffer, falling back to single-buffer mode");
+                m_DoubleBuffer = false;
+            }
+            else
+            {
+                memset(buffers[1], 0, buffer_bytes);
+            }
+        }
+    }
+    // else: passthrough mode — no display buffers, Present pushes framebuffer directly
+
+    m_RenderIndex = 0;
+    m_DmaInFlight = false;
+
+    initialized = true;
+    DEKI_LOG_INTERNAL("LovyanGFX display initialized %dx%d (psram=%d, doubleBuffer=%d)",
+                   width, height, usePSRAM ? 1 : 0, m_DoubleBuffer ? 1 : 0);
+
+    return true;
+}
+
+bool LovyanGFXDisplay::Initialize(int32_t width, int32_t height)
+{
+    // No longer auto-creates device — use InitializeWithDevice() via LGFXDisplayPanel
+    DEKI_LOG_ERROR("LovyanGFXDisplay::Initialize() called directly — use LGFXDisplayPanel component instead");
+    return false;
+}
+
+void LovyanGFXDisplay::Shutdown()
+{
+    if (!initialized)
+    {
+        return;
+    }
+
+    // Wait for any in-flight DMA before freeing buffers
+    if (m_DmaInFlight && tft)
+    {
+        tft->waitDMA();
+        m_DmaInFlight = false;
+    }
+
+    for (int i = 0; i < 2; i++)
+    {
+        if (buffers[i])
+        {
+#ifdef ESP32
+            heap_caps_free(buffers[i]);
+#else
+            free(buffers[i]);
+#endif
+            buffers[i] = nullptr;
+        }
+    }
+    FreeBands();
+    m_BufferPixelCount = 0;
+    DEKI_LOG_INTERNAL("LovyanGFX: Freed display buffers");
+
+    initialized = false;
+}
+
+void LovyanGFXDisplay::Present(const uint8_t* framebuffer, int width, int height, int format)
+{
+    if (!initialized || !framebuffer)
+    {
+        return;
+    }
+
+    ConvertAndRenderFramebuffer(framebuffer, width, height, format);
+}
+
+bool LovyanGFXDisplay::SupportsPartialPresent() const
+{
+    return true;
+}
+
+// ---- Partial present ------------------------------------------------------
+// UNTESTED ON HARDWARE (September 2026): written against the LovyanGFX API
+// used by the full path above (pushImage / startWrite / endWrite / waitDMA)
+// and compile-checked only. Please run a scene with dirty-rect tracking on and
+// report.
+
+bool LovyanGFXDisplay::EnsureBands()
+{
+    if (m_Band[0] && m_Band[1])
+        return true;
+    const size_t bytes = static_cast<size_t>(m_DisplayWidth) * kBandRows * sizeof(uint16_t);
+    for (int i = 0; i < 2; ++i)
+    {
+        if (m_Band[i]) continue;
+        m_Band[i] = static_cast<uint16_t*>(heap_caps_malloc(bytes, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL));
+        if (!m_Band[i])
+        {
+            DEKI_LOG_ERROR("LovyanGFX: cannot allocate a %zu-byte staging band; partial present off", bytes);
+            FreeBands();
+            return false;
+        }
+    }
+    return true;
+}
+
+void LovyanGFXDisplay::FreeBands()
+{
+    for (int i = 0; i < 2; ++i)
+    {
+        if (m_Band[i]) heap_caps_free(m_Band[i]);
+        m_Band[i] = nullptr;
+    }
+}
+
+static inline uint16_t SwapBytes16(uint16_t v)
+{
+    return static_cast<uint16_t>((v >> 8) | (v << 8));
+}
+
+void LovyanGFXDisplay::PushRows(const uint8_t* framebuffer, int width, int height, int format, int y0, int y1)
+{
+    if (!EnsureBands()) return;
+    const int w = (width < m_DisplayWidth) ? width : m_DisplayWidth;
+    y0 = y0 < 0 ? 0 : y0;
+    y1 = y1 > height ? height : y1;
+    y1 = y1 > m_DisplayHeight ? m_DisplayHeight : y1;
+
+    for (int y = y0; y < y1; y += kBandRows)
+    {
+        const int rows = (y1 - y < kBandRows) ? (y1 - y) : kBandRows;
+        uint16_t* band = m_Band[m_BandIndex];
+
+        // The band we are about to fill may still be read by the DMA of the
+        // push before last. waitDMA waits for every transfer, which costs
+        // the overlap between conversion and transfer; correct first.
+        if (m_DmaInFlight)
+        {
+            tft->waitDMA();
+            m_DmaInFlight = false;
+        }
+
+        for (int i = 0; i < rows; ++i)
+        {
+            uint16_t* dst = band + static_cast<size_t>(i) * w;
+            const int sy = y + i;
+            if (format == 0)  // RGB565
+            {
+                const uint16_t* src = reinterpret_cast<const uint16_t*>(framebuffer) + static_cast<size_t>(sy) * width;
+                if (m_SwapBytes)
+                    for (int x = 0; x < w; ++x) dst[x] = SwapBytes16(src[x]);
+                else
+                    memcpy(dst, src, static_cast<size_t>(w) * sizeof(uint16_t));
+            }
+            else if (format == 2)  // ARGB8888
+            {
+                const uint32_t* src = reinterpret_cast<const uint32_t*>(framebuffer) + static_cast<size_t>(sy) * width;
+                for (int x = 0; x < w; ++x)
+                {
+                    const uint32_t p = src[x];
+                    const uint16_t v = static_cast<uint16_t>((((p >> 16) & 0xF8) << 8) | (((p >> 8) & 0xFC) << 3) | ((p & 0xFF) >> 3));
+                    dst[x] = m_SwapBytes ? SwapBytes16(v) : v;
+                }
+            }
+            else if (format == 1)  // RGB888
+            {
+                const uint8_t* src = framebuffer + static_cast<size_t>(sy) * width * 3;
+                for (int x = 0; x < w; ++x)
+                {
+                    const uint16_t v = static_cast<uint16_t>(((src[x * 3] & 0xF8) << 8) | ((src[x * 3 + 1] & 0xFC) << 3) | (src[x * 3 + 2] >> 3));
+                    dst[x] = m_SwapBytes ? SwapBytes16(v) : v;
+                }
+            }
+            else
+            {
+                memset(dst, 0, static_cast<size_t>(w) * sizeof(uint16_t));
+            }
+        }
+
+        tft->startWrite();
+        tft->pushImage(0, y, w, rows, band);
+        tft->endWrite();
+        m_DmaInFlight = true;
+        m_BandIndex = 1 - m_BandIndex;
+    }
+}
+
+void LovyanGFXDisplay::FinishPresent()
+{
+    if (m_DoubleBuffer)
+    {
+        // The engine renders the next frame into the other buffer while the
+        // last band's DMA finishes (the bands are private, so this is safe
+        // even in direct-render mode).
+        m_RenderIndex = 1 - m_RenderIndex;
+    }
+    else if (m_DmaInFlight)
+    {
+        tft->waitDMA();
+        m_DmaInFlight = false;
+    }
+}
+
+void LovyanGFXDisplay::PresentRegions(const uint8_t* framebuffer, int width, int height, int format,
+                                      const Deki::Rect* rects, int32_t count)
+{
+    if (!initialized || !framebuffer)
+        return;
+    if (count == 0)
+        return;  // nothing changed on the panel
+
+    // The overlay is composited over the whole frame by the full path.
+    if (m_ActiveOverlay && m_ActiveOverlay->buffer)
+    {
+        Present(framebuffer, width, height, format);
+        return;
+    }
+
+    // pushImage takes a packed rectangle and the framebuffer's rows are only
+    // contiguous at full width, so rectangles collapse to row bands.
+    m_BandScratch.clear();
+    for (int32_t i = 0; i < count; ++i)
+    {
+        const Deki::Rect& r = rects[i];
+        if (r.Empty()) continue;
+        m_BandScratch.push_back(Deki::Rect{ 0, r.top, width, r.bottom });
+    }
+    std::sort(m_BandScratch.begin(), m_BandScratch.end(),
+              [](const Deki::Rect& a, const Deki::Rect& b) { return a.top < b.top; });
+
+    size_t out = 0;
+    for (size_t i = 0; i < m_BandScratch.size(); ++i)
+    {
+        if (out > 0 && m_BandScratch[i].top <= m_BandScratch[out - 1].bottom)
+        {
+            if (m_BandScratch[i].bottom > m_BandScratch[out - 1].bottom)
+                m_BandScratch[out - 1].bottom = m_BandScratch[i].bottom;
+        }
+        else
+        {
+            m_BandScratch[out++] = m_BandScratch[i];
+        }
+    }
+    m_BandScratch.resize(out);
+
+    for (const Deki::Rect& band : m_BandScratch)
+        PushRows(framebuffer, width, height, format, band.top, band.bottom);
+
+    FinishPresent();
+}
+
+void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, int width, int height, int format)
+{
+    uint16_t* conversion_buffer = buffers[m_RenderIndex];
+
+    // Passthrough mode: no display buffer, push framebuffer directly (RGB565 only)
+    const bool passthrough = (!conversion_buffer && format == 0);
+    if (passthrough)
+    {
+        conversion_buffer = (uint16_t*)framebuffer;
+    }
+    else if (!conversion_buffer)
+    {
+        DEKI_LOG_ERROR("LovyanGFX: Buffer not allocated and format is not RGB565");
+        return;
+    }
+
+    // Debug: Log first Present call
+    static int present_count = 0;
+    if (present_count == 0)
+    {
+        DEKI_LOG_INTERNAL("LovyanGFX First Present: fmt=%d size=%dx%d overlay=%s doubleBuffer=%d psram=%d passthrough=%d",
+                     format, width, height,
+                     (m_ActiveOverlay && m_ActiveOverlay->buffer) ? "YES" : "NO",
+                     m_DoubleBuffer ? 1 : 0, m_UsePSRAM ? 1 : 0, passthrough ? 1 : 0);
+    }
+    present_count++;
+
+    // Fast path: framebuffer IS the output buffer (direct rendering or passthrough)
+    const bool directBuffer = passthrough || (format == 0 && (const uint16_t*)framebuffer == conversion_buffer);
+
+    if (directBuffer)
+    {
+        if (present_count == 1)
+        {
+            DEKI_LOG_INTERNAL("LovyanGFX: Direct render buffer — skipping memcpy");
+        }
+
+        // A direct or passthrough buffer belongs to the engine: it renders
+        // into it and blends against its contents next frame, so the byte
+        // swap for big-endian panels must not happen in place (it used to,
+        // which only worked because every pixel was redrawn every frame).
+        // Push through the staging bands, which swap while copying.
+        if (m_SwapBytes && !(m_ActiveOverlay && m_ActiveOverlay->buffer))
+        {
+            PushRows(framebuffer, width, height, format, 0, height);
+            FinishPresent();
+            return;
+        }
+    }
+
+    if (!directBuffer)
+    {
+
+    // Flush source framebuffer from CPU cache if it resides in PSRAM
+#if defined(ESP32) && ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+    if (esp_ptr_external_ram(framebuffer))
+    {
+        size_t bytes_per_pixel = (format == 2) ? 4 : (format == 1) ? 3 : 2;
+        uintptr_t addr = (uintptr_t)framebuffer;
+        uintptr_t aligned_addr = addr & ~63;
+        size_t raw_bytes = width * height * bytes_per_pixel;
+        size_t aligned_bytes = ((addr - aligned_addr) + raw_bytes + 63) & ~63;
+        esp_cache_msync((void*)aligned_addr, aligned_bytes, ESP_CACHE_MSYNC_FLAG_DIR_C2M);
+    }
+#endif
+
+    // Optimized conversion using direct pointer arithmetic
+    int effective_width = (width < m_DisplayWidth) ? width : m_DisplayWidth;
+    int effective_height = (height < m_DisplayHeight) ? height : m_DisplayHeight;
+    size_t pixel_count = effective_width * effective_height;
+
+    if (format == 2)  // ARGB8888 - most common path
+    {
+        const uint32_t* src = (const uint32_t*)framebuffer;
+        uint16_t* dst = conversion_buffer;
+
+        if (width == m_DisplayWidth && height == m_DisplayHeight)
+        {
+            for (size_t i = 0; i < pixel_count; i++)
+            {
+                uint32_t pixel = src[i];
+                uint8_t b = pixel & 0xFF;
+                uint8_t g = (pixel >> 8) & 0xFF;
+                uint8_t r = (pixel >> 16) & 0xFF;
+                dst[i] = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+            }
+        }
+        else
+        {
+            for (int y = 0; y < effective_height; y++)
+            {
+                const uint32_t* src_row = src + y * width;
+                uint16_t* dst_row = dst + y * m_DisplayWidth;
+
+                for (int x = 0; x < effective_width; x++)
+                {
+                    uint32_t pixel = src_row[x];
+                    uint8_t b = pixel & 0xFF;
+                    uint8_t g = (pixel >> 8) & 0xFF;
+                    uint8_t r = (pixel >> 16) & 0xFF;
+                    dst_row[x] = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+                }
+            }
+        }
+    }
+    else if (format == 0)  // RGB565
+    {
+        const uint16_t* src = (const uint16_t*)framebuffer;
+        uint16_t* dst = conversion_buffer;
+
+        if (width == m_DisplayWidth && height == m_DisplayHeight)
+        {
+            memcpy(dst, src, pixel_count * sizeof(uint16_t));
+        }
+        else
+        {
+            for (int y = 0; y < effective_height; y++)
+            {
+                memcpy(dst + y * m_DisplayWidth, src + y * width, effective_width * sizeof(uint16_t));
+            }
+        }
+    }
+    else if (format == 1)  // RGB888
+    {
+        const uint8_t* src = framebuffer;
+        uint16_t* dst = conversion_buffer;
+
+        for (int y = 0; y < effective_height; y++)
+        {
+            const uint8_t* src_row = src + y * width * 3;
+            uint16_t* dst_row = dst + y * m_DisplayWidth;
+
+            for (int x = 0; x < effective_width; x++)
+            {
+                uint8_t r = src_row[x * 3 + 0];
+                uint8_t g = src_row[x * 3 + 1];
+                uint8_t b = src_row[x * 3 + 2];
+                uint16_t rgb565 = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+                dst_row[x] = rgb565;
+            }
+        }
+    }
+    else
+    {
+        // Unknown format - fill with black
+        memset(conversion_buffer, 0, pixel_count * sizeof(uint16_t));
+    }
+
+    } // if (!directBuffer)
+
+    // Composite UI overlay on top if active (ARGB8888 format)
+    if (m_ActiveOverlay && m_ActiveOverlay->buffer)
+    {
+        int overlay_width = m_ActiveOverlay->width < m_DisplayWidth ? m_ActiveOverlay->width : m_DisplayWidth;
+        int overlay_height = m_ActiveOverlay->height < m_DisplayHeight ? m_ActiveOverlay->height : m_DisplayHeight;
+
+        const uint32_t* overlay_base = m_ActiveOverlay->buffer;
+        uint16_t* dst_base = conversion_buffer;
+
+        for (int y = 0; y < overlay_height; y++)
+        {
+            const uint32_t* overlay_row = overlay_base + y * m_ActiveOverlay->width;
+            uint16_t* dst_row = dst_base + y * m_DisplayWidth;
+
+            // Process 4 pixels at a time when possible (unrolled loop for better CPU pipelining)
+            int x = 0;
+            for (; x + 3 < overlay_width; x += 4)
+            {
+                uint32_t argb0 = overlay_row[x];
+                uint32_t argb1 = overlay_row[x+1];
+                uint32_t argb2 = overlay_row[x+2];
+                uint32_t argb3 = overlay_row[x+3];
+
+                // Process pixel 0
+                if ((argb0 & 0xFF000000) != 0)
+                {
+                    if ((argb0 & 0xFF000000) == 0xFF000000)
+                    {
+                        dst_row[x] =
+                            ((argb0 >> 8) & 0xF800) | ((argb0 >> 5) & 0x07E0) | ((argb0 >> 3) & 0x001F);
+                    }
+                    else
+                    {
+                        uint8_t alpha = argb0 >> 24;
+                        uint8_t r = (argb0 >> 16) & 0xFF;
+                        uint8_t g = (argb0 >> 8) & 0xFF;
+                        uint8_t b = argb0 & 0xFF;
+
+                        uint16_t bg = dst_row[x];
+                        uint8_t bg_r = (bg >> 8) & 0xF8;
+                        uint8_t bg_g = (bg >> 3) & 0xFC;
+                        uint8_t bg_b = (bg << 3) & 0xF8;
+
+                        uint8_t inv_alpha = 255 - alpha;
+                        uint8_t out_r = (r * alpha + bg_r * inv_alpha + 128) >> 8;
+                        uint8_t out_g = (g * alpha + bg_g * inv_alpha + 128) >> 8;
+                        uint8_t out_b = (b * alpha + bg_b * inv_alpha + 128) >> 8;
+
+                        dst_row[x] =
+                            ((out_r & 0xF8) << 8) | ((out_g & 0xFC) << 3) | (out_b >> 3);
+                    }
+                }
+
+                // Process pixel 1
+                if ((argb1 & 0xFF000000) != 0)
+                {
+                    if ((argb1 & 0xFF000000) == 0xFF000000)
+                    {
+                        dst_row[x+1] =
+                            ((argb1 >> 8) & 0xF800) | ((argb1 >> 5) & 0x07E0) | ((argb1 >> 3) & 0x001F);
+                    }
+                    else
+                    {
+                        uint8_t alpha = argb1 >> 24;
+                        uint8_t r = (argb1 >> 16) & 0xFF;
+                        uint8_t g = (argb1 >> 8) & 0xFF;
+                        uint8_t b = argb1 & 0xFF;
+
+                        uint16_t bg = dst_row[x+1];
+                        uint8_t bg_r = (bg >> 8) & 0xF8;
+                        uint8_t bg_g = (bg >> 3) & 0xFC;
+                        uint8_t bg_b = (bg << 3) & 0xF8;
+
+                        uint8_t inv_alpha = 255 - alpha;
+                        uint8_t out_r = (r * alpha + bg_r * inv_alpha + 128) >> 8;
+                        uint8_t out_g = (g * alpha + bg_g * inv_alpha + 128) >> 8;
+                        uint8_t out_b = (b * alpha + bg_b * inv_alpha + 128) >> 8;
+
+                        dst_row[x+1] =
+                            ((out_r & 0xF8) << 8) | ((out_g & 0xFC) << 3) | (out_b >> 3);
+                    }
+                }
+
+                // Process pixel 2
+                if ((argb2 & 0xFF000000) != 0)
+                {
+                    if ((argb2 & 0xFF000000) == 0xFF000000)
+                    {
+                        dst_row[x+2] =
+                            ((argb2 >> 8) & 0xF800) | ((argb2 >> 5) & 0x07E0) | ((argb2 >> 3) & 0x001F);
+                    }
+                    else
+                    {
+                        uint8_t alpha = argb2 >> 24;
+                        uint8_t r = (argb2 >> 16) & 0xFF;
+                        uint8_t g = (argb2 >> 8) & 0xFF;
+                        uint8_t b = argb2 & 0xFF;
+
+                        uint16_t bg = dst_row[x+2];
+                        uint8_t bg_r = (bg >> 8) & 0xF8;
+                        uint8_t bg_g = (bg >> 3) & 0xFC;
+                        uint8_t bg_b = (bg << 3) & 0xF8;
+
+                        uint8_t inv_alpha = 255 - alpha;
+                        uint8_t out_r = (r * alpha + bg_r * inv_alpha + 128) >> 8;
+                        uint8_t out_g = (g * alpha + bg_g * inv_alpha + 128) >> 8;
+                        uint8_t out_b = (b * alpha + bg_b * inv_alpha + 128) >> 8;
+
+                        dst_row[x+2] =
+                            ((out_r & 0xF8) << 8) | ((out_g & 0xFC) << 3) | (out_b >> 3);
+                    }
+                }
+
+                // Process pixel 3
+                if ((argb3 & 0xFF000000) != 0)
+                {
+                    if ((argb3 & 0xFF000000) == 0xFF000000)
+                    {
+                        dst_row[x+3] =
+                            ((argb3 >> 8) & 0xF800) | ((argb3 >> 5) & 0x07E0) | ((argb3 >> 3) & 0x001F);
+                    }
+                    else
+                    {
+                        uint8_t alpha = argb3 >> 24;
+                        uint8_t r = (argb3 >> 16) & 0xFF;
+                        uint8_t g = (argb3 >> 8) & 0xFF;
+                        uint8_t b = argb3 & 0xFF;
+
+                        uint16_t bg = dst_row[x+3];
+                        uint8_t bg_r = (bg >> 8) & 0xF8;
+                        uint8_t bg_g = (bg >> 3) & 0xFC;
+                        uint8_t bg_b = (bg << 3) & 0xF8;
+
+                        uint8_t inv_alpha = 255 - alpha;
+                        uint8_t out_r = (r * alpha + bg_r * inv_alpha + 128) >> 8;
+                        uint8_t out_g = (g * alpha + bg_g * inv_alpha + 128) >> 8;
+                        uint8_t out_b = (b * alpha + bg_b * inv_alpha + 128) >> 8;
+
+                        dst_row[x+3] =
+                            ((out_r & 0xF8) << 8) | ((out_g & 0xFC) << 3) | (out_b >> 3);
+                    }
+                }
+            }
+
+            // Handle remaining pixels
+            for (; x < overlay_width; x++)
+            {
+                uint32_t argb = overlay_row[x];
+                if ((argb & 0xFF000000) == 0) continue;
+
+                if ((argb & 0xFF000000) == 0xFF000000)
+                {
+                    dst_row[x] =
+                        ((argb >> 8) & 0xF800) | ((argb >> 5) & 0x07E0) | ((argb >> 3) & 0x001F);
+                }
+                else
+                {
+                    uint8_t alpha = argb >> 24;
+                    uint8_t r = (argb >> 16) & 0xFF;
+                    uint8_t g = (argb >> 8) & 0xFF;
+                    uint8_t b = argb & 0xFF;
+
+                    uint16_t bg = dst_row[x];
+                    uint8_t bg_r = (bg >> 8) & 0xF8;
+                    uint8_t bg_g = (bg >> 3) & 0xFC;
+                    uint8_t bg_b = (bg << 3) & 0xF8;
+
+                    uint8_t inv_alpha = 255 - alpha;
+                    uint8_t out_r = (r * alpha + bg_r * inv_alpha + 128) >> 8;
+                    uint8_t out_g = (g * alpha + bg_g * inv_alpha + 128) >> 8;
+                    uint8_t out_b = (b * alpha + bg_b * inv_alpha + 128) >> 8;
+
+                    dst_row[x] =
+                        ((out_r & 0xF8) << 8) | ((out_g & 0xFC) << 3) | (out_b >> 3);
+                }
+            }
+        }
+    }
+
+    // Flush PSRAM display buffer from CPU cache before DMA reads it
+#if defined(ESP32) && ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+    if (m_UsePSRAM)
+    {
+        uintptr_t addr = (uintptr_t)conversion_buffer;
+        uintptr_t aligned_addr = addr & ~63;
+        size_t raw_bytes = m_BufferPixelCount * sizeof(uint16_t);
+        size_t aligned_bytes = ((addr - aligned_addr) + raw_bytes + 63) & ~63;
+        esp_cache_msync((void*)aligned_addr, aligned_bytes, ESP_CACHE_MSYNC_FLAG_DIR_C2M);
+    }
+#endif
+
+    // Bulk byte swap for display controllers that expect big-endian RGB565.
+    // Done as a single tight loop — faster than per-pixel swap during rendering
+    // or LovyanGFX's pixelcopy path.
+    if (m_SwapBytes)
+    {
+        uint32_t* buf32 = (uint32_t*)conversion_buffer;
+        size_t count32 = m_BufferPixelCount / 2;
+        for (size_t i = 0; i < count32; i++)
+        {
+            uint32_t v = buf32[i];
+            buf32[i] = ((v >> 8) & 0x00FF00FF) | ((v & 0x00FF00FF) << 8);
+        }
+    }
+
+    if (m_DoubleBuffer)
+    {
+        if (m_DmaInFlight)
+        {
+            tft->waitDMA();
+        }
+
+        tft->startWrite();
+        tft->pushImage(0, 0, m_DisplayWidth, m_DisplayHeight, conversion_buffer);
+        tft->endWrite();
+        m_DmaInFlight = true;
+
+        m_RenderIndex = 1 - m_RenderIndex;
+    }
+    else
+    {
+        tft->startWrite();
+        tft->pushImage(0, 0, m_DisplayWidth, m_DisplayHeight, conversion_buffer);
+        tft->endWrite();
+        tft->waitDMA();
+    }
+}
+
+void LovyanGFXDisplay::GetDisplaySize(int32_t* width, int32_t* height) const
+{
+    if (width) *width = m_DisplayWidth;
+    if (height) *height = m_DisplayHeight;
+}
+
+bool LovyanGFXDisplay::IsInitialized() const
+{
+    return initialized;
+}
+
+void LovyanGFXDisplay::RequestFullRefresh()
+{
+    // For LovyanGFX, we always do full refresh, so this is a no-op
+}
+
+bool LovyanGFXDisplay::ProcessEvents()
+{
+    // For embedded platforms, there are no windowing events to process
+    return true;
+}
+
+void* LovyanGFXDisplay::CreateUIOverlay(int32_t width, int32_t height)
+{
+    if (!initialized)
+    {
+        DEKI_LOG_ERROR("LovyanGFXDisplay::CreateUIOverlay: Display not initialized");
+        return nullptr;
+    }
+
+    UIOverlay* overlay = new UIOverlay();
+    if (!overlay)
+    {
+        DEKI_LOG_ERROR("LovyanGFXDisplay::CreateUIOverlay: Failed to allocate overlay structure");
+        return nullptr;
+    }
+
+    overlay->width = width;
+    overlay->height = height;
+
+    size_t buffer_size = width * height * sizeof(uint32_t);
+    overlay->buffer = (uint32_t*)Deki::Memory::Allocate(buffer_size, true, "UIOverlay-ARGB8888");
+
+    if (!overlay->buffer)
+    {
+        DEKI_LOG_ERROR("LovyanGFXDisplay::CreateUIOverlay: Failed to allocate overlay buffer (%zu bytes)", buffer_size);
+        delete overlay;
+        return nullptr;
+    }
+
+    memset(overlay->buffer, 0, buffer_size);
+
+    DEKI_LOG_INTERNAL("LovyanGFXDisplay: Created UI overlay %dx%d (%zu bytes, ARGB8888 format)", width, height, buffer_size);
+    return overlay;
+}
+
+bool LovyanGFXDisplay::UpdateUIOverlay(void* overlay, int32_t x, int32_t y,
+                                       int32_t width, int32_t height,
+                                       const uint32_t* buffer)
+{
+    if (!overlay || !buffer)
+    {
+        return false;
+    }
+
+    UIOverlay* ui_overlay = (UIOverlay*)overlay;
+
+    if (x < 0 || y < 0 || x + width > ui_overlay->width || y + height > ui_overlay->height)
+    {
+        DEKI_LOG_WARNING("LovyanGFXDisplay::UpdateUIOverlay: Invalid bounds (%d,%d,%d,%d) for overlay %dx%d",
+                         x, y, width, height, ui_overlay->width, ui_overlay->height);
+        return false;
+    }
+
+    for (int32_t row = 0; row < height; row++)
+    {
+        uint32_t* dest = &ui_overlay->buffer[(y + row) * ui_overlay->width + x];
+        const uint32_t* src = &buffer[row * width];
+        memcpy(dest, src, width * sizeof(uint32_t));
+    }
+
+    return true;
+}
+
+bool LovyanGFXDisplay::UpdateUIOverlayRGB565A8(void* overlay, int32_t x, int32_t y,
+                                               int32_t width, int32_t height,
+                                               const uint8_t* rgb565a8_pixels)
+{
+    return false;
+}
+
+void LovyanGFXDisplay::DestroyUIOverlay(void* overlay)
+{
+    if (!overlay)
+    {
+        return;
+    }
+
+    UIOverlay* ui_overlay = (UIOverlay*)overlay;
+
+    if (ui_overlay == m_ActiveOverlay)
+    {
+        m_ActiveOverlay = nullptr;
+    }
+
+    if (ui_overlay->buffer)
+    {
+        Deki::Memory::Free(ui_overlay->buffer, "UIOverlay-ARGB8888");
+        ui_overlay->buffer = nullptr;
+    }
+
+    delete ui_overlay;
+
+    DEKI_LOG_INTERNAL("LovyanGFXDisplay: Destroyed UI overlay");
+}
+
+void LovyanGFXDisplay::SetActiveUIOverlay(void* overlay)
+{
+    m_ActiveOverlay = (UIOverlay*)overlay;
+
+    if (m_ActiveOverlay)
+    {
+        DEKI_LOG_INTERNAL("LovyanGFXDisplay: Set active UI overlay %dx%d", m_ActiveOverlay->width, m_ActiveOverlay->height);
+    }
+    else
+    {
+        DEKI_LOG_INTERNAL("LovyanGFXDisplay: Cleared active UI overlay");
+    }
+}
+
+void LovyanGFXDisplay::ClearActiveUIOverlay()
+{
+    if (!m_ActiveOverlay || !m_ActiveOverlay->buffer)
+    {
+        return;
+    }
+
+    size_t buffer_size = m_ActiveOverlay->width * m_ActiveOverlay->height * sizeof(uint32_t);
+    memset(m_ActiveOverlay->buffer, 0, buffer_size);
+}
+
+uint8_t* LovyanGFXDisplay::GetRenderBuffer(int32_t* width, int32_t* height)
+{
+    // When using PSRAM, don't offer the display buffer for direct rendering.
+    // PSRAM is slow for random-access pixel operations (blending, blitting).
+    // Let DekiRenderSystem allocate in fast internal RAM instead;
+    // Present() will do a fast sequential memcpy to the PSRAM DMA buffer.
+    if (m_UsePSRAM)
+        return nullptr;
+
+    if (!initialized || !buffers[m_RenderIndex])
+        return nullptr;
+    if (width) *width = m_DisplayWidth;
+    if (height) *height = m_DisplayHeight;
+    return (uint8_t*)buffers[m_RenderIndex];
+}
+
+void LovyanGFXDisplay::SetBacklight(bool on)
+{
+    if (!tft) return;
+    tft->setBrightness(on ? 255 : 0);
+}
+
+#else
+// Non-ESP32 stub implementation
+LovyanGFXDisplay::LovyanGFXDisplay() : tft(nullptr), m_DisplayWidth(0), m_DisplayHeight(0), initialized(false),
+    buffers{nullptr, nullptr}, m_BufferPixelCount(0), m_RenderIndex(0), m_DmaInFlight(false),
+    m_UsePSRAM(false), m_DoubleBuffer(false), m_SwapBytes(false), m_ActiveOverlay(nullptr) {}
+LovyanGFXDisplay::~LovyanGFXDisplay() {}
+bool LovyanGFXDisplay::InitializeWithDevice(lgfx::LGFX_Device*, int32_t, int32_t, bool, bool, bool) { return false; }
+bool LovyanGFXDisplay::Initialize(int32_t width, int32_t height) { return false; }
+void LovyanGFXDisplay::Shutdown() {}
+void LovyanGFXDisplay::Present(const uint8_t* framebuffer, int width, int height, int format) {}
+bool LovyanGFXDisplay::SupportsPartialPresent() const { return false; }
+void LovyanGFXDisplay::PresentRegions(const uint8_t*, int, int, int, const Deki::Rect*, int32_t) {}
+bool LovyanGFXDisplay::EnsureBands() { return false; }
+void LovyanGFXDisplay::FreeBands() {}
+void LovyanGFXDisplay::PushRows(const uint8_t*, int, int, int, int, int) {}
+void LovyanGFXDisplay::FinishPresent() {}
+void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, int width, int height, int format) {}
+void LovyanGFXDisplay::GetDisplaySize(int32_t* width, int32_t* height) const {}
+bool LovyanGFXDisplay::IsInitialized() const { return false; }
+void LovyanGFXDisplay::RequestFullRefresh() {}
+bool LovyanGFXDisplay::ProcessEvents() { return true; }
+void* LovyanGFXDisplay::CreateUIOverlay(int32_t width, int32_t height) { return nullptr; }
+bool LovyanGFXDisplay::UpdateUIOverlay(void* overlay, int32_t x, int32_t y,
+                                       int32_t width, int32_t height,
+                                       const uint32_t* buffer) { return false; }
+bool LovyanGFXDisplay::UpdateUIOverlayRGB565A8(void* overlay, int32_t x, int32_t y,
+                                               int32_t width, int32_t height,
+                                               const uint8_t* rgb565a8_pixels) { return false; }
+void LovyanGFXDisplay::DestroyUIOverlay(void* overlay) {}
+void LovyanGFXDisplay::SetActiveUIOverlay(void* overlay) {}
+void LovyanGFXDisplay::ClearActiveUIOverlay() {}
+uint8_t* LovyanGFXDisplay::GetRenderBuffer(int32_t*, int32_t*) { return nullptr; }
+void LovyanGFXDisplay::SetBacklight(bool) {}
+#endif

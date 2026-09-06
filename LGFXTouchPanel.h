@@ -1,0 +1,136 @@
+#pragma once
+
+#include <cstdint>
+#include <deki/SetupComponent.h>
+#include <deki/reflection/Property.h>
+#include "LovyanGFXPackage.h"
+
+enum class TouchDriverType : uint8_t
+{
+    FT5x06 = 0,
+    GT911 = 1,
+    CST816S = 2,
+    XPT2046 = 3
+};
+
+enum class TouchRotation : uint8_t
+{
+    None = 0,
+    CW_90 = 1,
+    CW_180 = 2,
+    CW_270 = 3,
+    Mirror = 4,
+    Mirror_CW_90 = 5,
+    Mirror_CW_180 = 6,
+    Mirror_CW_270 = 7
+};
+
+/**
+ * @brief Component to configure and initialize a touch panel at runtime
+ *
+ * Add this component to your boot scene to enable touch input.
+ * Supports multiple LovyanGFX touch drivers: FT5x06, GT911, XPT2046, CST816S.
+ *
+ * Inherits from SetupComponent to participate in boot sequence.
+ * PlatformSetupComponent calls Setup() to initialize the touch controller
+ * and attach it to the LovyanGFX display panel.
+ *
+ * Usage:
+ * 1. Add LGFXTouchPanel to your boot scene
+ * 2. Set driver type and pin values in Inspector
+ * 3. Add to PlatformSetupComponent's setup_components list
+ */
+class DEKI_LOVYANGFX_API LGFXTouchPanel : public Deki::SetupComponent
+{
+public:
+    DEKI_COMPONENT(LGFXTouchPanel, Deki::SetupComponent, "LovyanGFX", "9c79bf8d-6ba3-48b8-80da-1e775d818ad3", "DEKI_FEATURE_LGFX_TOUCH_PANEL")
+    DEKI_DESCRIPTION("Reads a touch controller (FT5x06, GT911, CST816S, XPT2046) through LovyanGFX.")
+
+    // ========== Driver Selection ==========
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Touch controller IC")
+    TouchDriverType driverType = TouchDriverType::FT5x06;
+
+    // ========== Pins ==========
+
+    DEKI_GROUP("I2C (capacitive touch)")
+    DEKI_EXPORT
+    DEKI_TOOLTIP("I2C bus port (must match an I2CBusComponent in the boot scene)")
+    DEKI_VISIBLE_WHEN(driverType, FT5x06, GT911, CST816S)
+    DEKI_RANGE(0, 3)
+    int32_t i2cPort = 0;
+
+    DEKI_GROUP("Pins")
+    DEKI_EXPORT
+    DEKI_TOOLTIP("SPI chip select pin (-1 = not used)")
+    DEKI_VISIBLE_WHEN(driverType, XPT2046)
+    DEKI_RANGE(-1, 48)
+    int32_t spiCs = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("SPI MOSI pin (-1 = not used)")
+    DEKI_VISIBLE_WHEN(driverType, XPT2046)
+    DEKI_RANGE(-1, 48)
+    int32_t spiMosi = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("SPI MISO pin (-1 = not used)")
+    DEKI_VISIBLE_WHEN(driverType, XPT2046)
+    DEKI_RANGE(-1, 48)
+    int32_t spiMiso = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("SPI clock pin (-1 = not used)")
+    DEKI_VISIBLE_WHEN(driverType, XPT2046)
+    DEKI_RANGE(-1, 48)
+    int32_t spiClk = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Interrupt pin for touch events (-1 = polling mode)")
+    DEKI_RANGE(-1, 48)
+    int32_t m_PinInt = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Reset pin for touch controller (-1 = not connected)")
+    DEKI_RANGE(-1, 48)
+    int32_t pinRst = -1;
+
+    // ========== Touch Panel Bounds ==========
+
+    DEKI_GROUP("Touch Panel Bounds")
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Minimum raw X value from touch controller")
+    int32_t xMin = 0;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Maximum raw X value from touch controller")
+    int32_t xMax = 239;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Minimum raw Y value from touch controller")
+    int32_t yMin = 0;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Maximum raw Y value from touch controller")
+    int32_t yMax = 319;
+
+    // ========== Advanced ==========
+
+    DEKI_GROUP("Advanced")
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Touch coordinate rotation, must match display rotation")
+    TouchRotation offsetRotation = TouchRotation::None;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Enable if touch shares the SPI bus with the display")
+    bool busShared = false;
+
+    // ========== SetupComponent Implementation ==========
+
+    void Setup(SetupCallback onComplete) override;
+    const char* GetSetupName() const override { return "Touch Panel"; }
+};
+
+// Generated property metadata
+#include "generated/LGFXTouchPanel.gen.h"
