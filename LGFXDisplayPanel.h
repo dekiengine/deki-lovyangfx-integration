@@ -53,11 +53,11 @@ enum class DisplayRotation : uint8_t
  * 2. Configure panel type, bus, and pins in Inspector
  * 3. Add to PlatformSetupComponent's setup_components list (before touch)
  */
+DEKI_CATEGORY("LovyanGFX")
+DEKI_DESCRIPTION("Drives an SPI display panel (ILI9341, ST7789, GC9A01, ...) through LovyanGFX.")
 class DEKI_LOVYANGFX_API LGFXDisplayPanel : public Deki::SetupComponent
 {
 public:
-    DEKI_COMPONENT(LGFXDisplayPanel, Deki::SetupComponent, "LovyanGFX", "a7e1d3f0-8b4c-4e2a-9f61-3c8d2b5a7e90", "DEKI_FEATURE_LGFX_DISPLAY_PANEL")
-    DEKI_DESCRIPTION("Drives an SPI display panel (ILI9341, ST7789, GC9A01, ...) through LovyanGFX.")
 
     // ========== Panel ==========
 
@@ -332,4 +332,3 @@ public:
 };
 
 // Generated property metadata
-#include "generated/LGFXDisplayPanel.gen.h"

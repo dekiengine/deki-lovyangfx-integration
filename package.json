@@ -1,7 +1,7 @@
 {
   "id": "deki-lovyangfx",
   "displayName": "LovyanGFX Integration",
-  "minEngine": "0.10.0",
+  "minEngine": "0.11.0",
   "buildDefine": "DEKI_PACKAGE_LOVYANGFX",
   "requires": [
     "deki-i2c"
@@ -12,8 +12,8 @@
       "displayName": "Display Panel",
       "buildDefine": "DEKI_FEATURE_LGFX_DISPLAY_PANEL",
       "defaultEnabled": true,
-      "componentGuids": [
-        "a7e1d3f0-8b4c-4e2a-9f61-3c8d2b5a7e90"
+      "componentTypes": [
+        "LGFXDisplayPanel"
       ]
     },
     {
@@ -21,8 +21,8 @@
       "displayName": "Touch Panel",
       "buildDefine": "DEKI_FEATURE_LGFX_TOUCH_PANEL",
       "defaultEnabled": true,
-      "componentGuids": [
-        "9c79bf8d-6ba3-48b8-80da-1e775d818ad3"
+      "componentTypes": [
+        "LGFXTouchPanel"
       ]
     }
   ],
