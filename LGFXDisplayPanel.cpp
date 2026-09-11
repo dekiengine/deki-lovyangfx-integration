@@ -64,7 +64,7 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         cfg.pin_miso = spiMiso;
         cfg.pin_sclk = spiClk;
         cfg.pin_dc = spiDc;
-        cfg.spiHost = static_cast<spi_host_device_t>(spiHost);
+        cfg.spi_host = static_cast<spi_host_device_t>(spiHost);
         cfg.freq_write = spiFreqWrite;
         bus->config(cfg);
         device->setPanel(nullptr); // Clear before setting bus
@@ -91,19 +91,19 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         }
 
         auto panel_cfg = panel->config();
-        panel_cfg.pinCs = pinCs;
-        panel_cfg.pinRst = pinRst;
+        panel_cfg.pin_cs = pinCs;
+        panel_cfg.pin_rst = pinRst;
         panel_cfg.pin_busy = -1;
-        panel_cfg.panelWidth = panelWidth;
-        panel_cfg.panelHeight = panelHeight;
-        panel_cfg.memoryWidth = memoryWidth;
-        panel_cfg.memoryHeight = memoryHeight;
-        panel_cfg.offsetX = offsetX;
-        panel_cfg.offsetY = offsetY;
-        panel_cfg.offsetRotation = 0;
+        panel_cfg.panel_width = panelWidth;
+        panel_cfg.panel_height = panelHeight;
+        panel_cfg.memory_width = memoryWidth;
+        panel_cfg.memory_height = memoryHeight;
+        panel_cfg.offset_x = offsetX;
+        panel_cfg.offset_y = offsetY;
+        panel_cfg.offset_rotation = 0;
         panel_cfg.readable = true;
         panel_cfg.invert = invertColor;
-        panel_cfg.rgbOrder = rgbOrder;
+        panel_cfg.rgb_order = rgbOrder;
         panel->config(panel_cfg);
         panel->setBus(bus);
 
@@ -159,19 +159,19 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
                 return;
         }
         auto panel_cfg = panel->config();
-        panel_cfg.pinCs = pinCs;
-        panel_cfg.pinRst = pinRst;
+        panel_cfg.pin_cs = pinCs;
+        panel_cfg.pin_rst = pinRst;
         panel_cfg.pin_busy = -1;
-        panel_cfg.panelWidth = panelWidth;
-        panel_cfg.panelHeight = panelHeight;
-        panel_cfg.memoryWidth = memoryWidth;
-        panel_cfg.memoryHeight = memoryHeight;
-        panel_cfg.offsetX = offsetX;
-        panel_cfg.offsetY = offsetY;
-        panel_cfg.offsetRotation = 0;
+        panel_cfg.panel_width = panelWidth;
+        panel_cfg.panel_height = panelHeight;
+        panel_cfg.memory_width = memoryWidth;
+        panel_cfg.memory_height = memoryHeight;
+        panel_cfg.offset_x = offsetX;
+        panel_cfg.offset_y = offsetY;
+        panel_cfg.offset_rotation = 0;
         panel_cfg.readable = true;
         panel_cfg.invert = invertColor;
-        panel_cfg.rgbOrder = rgbOrder;
+        panel_cfg.rgb_order = rgbOrder;
         panel->config(panel_cfg);
         panel->setBus(bus);
 
@@ -236,19 +236,19 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         }
 
         auto panel_cfg = panel->config();
-        panel_cfg.pinCs = pinCs;
-        panel_cfg.pinRst = pinRst;
+        panel_cfg.pin_cs = pinCs;
+        panel_cfg.pin_rst = pinRst;
         panel_cfg.pin_busy = -1;
-        panel_cfg.panelWidth = panelWidth;
-        panel_cfg.panelHeight = panelHeight;
-        panel_cfg.memoryWidth = memoryWidth;
-        panel_cfg.memoryHeight = memoryHeight;
-        panel_cfg.offsetX = offsetX;
-        panel_cfg.offsetY = offsetY;
-        panel_cfg.offsetRotation = 0;
+        panel_cfg.panel_width = panelWidth;
+        panel_cfg.panel_height = panelHeight;
+        panel_cfg.memory_width = memoryWidth;
+        panel_cfg.memory_height = memoryHeight;
+        panel_cfg.offset_x = offsetX;
+        panel_cfg.offset_y = offsetY;
+        panel_cfg.offset_rotation = 0;
         panel_cfg.readable = true;
         panel_cfg.invert = invertColor;
-        panel_cfg.rgbOrder = rgbOrder;
+        panel_cfg.rgb_order = rgbOrder;
         panel_cfg.dlen_16bit = true;
         panel->config(panel_cfg);
         panel->setBus(bus);
