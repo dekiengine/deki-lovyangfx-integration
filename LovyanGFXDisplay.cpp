@@ -767,7 +767,7 @@ void* LovyanGFXDisplay::CreateUIOverlay(int32_t width, int32_t height)
     overlay->height = height;
 
     size_t buffer_size = width * height * sizeof(uint32_t);
-    overlay->buffer = (uint32_t*)Deki::Memory::Allocate(buffer_size, true, "UIOverlay-ARGB8888");
+    overlay->buffer = (uint32_t*)Deki::Memory::Allocate(buffer_size, Deki::MemoryUse::Buffer, "UIOverlay-ARGB8888");
 
     if (!overlay->buffer)
     {
