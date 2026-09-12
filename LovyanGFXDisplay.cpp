@@ -42,25 +42,23 @@ LovyanGFXDisplay::~LovyanGFXDisplay()
 
 static uint16_t* AllocateDisplayBuffer(size_t buffer_bytes, bool usePSRAM, const char* label)
 {
-    uint16_t* buf = nullptr;
-
-#ifdef ESP32
-    if (usePSRAM)
-    {
-        buf = (uint16_t*)heap_caps_aligned_alloc(64, buffer_bytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-    }
-    else
-    {
-        buf = (uint16_t*)heap_caps_malloc(buffer_bytes, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
-    }
+    // Through the engine, which owns placement. The panel driver reads this
+    // buffer by DMA, so an internal one must carry the DMA capability rather
+    // than be merely internal: some internal regions on this part are not
+    // reachable, and a peripheral reading one of those corrupts the display
+    // silently instead of failing.
+    //
+    // usePSRAM comes from the board's own config, so it states what the
+    // hardware is rather than a caller guessing, and it maps onto the use.
+    const Deki::MemoryUse use = usePSRAM ? Deki::MemoryUse::Buffer : Deki::MemoryUse::Dma;
+    uint16_t* buf = (uint16_t*)Deki::Memory::Allocate(buffer_bytes, use, label);
 
     if (buf)
-    {
-        DEKI_LOG_INTERNAL("LovyanGFX: Allocated %s (%zu bytes, psram=%d)", label, buffer_bytes, usePSRAM);
-    }
-#else
-    buf = (uint16_t*)malloc(buffer_bytes);
-#endif
+        DEKI_LOG_INTERNAL("LovyanGFX: Allocated %s (%zu bytes, psram=%d)", label,
+                          buffer_bytes, (int)usePSRAM);
+    else
+        DEKI_LOG_ERROR("LovyanGFX: no room for %s (%zu bytes) in %s RAM", label,
+                       buffer_bytes, usePSRAM ? "external" : "DMA-capable internal");
 
     return buf;
 }
@@ -148,11 +146,7 @@ void LovyanGFXDisplay::Shutdown()
     {
         if (buffers[i])
         {
-#ifdef ESP32
-            heap_caps_free(buffers[i]);
-#else
-            free(buffers[i]);
-#endif
+            Deki::Memory::Free(buffers[i]);
             buffers[i] = nullptr;
         }
     }
@@ -192,7 +186,9 @@ bool LovyanGFXDisplay::EnsureBands()
     for (int i = 0; i < 2; ++i)
     {
         if (m_Band[i]) continue;
-        m_Band[i] = static_cast<uint16_t*>(heap_caps_malloc(bytes, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL));
+        // Band buffers are handed to the panel by DMA, same as the framebuffer.
+        m_Band[i] = static_cast<uint16_t*>(
+            Deki::Memory::Allocate(bytes, Deki::MemoryUse::Dma, "LovyanGFX::band"));
         if (!m_Band[i])
         {
             DEKI_LOG_ERROR("LovyanGFX: cannot allocate a %zu-byte staging band; partial present off", bytes);
@@ -207,7 +203,7 @@ void LovyanGFXDisplay::FreeBands()
 {
     for (int i = 0; i < 2; ++i)
     {
-        if (m_Band[i]) heap_caps_free(m_Band[i]);
+        Deki::Memory::Free(m_Band[i]);
         m_Band[i] = nullptr;
     }
 }
