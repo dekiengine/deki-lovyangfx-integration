@@ -53,7 +53,7 @@ static uint16_t* AllocateDisplayBuffer(size_t buffer_bytes, bool usePSRAM, const
     // Placement and reachability are separate questions. The board's config
     // answers the first; the second is true either way, because the panel
     // driver reads this buffer by DMA wherever it lives.
-    const Deki::MemoryRegion region = usePSRAM ? Deki::External : Deki::Internal;
+    const Deki::Memory::Region region = usePSRAM ? Deki::Memory::External : Deki::Memory::Internal;
     uint16_t* buf = (uint16_t*)Deki::Memory::AllocateDma(buffer_bytes, region);
 
     // `label` still names which buffer this is in the lines below. It is not
@@ -195,7 +195,7 @@ bool LovyanGFXDisplay::EnsureBands()
         if (m_Band[i]) continue;
         // Band buffers are handed to the panel by DMA, same as the framebuffer.
         m_Band[i] = static_cast<uint16_t*>(
-            Deki::Memory::AllocateDma(bytes, Deki::Internal));
+            Deki::Memory::AllocateDma(bytes, Deki::Memory::Internal));
         if (!m_Band[i])
         {
             DEKI_LOG_ERROR("LovyanGFX: cannot allocate a %zu-byte staging band; partial present off", bytes);
@@ -770,7 +770,7 @@ void* LovyanGFXDisplay::CreateUIOverlay(int32_t width, int32_t height)
     overlay->height = height;
 
     size_t buffer_size = width * height * sizeof(uint32_t);
-    overlay->buffer = (uint32_t*)Deki::Memory::Allocate(buffer_size, Deki::External);
+    overlay->buffer = (uint32_t*)Deki::Memory::Allocate(buffer_size, Deki::Memory::External);
 
     if (!overlay->buffer)
     {
