@@ -1,3 +1,4 @@
+#include <deki/Engine.h>  // ColorFormat, FrameBufferBytes
 #include "LovyanGFXDisplay.h"
 
 #ifdef ESP32
@@ -164,7 +165,7 @@ void LovyanGFXDisplay::Shutdown()
     initialized = false;
 }
 
-void LovyanGFXDisplay::Present(const uint8_t* framebuffer, int width, int height, int format)
+void LovyanGFXDisplay::Present(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format)
 {
     if (!initialized || !framebuffer)
     {
@@ -220,7 +221,7 @@ static inline uint16_t SwapBytes16(uint16_t v)
     return static_cast<uint16_t>((v >> 8) | (v << 8));
 }
 
-void LovyanGFXDisplay::PushRows(const uint8_t* framebuffer, int width, int height, int format, int y0, int y1)
+void LovyanGFXDisplay::PushRows(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format, int y0, int y1)
 {
     if (!EnsureBands()) return;
     const int w = (width < m_DisplayWidth) ? width : m_DisplayWidth;
@@ -246,7 +247,7 @@ void LovyanGFXDisplay::PushRows(const uint8_t* framebuffer, int width, int heigh
         {
             uint16_t* dst = band + static_cast<size_t>(i) * w;
             const int sy = y + i;
-            if (format == 0)  // RGB565
+            if (format == Deki::ColorFormat::RGB565)  // RGB565
             {
                 const uint16_t* src = reinterpret_cast<const uint16_t*>(framebuffer) + static_cast<size_t>(sy) * width;
                 if (m_SwapBytes)
@@ -254,7 +255,7 @@ void LovyanGFXDisplay::PushRows(const uint8_t* framebuffer, int width, int heigh
                 else
                     memcpy(dst, src, static_cast<size_t>(w) * sizeof(uint16_t));
             }
-            else if (format == 2)  // ARGB8888
+            else if (format == Deki::ColorFormat::ARGB8888)  // ARGB8888
             {
                 const uint32_t* src = reinterpret_cast<const uint32_t*>(framebuffer) + static_cast<size_t>(sy) * width;
                 for (int x = 0; x < w; ++x)
@@ -264,7 +265,7 @@ void LovyanGFXDisplay::PushRows(const uint8_t* framebuffer, int width, int heigh
                     dst[x] = m_SwapBytes ? SwapBytes16(v) : v;
                 }
             }
-            else if (format == 1)  // RGB888
+            else if (format == Deki::ColorFormat::RGB888)  // RGB888
             {
                 const uint8_t* src = framebuffer + static_cast<size_t>(sy) * width * 3;
                 for (int x = 0; x < w; ++x)
@@ -303,7 +304,7 @@ void LovyanGFXDisplay::FinishPresent()
     }
 }
 
-void LovyanGFXDisplay::PresentRegions(const uint8_t* framebuffer, int width, int height, int format,
+void LovyanGFXDisplay::PresentRegions(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format,
                                       const Deki::Rect* rects, int32_t count)
 {
     if (!initialized || !framebuffer)
@@ -351,12 +352,12 @@ void LovyanGFXDisplay::PresentRegions(const uint8_t* framebuffer, int width, int
     FinishPresent();
 }
 
-void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, int width, int height, int format)
+void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format)
 {
     uint16_t* conversion_buffer = buffers[m_RenderIndex];
 
     // Passthrough mode: no display buffer, push framebuffer directly (RGB565 only)
-    const bool passthrough = (!conversion_buffer && format == 0);
+    const bool passthrough = (!conversion_buffer && format == Deki::ColorFormat::RGB565);
     if (passthrough)
     {
         conversion_buffer = (uint16_t*)framebuffer;
@@ -379,7 +380,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
     present_count++;
 
     // Fast path: framebuffer IS the output buffer (direct rendering or passthrough)
-    const bool directBuffer = passthrough || (format == 0 && (const uint16_t*)framebuffer == conversion_buffer);
+    const bool directBuffer = passthrough || (format == Deki::ColorFormat::RGB565 && (const uint16_t*)framebuffer == conversion_buffer);
 
     if (directBuffer)
     {
@@ -408,10 +409,9 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
 #if defined(ESP32) && ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
     if (esp_ptr_external_ram(framebuffer))
     {
-        size_t bytes_per_pixel = (format == 2) ? 4 : (format == 1) ? 3 : 2;
         uintptr_t addr = (uintptr_t)framebuffer;
         uintptr_t aligned_addr = addr & ~63;
-        size_t raw_bytes = width * height * bytes_per_pixel;
+        const size_t raw_bytes = Deki::FrameBufferBytes(format, width, height);
         size_t aligned_bytes = ((addr - aligned_addr) + raw_bytes + 63) & ~63;
         esp_cache_msync((void*)aligned_addr, aligned_bytes, ESP_CACHE_MSYNC_FLAG_DIR_C2M);
     }
@@ -422,7 +422,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
     int effective_height = (height < m_DisplayHeight) ? height : m_DisplayHeight;
     size_t pixel_count = effective_width * effective_height;
 
-    if (format == 2)  // ARGB8888 - most common path
+    if (format == Deki::ColorFormat::ARGB8888)  // ARGB8888 - most common path
     {
         const uint32_t* src = (const uint32_t*)framebuffer;
         uint16_t* dst = conversion_buffer;
@@ -456,7 +456,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
             }
         }
     }
-    else if (format == 0)  // RGB565
+    else if (format == Deki::ColorFormat::RGB565)  // RGB565
     {
         const uint16_t* src = (const uint16_t*)framebuffer;
         uint16_t* dst = conversion_buffer;
@@ -473,7 +473,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
             }
         }
     }
-    else if (format == 1)  // RGB888
+    else if (format == Deki::ColorFormat::RGB888)  // RGB888
     {
         const uint8_t* src = framebuffer;
         uint16_t* dst = conversion_buffer;
@@ -901,14 +901,14 @@ LovyanGFXDisplay::~LovyanGFXDisplay() {}
 bool LovyanGFXDisplay::InitializeWithDevice(lgfx::LGFX_Device*, int32_t, int32_t, bool, bool, bool) { return false; }
 bool LovyanGFXDisplay::Initialize(int32_t width, int32_t height) { return false; }
 void LovyanGFXDisplay::Shutdown() {}
-void LovyanGFXDisplay::Present(const uint8_t* framebuffer, int width, int height, int format) {}
+void LovyanGFXDisplay::Present(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format) {}
 bool LovyanGFXDisplay::SupportsPartialPresent() const { return false; }
-void LovyanGFXDisplay::PresentRegions(const uint8_t*, int, int, int, const Deki::Rect*, int32_t) {}
+void LovyanGFXDisplay::PresentRegions(const uint8_t*, int, int, Deki::ColorFormat, const Deki::Rect*, int32_t) {}
 bool LovyanGFXDisplay::EnsureBands() { return false; }
 void LovyanGFXDisplay::FreeBands() {}
-void LovyanGFXDisplay::PushRows(const uint8_t*, int, int, int, int, int) {}
+void LovyanGFXDisplay::PushRows(const uint8_t*, int, int, Deki::ColorFormat, int, int) {}
 void LovyanGFXDisplay::FinishPresent() {}
-void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, int width, int height, int format) {}
+void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format) {}
 void LovyanGFXDisplay::GetDisplaySize(int32_t* width, int32_t* height) const {}
 bool LovyanGFXDisplay::IsInitialized() const { return false; }
 void LovyanGFXDisplay::RequestFullRefresh() {}

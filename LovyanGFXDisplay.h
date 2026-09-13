@@ -62,9 +62,9 @@ class LovyanGFXDisplay : public Deki::IDisplay
     // IPlatformDisplay interface
     bool Initialize(int32_t width, int32_t height) override;
     void Shutdown() override;
-    void Present(const uint8_t* framebuffer, int width, int height, int format) override;
+    void Present(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format) override;
     bool SupportsPartialPresent() const override;
-    void PresentRegions(const uint8_t* framebuffer, int width, int height, int format,
+    void PresentRegions(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format,
                         const Deki::Rect* rects, int32_t count) override;
     void GetDisplaySize(int32_t* width, int32_t* height) const override;
     bool IsInitialized() const override;
@@ -89,11 +89,11 @@ class LovyanGFXDisplay : public Deki::IDisplay
     lgfx::LGFX_Device* GetTFT() const { return tft; }
 
    private:
-    void ConvertAndRenderFramebuffer(const uint8_t* framebuffer, int width, int height, int format);
+    void ConvertAndRenderFramebuffer(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format);
     bool EnsureBands();
     void FreeBands();
     // Convert rows [y0, y1) of the framebuffer into staging bands and push them.
-    void PushRows(const uint8_t* framebuffer, int width, int height, int format, int y0, int y1);
+    void PushRows(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format, int y0, int y1);
     // Flip the render buffer (double buffering) / wait for DMA (single).
     void FinishPresent();
 };
