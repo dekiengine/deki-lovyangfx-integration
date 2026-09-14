@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">deki-lovyangfx-integration<span id="projectnumber">&#160;0.10.0</span>
+   <div id="projectname">deki-lovyangfx-integration<span id="projectnumber">&#160;0.15.0</span>
    </div>
    <div id="projectbrief">Deki package reference</div>
   </td>
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="mainpage"></a></p>
 <p>LovyanGFX display and touch panel integration</p>
-<p>Repository: <a href="https://github.com/dekiengine/deki-lovyangfx-integration">github.com/dekiengine/deki-lovyangfx-integration</a> · Latest release: 0.10.0 · Requires: <a href="https://dekiengine.github.io/deki-i2c/">deki-i2c</a></p>
+<p>Repository: <a href="https://github.com/dekiengine/deki-lovyangfx-integration">github.com/dekiengine/deki-lovyangfx-integration</a> · Latest release: 0.15.0 · Needs engine 0.15.0+ · Requires: <a href="https://dekiengine.github.io/deki-i2c/">deki-i2c</a></p>
 <p>Install: <span class="tt">DekiEditor --packages-add deki-lovyangfx-integration &lt;project&gt;</span>, or add it in the Package Manager. Part of <a href="https://dekiengine.github.io/docs/">Deki</a>; the engine's own components and the C++ API are documented there.</p>
 <p>Shown in the editor as <b>LovyanGFX Integration</b>.</p>
 <h1 class="doxsection"><a class="anchor" id="autotoc_md0"></a>
@@ -94,11 +94,22 @@ Components</h1>
 <td class="markdownTableBodyNone"><a class="el" href="#c-lgfxtouchpanel" title="LGFXTouchPanel">LGFXTouchPanel</a>  </td><td class="markdownTableBodyNone">LovyanGFX  </td><td class="markdownTableBodyNone">Reads a touch controller (FT5x06, GT911, CST816S, XPT2046) through LovyanGFX.  </td></tr>
 </table>
 <h1 class="doxsection"><a class="anchor" id="autotoc_md1"></a>
+Feature flags</h1>
+<p>Compile-time features the package exposes (<span class="tt">package.json</span>):</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Feature  </th><th class="markdownTableHeadNone">Define  </th><th class="markdownTableHeadNone">Default  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Display Panel  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_LGFX_DISPLAY_PANEL</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Touch Panel  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_LGFX_TOUCH_PANEL</span>  </td><td class="markdownTableBodyNone">on  </td></tr>
+</table>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
 Component reference</h1>
 <h2 class="doxsection"><a class="anchor" id="c-lgfxdisplaypanel"></a>
 LGFXDisplayPanel</h2>
 <p>Drives an SPI display panel (ILI9341, ST7789, GC9A01, ...) through LovyanGFX.</p>
-<p>Inspector name: LGFX Display Panel · Category: LovyanGFX · Type GUID: <span class="tt">a7e1d3f0-8b4c-4e2a-9f61-3c8d2b5a7e90</span></p>
+<p>Inspector name: LGFX Display Panel · Category: LovyanGFX · Type: <span class="tt">LGFXDisplayPanel</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
@@ -196,7 +207,7 @@ LGFXDisplayPanel</h2>
 <h2 class="doxsection"><a class="anchor" id="c-lgfxtouchpanel"></a>
 LGFXTouchPanel</h2>
 <p>Reads a touch controller (FT5x06, GT911, CST816S, XPT2046) through LovyanGFX.</p>
-<p>Inspector name: LGFX Touch Panel · Category: LovyanGFX · Type GUID: <span class="tt">9c79bf8d-6ba3-48b8-80da-1e775d818ad3</span></p>
+<p>Inspector name: LGFX Touch Panel · Category: LovyanGFX · Type: <span class="tt">LGFXTouchPanel</span></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
@@ -229,8 +240,24 @@ LGFXTouchPanel</h2>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><span class="tt">busShared</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">Enable if touch shares the SPI bus with the display  </td></tr>
 </table>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
+Changelog</h1>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
+0.15.0</h2>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
+Changed</h2>
+<ul>
+<li><span class="tt">Present</span> and <span class="tt">PresentRegions</span> take a <span class="tt">Deki::ColorFormat</span> instead of an <span class="tt">int</span> whose numbering lived in a comment and as literals in every display.</li>
+<li>Allocates through the engine, DMA buffers included, naming both the region and the DMA requirement rather than inferring either. The framebuffer's placement comes from the board's own config.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md6"></a>
+Fixed</h2>
+<ul>
+<li>A PSRAM cache flush sized an <span class="tt">RGB565A8</span> buffer at 2 bytes per pixel instead of 3. Sizes now come from <span class="tt">Deki::FrameBufferBytes</span>.</li>
+</ul>
+<p>Earlier releases: <a href="https://github.com/dekiengine/deki-lovyangfx-integration/blob/master/CHANGELOG.md">CHANGELOG.md</a>.</p>
 <hr  />
-<p>Generated from the package's reflection metadata by the Deki documentation build (engine 0.10.0). Reflected property names are the keys scene files use; a rename ships with an alias, see <a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">COMPATIBILITY.md</a>. </p>
+<p>Generated from the package's reflection metadata by the Deki documentation build (engine 0.15.0). Reflected property names are the keys scene files use; a rename ships with an alias, see <a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">COMPATIBILITY.md</a>. </p>
 </div></div><!-- PageDoc -->
 <a href="doxygen_crawl.html"></a>
 </div><!-- contents -->

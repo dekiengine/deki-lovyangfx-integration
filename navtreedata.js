@@ -26,9 +26,15 @@ var NAVTREE =
 [
   [ "deki-lovyangfx-integration", "index.html", [
     [ "Components", "index.html#autotoc_md0", null ],
-    [ "Component reference", "index.html#autotoc_md1", [
+    [ "Feature flags", "index.html#autotoc_md1", null ],
+    [ "Component reference", "index.html#autotoc_md2", [
       [ "LGFXDisplayPanel", "index.html#c-lgfxdisplaypanel", null ],
       [ "LGFXTouchPanel", "index.html#c-lgfxtouchpanel", null ]
+    ] ],
+    [ "Changelog", "index.html#autotoc_md3", [
+      [ "0.15.0", "index.html#autotoc_md4", null ],
+      [ "Changed", "index.html#autotoc_md5", null ],
+      [ "Fixed", "index.html#autotoc_md6", null ]
     ] ]
   ] ]
 ];
