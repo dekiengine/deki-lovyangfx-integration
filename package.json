@@ -1,5 +1,5 @@
 {
-  "id": "deki-lovyangfx",
+  "id": "deki-lovyangfx-integration",
   "displayName": "LovyanGFX Integration",
   "minEngine": "0.15.0",
   "buildDefine": "DEKI_PACKAGE_LOVYANGFX",
