@@ -60,7 +60,7 @@ public:
 
     DEKI_GROUP("I2C (capacitive touch)")
     DEKI_EXPORT
-    DEKI_TOOLTIP("I2C bus port (must match an DekiI2c::I2CBusComponent in the boot scene)")
+    DEKI_TOOLTIP("I2C bus port (must match an I2C Bus component in the boot scene)")
     DEKI_VISIBLE_WHEN(driverType, FT5x06, GT911, CST816S)
     DEKI_RANGE(0, 3)
     int32_t i2cPort = 0;
