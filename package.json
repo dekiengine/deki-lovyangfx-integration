@@ -1,7 +1,7 @@
 {
   "id": "deki-lovyangfx-integration",
   "displayName": "LovyanGFX Integration",
-  "minEngine": "0.15.0",
+  "minEngine": "0.16.0",
   "buildDefine": "DEKI_PACKAGE_LOVYANGFX",
   "requires": [
     "deki-i2c"
