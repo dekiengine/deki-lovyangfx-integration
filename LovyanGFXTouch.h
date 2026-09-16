@@ -5,27 +5,30 @@
 
 #include "IDekiInput.h"  // from deki-input
 
+namespace DekiLovyanGfx
+{
+
 // Forward declaration (must match LovyanGFX's inline namespace)
 namespace lgfx { inline namespace v1 { class LGFX_Device; } }
 
 /**
  * @brief LovyanGFX Touch input package
  *
- * Implements IDekiInput interface using LovyanGFX's built-in touch support.
+ * Implements DekiInput::IDekiInput interface using LovyanGFX's built-in touch support.
  * Works with any touch controller supported by LovyanGFX (XPT2046, FT5x06, etc.).
  * The touch controller is configured via the LGFXTouchPanel SetupComponent.
  */
-class LovyanGFXTouch : public IDekiInput
+class LovyanGFXTouch : public DekiInput::IDekiInput
 {
 public:
     LovyanGFXTouch();
     ~LovyanGFXTouch() override;
 
-    // IDekiInput interface
+    // DekiInput::IDekiInput interface
     bool Initialize() override;
     void Shutdown() override;
     void Update() override;
-    void RegisterEventCallback(const InputEventCallback& callback) override;
+    void RegisterEventCallback(const DekiInput::InputEventCallback& callback) override;
     bool IsInitialized() const override;
     bool GetPointerPosition(int32_t* x, int32_t* y) const override;
     bool IsKeyPressed(uint32_t key) const override;
@@ -44,10 +47,12 @@ private:
     int32_t m_PinInt;
     int32_t m_StaleFrameCount;
     static constexpr int STALE_THRESHOLD = 3;
-    std::vector<InputEventCallback> m_EventCallbacks;
+    std::vector<DekiInput::InputEventCallback> m_EventCallbacks;
 
-    void NotifyCallbacks(const InputEvent& event);
+    void NotifyCallbacks(const DekiInput::InputEvent& event);
 #else
     bool initialized = false;
 #endif
 };
+
+}  // namespace DekiLovyanGfx

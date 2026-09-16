@@ -7,6 +7,9 @@
 // Forward declaration (must match LovyanGFX's inline namespace)
 #include <vector>
 
+namespace DekiLovyanGfx
+{
+
 namespace lgfx { inline namespace v1 { class LGFX_Device; } }
 
 /**
@@ -97,3 +100,5 @@ class LovyanGFXDisplay : public Deki::IDisplay
     // Flip the render buffer (double buffering) / wait for DMA (single).
     void FinishPresent();
 };
+
+}  // namespace DekiLovyanGfx

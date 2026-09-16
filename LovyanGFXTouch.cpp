@@ -2,9 +2,15 @@
 #include <deki/LogSystem.h>
 
 #if defined(ESP32)
-
 #include <LovyanGFX.hpp>
 #include "LGFXDisplayPanel.h"
+#endif
+
+namespace DekiLovyanGfx
+{
+
+#if defined(ESP32)
+
 
 // millis() was provided by Arduino — use LovyanGFX's implementation instead
 using lgfx::v1::millis;
@@ -102,8 +108,8 @@ void LovyanGFXTouch::Update()
         {
             m_TouchPressed = false;
 
-            InputEvent event;
-            event.type = InputEventType::MOUSE_BUTTON_UP;
+            DekiInput::InputEvent event;
+            event.type = DekiInput::InputEventType::MOUSE_BUTTON_UP;
             event.x = m_TouchX;
             event.y = m_TouchY;
             event.pressed = false;
@@ -130,8 +136,8 @@ void LovyanGFXTouch::Update()
                 m_TouchPressed = false;
                 m_StaleFrameCount = 0;
 
-                InputEvent event;
-                event.type = InputEventType::MOUSE_BUTTON_UP;
+                DekiInput::InputEvent event;
+                event.type = DekiInput::InputEventType::MOUSE_BUTTON_UP;
                 event.x = m_TouchX;
                 event.y = m_TouchY;
                 event.pressed = false;
@@ -156,8 +162,8 @@ void LovyanGFXTouch::Update()
         m_LastTouchX = screen_x;
         m_LastTouchY = screen_y;
 
-        InputEvent event;
-        event.type = InputEventType::MOUSE_BUTTON_DOWN;
+        DekiInput::InputEvent event;
+        event.type = DekiInput::InputEventType::MOUSE_BUTTON_DOWN;
         event.x = screen_x;
         event.y = screen_y;
         event.pressed = true;
@@ -172,8 +178,8 @@ void LovyanGFXTouch::Update()
             m_TouchX = screen_x;
             m_TouchY = screen_y;
 
-            InputEvent event;
-            event.type = InputEventType::MOUSE_MOVE;
+            DekiInput::InputEvent event;
+            event.type = DekiInput::InputEventType::MOUSE_MOVE;
             event.x = screen_x;
             event.y = screen_y;
             event.timestamp = millis();
@@ -186,7 +192,7 @@ void LovyanGFXTouch::Update()
     }
 }
 
-void LovyanGFXTouch::NotifyCallbacks(const InputEvent& event)
+void LovyanGFXTouch::NotifyCallbacks(const DekiInput::InputEvent& event)
 {
     for (const auto& callback : m_EventCallbacks)
     {
@@ -197,7 +203,7 @@ void LovyanGFXTouch::NotifyCallbacks(const InputEvent& event)
     }
 }
 
-void LovyanGFXTouch::RegisterEventCallback(const InputEventCallback& callback)
+void LovyanGFXTouch::RegisterEventCallback(const DekiInput::InputEventCallback& callback)
 {
     m_EventCallbacks.push_back(callback);
     DEKI_LOG_INTERNAL("LovyanGFXTouch: Callback registered (total: %d callbacks)", m_EventCallbacks.size());
@@ -229,9 +235,11 @@ void LovyanGFXTouch::SetPinInt(int32_t) {}
 bool LovyanGFXTouch::Initialize() { return false; }
 void LovyanGFXTouch::Shutdown() {}
 void LovyanGFXTouch::Update() {}
-void LovyanGFXTouch::RegisterEventCallback(const InputEventCallback& callback) {}
+void LovyanGFXTouch::RegisterEventCallback(const DekiInput::InputEventCallback& callback) {}
 bool LovyanGFXTouch::IsInitialized() const { return false; }
 bool LovyanGFXTouch::GetPointerPosition(int32_t* x, int32_t* y) const { return false; }
 bool LovyanGFXTouch::IsKeyPressed(uint32_t key) const { return false; }
 
 #endif
+
+}  // namespace DekiLovyanGfx

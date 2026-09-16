@@ -7,11 +7,17 @@
 #include "IDekiI2C.h"  // from deki-i2c
 
 #if defined(ESP32)
-
 #include <LovyanGFX.hpp>
 #include "LGFXDisplayPanel.h"
 #include "LovyanGFXTouch.h"
 #include "esp_log.h"
+#endif
+
+namespace DekiLovyanGfx
+{
+
+#if defined(ESP32)
+
 static const char* TAG = "LGFXTouch";
 
 void LGFXTouchPanel::Setup(SetupCallback onComplete)
@@ -38,10 +44,10 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
 
     if (is_i2c_driver)
     {
-        IDekiI2C* bus = DekiI2C::GetBus(i2cPort);
+        DekiI2c::IDekiI2C* bus = DekiI2c::DekiI2C::GetBus(i2cPort);
         if (!bus)
         {
-            DEKI_LOG_ERROR("LGFXTouchPanel: no I2C bus on port %d — add I2CBusComponent before LGFXTouchPanel in boot scene", (int)i2cPort);
+            DEKI_LOG_ERROR("LGFXTouchPanel: no I2C bus on port %d — add DekiI2c::I2CBusComponent before LGFXTouchPanel in boot scene", (int)i2cPort);
             onComplete(false);
             return;
         }
@@ -187,7 +193,7 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             if (input->Initialize())
             {
                 DekiInput::SetInput(std::move(input), "LovyanGFXTouch");
-                DEKI_LOG_INFO("LGFXTouchPanel: Touch input registered with DekiInput");
+                DEKI_LOG_INFO("LGFXTouchPanel: Touch input registered with DekiInput::DekiInput");
             }
             else
             {
@@ -220,3 +226,5 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
 }
 
 #endif
+
+}  // namespace DekiLovyanGfx

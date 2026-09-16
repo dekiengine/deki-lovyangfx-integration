@@ -5,6 +5,9 @@
 #include <deki/reflection/Property.h>
 #include "LovyanGFXPackage.h"
 
+namespace DekiLovyanGfx
+{
+
 enum class TouchDriverType : uint8_t
 {
     FT5x06 = 0,
@@ -42,6 +45,7 @@ enum class TouchRotation : uint8_t
  */
 DEKI_CATEGORY("LovyanGFX")
 DEKI_DESCRIPTION("Reads a touch controller (FT5x06, GT911, CST816S, XPT2046) through LovyanGFX.")
+DEKI_FORMER_NAME("LGFXTouchPanel")
 class DEKI_LOVYANGFX_API LGFXTouchPanel : public Deki::SetupComponent
 {
 public:
@@ -56,7 +60,7 @@ public:
 
     DEKI_GROUP("I2C (capacitive touch)")
     DEKI_EXPORT
-    DEKI_TOOLTIP("I2C bus port (must match an I2CBusComponent in the boot scene)")
+    DEKI_TOOLTIP("I2C bus port (must match an DekiI2c::I2CBusComponent in the boot scene)")
     DEKI_VISIBLE_WHEN(driverType, FT5x06, GT911, CST816S)
     DEKI_RANGE(0, 3)
     int32_t i2cPort = 0;
@@ -98,7 +102,7 @@ public:
 
     // ========== Touch Panel Bounds ==========
 
-    DEKI_GROUP("Touch Panel Bounds")
+    DEKI_GROUP("Touch Panel DekiParticles::Bounds")
     DEKI_EXPORT
     DEKI_TOOLTIP("Minimum raw X value from touch controller")
     int32_t xMin = 0;
@@ -133,3 +137,5 @@ public:
 };
 
 // Generated property metadata
+
+}  // namespace DekiLovyanGfx

@@ -1,6 +1,17 @@
 #include "LGFXDisplayPanel.h"
 #include <deki/LogSystem.h>
 
+#if defined(ESP32)
+#include <LovyanGFX.hpp>
+#include "LovyanGFXDisplay.h"
+#include <deki/Engine.h>
+#include <deki/SceneSystem.h>
+#include "esp_log.h"
+#endif
+
+namespace DekiLovyanGfx
+{
+
 // Static LGFX device instance
 static lgfx::LGFX_Device* s_LGFXDevice = nullptr;
 
@@ -11,11 +22,6 @@ lgfx::LGFX_Device* LGFXDisplayPanel::GetLGFXDevice()
 
 #if defined(ESP32)
 
-#include <LovyanGFX.hpp>
-#include "LovyanGFXDisplay.h"
-#include <deki/Engine.h>
-#include <deki/SceneSystem.h>
-#include "esp_log.h"
 static const char* TAG = "LGFXDisplay";
 
 // Package owns the LovyanGFXDisplay lifetime now. File-scope unique_ptr keeps
@@ -313,3 +319,5 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
 }
 
 #endif
+
+}  // namespace DekiLovyanGfx

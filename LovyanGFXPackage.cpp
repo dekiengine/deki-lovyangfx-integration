@@ -16,15 +16,24 @@
 #include <deki/reflection/ComponentRegistry.h>
 #include <deki/reflection/ComponentFactory.h>
 
-#ifdef DEKI_EDITOR
-
-// Auto-generated registration helpers
 extern void DekiLovyanGFX_RegisterComponents();
 extern int DekiLovyanGFX_GetAutoComponentCount();
 extern const Deki::ComponentMeta* DekiLovyanGFX_GetAutoComponentMeta(int index);
 
+namespace DekiLovyanGfx
+{
+
+#ifdef DEKI_EDITOR
+
+// Auto-generated registration helpers
+
 // Track if already registered to avoid duplicates
 static bool s_LovyanGFXRegistered = false;
+
+
+// The exports below are C symbols at global scope; the package's own
+// registration helpers and statics live in its namespace.
+using namespace DekiLovyanGfx;
 
 extern "C" {
 
@@ -39,13 +48,13 @@ extern "C" {
 DEKI_LOVYANGFX_API int DekiLovyanGFX_EnsureRegistered(void)
 {
     if (s_LovyanGFXRegistered)
-        return DekiLovyanGFX_GetAutoComponentCount();
+        return ::DekiLovyanGFX_GetAutoComponentCount();
     s_LovyanGFXRegistered = true;
 
     // Auto-generated: registers all LovyanGFX components with ComponentRegistry + ComponentFactory
-    DekiLovyanGFX_RegisterComponents();
+    ::DekiLovyanGFX_RegisterComponents();
 
-    return DekiLovyanGFX_GetAutoComponentCount();
+    return ::DekiLovyanGFX_GetAutoComponentCount();
 }
 
 // =============================================================================
@@ -54,7 +63,7 @@ DEKI_LOVYANGFX_API int DekiLovyanGFX_EnsureRegistered(void)
 
 DEKI_PLUGIN_API const char* DekiPlugin_GetName(void)
 {
-    return "Deki LovyanGFX Package";
+    return "DekiRendering::Deki LovyanGFX Package";
 }
 
 DEKI_PLUGIN_API const char* DekiPlugin_GetVersion(void)
@@ -78,12 +87,12 @@ DEKI_PLUGIN_API void DekiPlugin_Shutdown(void)
 
 DEKI_PLUGIN_API int DekiPlugin_GetComponentCount(void)
 {
-    return DekiLovyanGFX_GetAutoComponentCount();
+    return ::DekiLovyanGFX_GetAutoComponentCount();
 }
 
 DEKI_PLUGIN_API const Deki::ComponentMeta* DekiPlugin_GetComponentMeta(int index)
 {
-    return DekiLovyanGFX_GetAutoComponentMeta(index);
+    return ::DekiLovyanGFX_GetAutoComponentMeta(index);
 }
 
 DEKI_PLUGIN_API void DekiPlugin_RegisterComponents(void)
@@ -108,3 +117,5 @@ DEKI_LOVYANGFX_API const char* DekiLovyanGFX_GetName(void)
 // or explicit calls from the application
 
 #endif // DEKI_EDITOR
+}  // namespace DekiLovyanGfx
+

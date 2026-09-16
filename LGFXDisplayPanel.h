@@ -5,6 +5,9 @@
 #include <deki/reflection/Property.h>
 #include "LovyanGFXPackage.h"
 
+namespace DekiLovyanGfx
+{
+
 // Forward declaration (must match LovyanGFX's inline namespace)
 namespace lgfx { inline namespace v1 { class LGFX_Device; } }
 
@@ -55,6 +58,7 @@ enum class DisplayRotation : uint8_t
  */
 DEKI_CATEGORY("LovyanGFX")
 DEKI_DESCRIPTION("Drives an SPI display panel (ILI9341, ST7789, GC9A01, ...) through LovyanGFX.")
+DEKI_FORMER_NAME("LGFXDisplayPanel")
 class DEKI_LOVYANGFX_API LGFXDisplayPanel : public Deki::SetupComponent
 {
 public:
@@ -332,3 +336,5 @@ public:
 };
 
 // Generated property metadata
+
+}  // namespace DekiLovyanGfx

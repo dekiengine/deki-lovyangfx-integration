@@ -4,21 +4,37 @@
 #ifdef ESP32
 #include <algorithm>
 #include <cstring>
-
 #include <deki/LogSystem.h>
 #include <deki/providers/Memory.h>
-// ESP32-specific includes for DMA memory allocation and cache management
+#endif
+
 #ifdef ESP32
-#include <esp_heap_caps.h>
-#include <esp_idf_version.h>
-#include <esp_task_wdt.h>  // For watchdog feeding during long display writes
+// Nested inside the ESP32 guard: ESP_IDF_VERSION comes from esp_idf_version.h
+// above, which only exists on that target.
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
 #include <esp_cache.h>
 #include <esp_dma_utils.h>  // For esp_dma_malloc (ensures DMA + cache alignment)
 #endif
 #endif
 
+#ifdef ESP32
+#include <esp_heap_caps.h>
+#include <esp_idf_version.h>
+#include <esp_task_wdt.h>  // For watchdog feeding during long display writes
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+#endif
+#endif
+#ifdef ESP32
 #include <LovyanGFX.hpp>
+#endif
+
+namespace DekiLovyanGfx
+{
+
+#ifdef ESP32
+
+// ESP32-specific includes for DMA memory allocation and cache management
+
 
 LovyanGFXDisplay::LovyanGFXDisplay()
 : tft(nullptr)
@@ -874,7 +890,7 @@ uint8_t* LovyanGFXDisplay::GetRenderBuffer(int32_t* width, int32_t* height)
 {
     // When using PSRAM, don't offer the display buffer for direct rendering.
     // PSRAM is slow for random-access pixel operations (blending, blitting).
-    // Let DekiRenderSystem allocate in fast internal RAM instead;
+    // Let DekiRendering::DekiRenderSystem allocate in fast internal RAM instead;
     // Present() will do a fast sequential memcpy to the PSRAM DMA buffer.
     if (m_UsePSRAM)
         return nullptr;
@@ -926,3 +942,5 @@ void LovyanGFXDisplay::ClearActiveUIOverlay() {}
 uint8_t* LovyanGFXDisplay::GetRenderBuffer(int32_t*, int32_t*) { return nullptr; }
 void LovyanGFXDisplay::SetBacklight(bool) {}
 #endif
+
+}  // namespace DekiLovyanGfx
