@@ -70,35 +70,35 @@ public:
     DEKI_TOOLTIP("SPI chip select pin (-1 = not used)")
     DEKI_VISIBLE_WHEN(driverType, XPT2046)
     DEKI_RANGE(-1, 48)
-    int32_t spiCs = -1;
+    int32_t csPin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("SPI MOSI pin (-1 = not used)")
     DEKI_VISIBLE_WHEN(driverType, XPT2046)
     DEKI_RANGE(-1, 48)
-    int32_t spiMosi = -1;
+    int32_t mosiPin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("SPI MISO pin (-1 = not used)")
     DEKI_VISIBLE_WHEN(driverType, XPT2046)
     DEKI_RANGE(-1, 48)
-    int32_t spiMiso = -1;
+    int32_t misoPin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("SPI clock pin (-1 = not used)")
     DEKI_VISIBLE_WHEN(driverType, XPT2046)
     DEKI_RANGE(-1, 48)
-    int32_t spiClk = -1;
+    int32_t clkPin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Interrupt pin for touch events (-1 = polling mode)")
     DEKI_RANGE(-1, 48)
-    int32_t m_PinInt = -1;
+    int32_t intPin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Reset pin for touch controller (-1 = not connected)")
     DEKI_RANGE(-1, 48)
-    int32_t pinRst = -1;
+    int32_t rstPin = -1;
 
     // ========== Touch Panel Bounds ==========
 

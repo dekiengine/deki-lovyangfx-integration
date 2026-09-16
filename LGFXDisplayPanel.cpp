@@ -45,7 +45,7 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
     ESP_LOGI(TAG, "Memory: %dx%d, offset: %d,%d, rotation=%d",
              (int)memoryWidth, (int)memoryHeight, (int)offsetX, (int)offsetY, (int)rotation);
     ESP_LOGI(TAG, "Control pins: CS=%d, RST=%d, BL=%d",
-             (int)pinCs, (int)pinRst, (int)blPin);
+             (int)csPin, (int)rstPin, (int)blPin);
     if (busType == DisplayBusType::Parallel8bit || busType == DisplayBusType::Parallel16bit)
     {
         ESP_LOGI(TAG, "Parallel pins: RS=%d, WR=%d, RD=%d",
@@ -57,8 +57,8 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
     else if (busType == DisplayBusType::SPI)
     {
         ESP_LOGI(TAG, "SPI pins: MOSI=%d, MISO=%d, CLK=%d, DC=%d, host=%d, freq=%d",
-                 (int)spiMosi, (int)spiMiso, (int)spiClk, (int)spiDc,
-                 (int)spiHost, (int)spiFreqWrite);
+                 (int)mosiPin, (int)misoPin, (int)clkPin, (int)dcPin,
+                 (int)spiPort, (int)spiWriteHz);
     }
 
     // --- Configure Bus ---
@@ -66,17 +66,17 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
     {
         auto* bus = new lgfx::Bus_SPI();
         auto cfg = bus->config();
-        cfg.pin_mosi = spiMosi;
-        cfg.pin_miso = spiMiso;
-        cfg.pin_sclk = spiClk;
-        cfg.pin_dc = spiDc;
-        cfg.spi_host = static_cast<spi_host_device_t>(spiHost);
-        cfg.freq_write = spiFreqWrite;
+        cfg.pin_mosi = mosiPin;
+        cfg.pin_miso = misoPin;
+        cfg.pin_sclk = clkPin;
+        cfg.pin_dc = dcPin;
+        cfg.spi_host = static_cast<spi_host_device_t>(spiPort);
+        cfg.freq_write = spiWriteHz;
         bus->config(cfg);
         device->setPanel(nullptr); // Clear before setting bus
         // Bus gets set on the panel below
         DEKI_LOG_INFO("LGFXDisplayPanel: SPI bus configured (MOSI=%d, CLK=%d, DC=%d)",
-                      (int)spiMosi, (int)spiClk, (int)spiDc);
+                      (int)mosiPin, (int)clkPin, (int)dcPin);
 
         // Create panel and set bus
         lgfx::Panel_Device* panel = nullptr;
@@ -97,8 +97,8 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         }
 
         auto panel_cfg = panel->config();
-        panel_cfg.pin_cs = pinCs;
-        panel_cfg.pin_rst = pinRst;
+        panel_cfg.pin_cs = csPin;
+        panel_cfg.pin_rst = rstPin;
         panel_cfg.pin_busy = -1;
         panel_cfg.panel_width = panelWidth;
         panel_cfg.panel_height = panelHeight;
@@ -131,7 +131,7 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
     {
         auto* bus = new lgfx::Bus_Parallel8();
         auto cfg = bus->config();
-        cfg.freq_write = parFreqWrite;
+        cfg.freq_write = parWriteHz;
         cfg.pin_rs = rsPin;
         cfg.pin_wr = wrPin;
         cfg.pin_rd = rdPin;
@@ -165,8 +165,8 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
                 return;
         }
         auto panel_cfg = panel->config();
-        panel_cfg.pin_cs = pinCs;
-        panel_cfg.pin_rst = pinRst;
+        panel_cfg.pin_cs = csPin;
+        panel_cfg.pin_rst = rstPin;
         panel_cfg.pin_busy = -1;
         panel_cfg.panel_width = panelWidth;
         panel_cfg.panel_height = panelHeight;
@@ -199,7 +199,7 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
     {
         auto* bus = new lgfx::Bus_Parallel16();
         auto cfg = bus->config();
-        cfg.freq_write = parFreqWrite;
+        cfg.freq_write = parWriteHz;
         cfg.pin_rs = rsPin;
         cfg.pin_wr = wrPin;
         cfg.pin_rd = rdPin;
@@ -242,8 +242,8 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         }
 
         auto panel_cfg = panel->config();
-        panel_cfg.pin_cs = pinCs;
-        panel_cfg.pin_rst = pinRst;
+        panel_cfg.pin_cs = csPin;
+        panel_cfg.pin_rst = rstPin;
         panel_cfg.pin_busy = -1;
         panel_cfg.panel_width = panelWidth;
         panel_cfg.panel_height = panelHeight;

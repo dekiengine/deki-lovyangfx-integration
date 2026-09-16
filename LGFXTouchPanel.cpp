@@ -69,8 +69,8 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             cfg.x_max = xMax;
             cfg.y_min = yMin;
             cfg.y_max = yMax;
-            cfg.pin_int = m_PinInt;
-            cfg.pin_rst = pinRst;
+            cfg.pin_int = intPin;
+            cfg.pin_rst = rstPin;
             cfg.pin_sda = bus_sda;
             cfg.pin_scl = bus_scl;
             cfg.i2c_addr = 0x38;
@@ -91,8 +91,8 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             cfg.x_max = xMax;
             cfg.y_min = yMin;
             cfg.y_max = yMax;
-            cfg.pin_int = m_PinInt;
-            cfg.pin_rst = pinRst;
+            cfg.pin_int = intPin;
+            cfg.pin_rst = rstPin;
             cfg.pin_sda = bus_sda;
             cfg.pin_scl = bus_scl;
             cfg.i2c_addr = 0x5D;
@@ -113,8 +113,8 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             cfg.x_max = xMax;
             cfg.y_min = yMin;
             cfg.y_max = yMax;
-            cfg.pin_int = m_PinInt;
-            cfg.pin_rst = pinRst;
+            cfg.pin_int = intPin;
+            cfg.pin_rst = rstPin;
             cfg.pin_sda = bus_sda;
             cfg.pin_scl = bus_scl;
             cfg.i2c_addr = 0x15;
@@ -135,12 +135,12 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             cfg.x_max = xMax;
             cfg.y_min = yMin;
             cfg.y_max = yMax;
-            cfg.pin_int = m_PinInt;
-            cfg.pin_rst = pinRst;
-            cfg.pin_cs = spiCs;
-            cfg.pin_mosi = spiMosi;
-            cfg.pin_miso = spiMiso;
-            cfg.pin_sclk = spiClk;
+            cfg.pin_int = intPin;
+            cfg.pin_rst = rstPin;
+            cfg.pin_cs = csPin;
+            cfg.pin_mosi = mosiPin;
+            cfg.pin_miso = misoPin;
+            cfg.pin_sclk = clkPin;
             cfg.bus_shared = busShared;
             cfg.offset_rotation = static_cast<uint8_t>(offsetRotation);
             t->config(cfg);
@@ -189,7 +189,7 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
         {
             // Create and register LovyanGFXTouch with input backend
             auto input = std::make_unique<LovyanGFXTouch>();
-            input->SetPinInt(m_PinInt);
+            input->SetPinInt(intPin);
             if (input->Initialize())
             {
                 DekiInput::SetInput(std::move(input), "LovyanGFXTouch");

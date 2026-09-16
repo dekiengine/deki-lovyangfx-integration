@@ -44,7 +44,7 @@ private:
     int32_t m_TouchY;
     int32_t m_LastTouchX;
     int32_t m_LastTouchY;
-    int32_t m_PinInt;
+    int32_t intPin;
     int32_t m_StaleFrameCount;
     static constexpr int STALE_THRESHOLD = 3;
     std::vector<DekiInput::InputEventCallback> m_EventCallbacks;

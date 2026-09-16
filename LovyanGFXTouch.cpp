@@ -23,7 +23,7 @@ LovyanGFXTouch::LovyanGFXTouch()
 , m_TouchY(0)
 , m_LastTouchX(0)
 , m_LastTouchY(0)
-, m_PinInt(-1)
+, intPin(-1)
 , m_StaleFrameCount(0)
 {
 }
@@ -81,7 +81,7 @@ void LovyanGFXTouch::Shutdown()
 
 void LovyanGFXTouch::SetPinInt(int32_t pin)
 {
-    m_PinInt = pin;
+    intPin = pin;
 }
 
 void LovyanGFXTouch::Update()
@@ -126,7 +126,7 @@ void LovyanGFXTouch::Update()
     // Software release detection when no INT pin is wired.
     // Without INT, the FT5x06 driver can report stale touch data after
     // finger lift. Detect this by checking for unchanged position.
-    if (m_PinInt == -1 && m_TouchPressed)
+    if (intPin == -1 && m_TouchPressed)
     {
         if (screen_x == m_LastTouchX && screen_y == m_LastTouchY)
         {

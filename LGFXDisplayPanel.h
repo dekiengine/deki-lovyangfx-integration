@@ -112,43 +112,45 @@ public:
     DEKI_TOOLTIP("SPI MOSI pin")
     DEKI_VISIBLE_WHEN(busType, SPI)
     DEKI_RANGE(-1, 48)
-    int32_t spiMosi = -1;
+    int32_t mosiPin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("SPI MISO pin (-1 = not used)")
     DEKI_VISIBLE_WHEN(busType, SPI)
     DEKI_RANGE(-1, 48)
-    int32_t spiMiso = -1;
+    int32_t misoPin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("SPI clock pin")
     DEKI_VISIBLE_WHEN(busType, SPI)
     DEKI_RANGE(-1, 48)
-    int32_t spiClk = -1;
+    int32_t clkPin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("SPI data/command pin")
     DEKI_VISIBLE_WHEN(busType, SPI)
     DEKI_RANGE(-1, 48)
-    int32_t spiDc = -1;
+    int32_t dcPin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("SPI host (0=VSPI, 1=HSPI)")
     DEKI_VISIBLE_WHEN(busType, SPI)
     DEKI_RANGE(0, 1)
-    int32_t spiHost = 0;
+    int32_t spiPort = 0;
 
     DEKI_EXPORT
+    DEKI_UNIT(Frequency)
     DEKI_TOOLTIP("SPI write frequency in Hz")
     DEKI_VISIBLE_WHEN(busType, SPI)
-    int32_t spiFreqWrite = 40000000;
+    int32_t spiWriteHz = 40000000;
 
     // --- Parallel Bus Pins (8-bit and 16-bit) ---
 
     DEKI_EXPORT
+    DEKI_UNIT(Frequency)
     DEKI_TOOLTIP("Parallel bus write frequency in Hz")
     DEKI_VISIBLE_WHEN(busType, Parallel8bit, Parallel16bit)
-    int32_t parFreqWrite = 40000000;
+    int32_t parWriteHz = 40000000;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Register select / data-command pin (RS/DC)")
@@ -272,12 +274,12 @@ public:
     DEKI_EXPORT
     DEKI_TOOLTIP("Chip select pin (-1 = not used)")
     DEKI_RANGE(-1, 48)
-    int32_t pinCs = -1;
+    int32_t csPin = -1;
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Reset pin (-1 = not connected)")
     DEKI_RANGE(-1, 48)
-    int32_t pinRst = -1;
+    int32_t rstPin = -1;
 
     // ========== Backlight ==========
 
