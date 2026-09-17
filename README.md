@@ -28,6 +28,7 @@ Install via the Package Manager inside the Deki Editor.
 
 | Dependency | Type |
 |---|---|
+| `deki-i2c` | Deki package |
 | `LovyanGFX` (1.2.19) | External (FreeBSD License) |
 
 ## Partial present (untested on hardware)
