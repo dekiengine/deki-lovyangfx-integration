@@ -5,11 +5,13 @@
 #include <deki/reflection/Property.h>
 #include "LovyanGFXPackage.h"
 
+// Forward declaration (must match LovyanGFX's inline namespace).
+// Must stay at global scope: LovyanGFX declares ::lgfx, so declaring it inside
+// DekiLovyanGfx would create a distinct, never-defined DekiLovyanGfx::lgfx.
+namespace lgfx { inline namespace v1 { class LGFX_Device; } }
+
 namespace DekiLovyanGfx
 {
-
-// Forward declaration (must match LovyanGFX's inline namespace)
-namespace lgfx { inline namespace v1 { class LGFX_Device; } }
 
 enum class DisplayPanelType : uint8_t
 {

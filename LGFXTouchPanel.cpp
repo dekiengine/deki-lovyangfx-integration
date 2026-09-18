@@ -192,8 +192,9 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             input->SetPinInt(intPin);
             if (input->Initialize())
             {
-                DekiInput::SetInput(std::move(input), "LovyanGFXTouch");
-                DEKI_LOG_INFO("LGFXTouchPanel: Touch input registered with DekiInput::DekiInput");
+                using DekiInputApi = DekiInput::DekiInput;
+                DekiInputApi::SetInput(std::move(input), "LovyanGFXTouch");
+                DEKI_LOG_INFO("LGFXTouchPanel: Touch input registered with DekiInput");
             }
             else
             {

@@ -9,22 +9,18 @@
 #endif
 
 #ifdef ESP32
-// Nested inside the ESP32 guard: ESP_IDF_VERSION comes from esp_idf_version.h
-// above, which only exists on that target.
+#include <esp_heap_caps.h>
+#include <esp_idf_version.h>
+#include <esp_task_wdt.h>  // For watchdog feeding during long display writes
+
+// Must come after esp_idf_version.h: ESP_IDF_VERSION and ESP_IDF_VERSION_VAL
+// are defined there. Testing them earlier makes the #if evaluate as 0 and
+// silently drops esp_cache.h, leaving esp_cache_msync undeclared.
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
 #include <esp_cache.h>
 #include <esp_dma_utils.h>  // For esp_dma_malloc (ensures DMA + cache alignment)
 #endif
-#endif
 
-#ifdef ESP32
-#include <esp_heap_caps.h>
-#include <esp_idf_version.h>
-#include <esp_task_wdt.h>  // For watchdog feeding during long display writes
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
-#endif
-#endif
-#ifdef ESP32
 #include <LovyanGFX.hpp>
 #endif
 

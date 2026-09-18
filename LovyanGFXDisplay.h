@@ -4,13 +4,15 @@
 
 #include <deki/providers/IDisplay.h>
 
-// Forward declaration (must match LovyanGFX's inline namespace)
 #include <vector>
+
+// Forward declaration (must match LovyanGFX's inline namespace).
+// Must stay at global scope: LovyanGFX declares ::lgfx, so declaring it inside
+// DekiLovyanGfx would create a distinct, never-defined DekiLovyanGfx::lgfx.
+namespace lgfx { inline namespace v1 { class LGFX_Device; } }
 
 namespace DekiLovyanGfx
 {
-
-namespace lgfx { inline namespace v1 { class LGFX_Device; } }
 
 /**
  * @brief LovyanGFX implementation of display interface
