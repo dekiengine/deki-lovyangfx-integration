@@ -8,6 +8,12 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
+## Unreleased
+
+### Changed
+- **LovyanGFX 1.2.29** (was 1.2.19): the first release that builds on
+  ESP-IDF 6.x.
+
 ## 0.16.0
 
 ### Changed
