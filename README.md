@@ -1,28 +1,25 @@
 # Deki LovyanGFX Integration
 
-Documentation: https://dekiengine.github.io/deki-lovyangfx-integration/ (components and properties, generated from the code)
+Docs: https://dekiengine.github.io/deki-lovyangfx-integration/ (components and properties, generated from the code)
 
 LovyanGFX display and touch panel driver integration for the Deki Engine.
 
-Part of the [Deki Engine](https://github.com/dekiengine/deki-engine) package ecosystem.
+Part of [Deki Engine](https://github.com/dekiengine/deki-engine).
 
 ## Namespace
 
-This package's types live in `DekiLovyanGfx`. Scene files store the qualified
-name, so a component is `DekiLovyanGfx::SomeComponent` there, and code naming one
-needs the namespace:
+Types live in `DekiLovyanGfx`. Scene files store the qualified name, and so does code:
 
 ```cpp
 using namespace DekiLovyanGfx;
 obj->AddComponent<SomeComponent>();
 ```
 
-Scenes saved before 0.16.0 used bare names and still load: every component
-records what it used to be called, and a save writes the current name.
+Scenes saved before 0.16.0 used bare names and still load; saving writes the current one.
 
-## Installation
+## Install
 
-Install via the Package Manager inside the Deki Editor.
+Package Manager in the Deki Editor, or `DekiEditor --packages-add deki-lovyangfx-integration <project>`.
 
 ## Dependencies
 
@@ -44,6 +41,6 @@ report what you see.
 
 ## License
 
-Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
+Apache 2.0. See [LICENSE](LICENSE).
 
 Third-party licenses are listed in [NOTICE](NOTICE).
