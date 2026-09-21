@@ -13,6 +13,7 @@ namespace lgfx { inline namespace v1 { class LGFX_Device; } }
 namespace DekiLovyanGfx
 {
 
+// RM67162 is an AMOLED controller that only speaks QSPI.
 enum class DisplayPanelType : uint8_t
 {
     ILI9341 = 0,
@@ -20,14 +21,16 @@ enum class DisplayPanelType : uint8_t
     ST7735 = 2,
     GC9A01 = 3,
     SSD1351 = 4,
-    ST7789P3 = 5
+    ST7789P3 = 5,
+    RM67162 = 6
 };
 
 enum class DisplayBusType : uint8_t
 {
     SPI = 0,
     Parallel8bit = 1,
-    Parallel16bit = 2
+    Parallel16bit = 2,
+    QSPI = 3
 };
 
 enum class DisplayRotation : uint8_t
@@ -59,7 +62,7 @@ enum class DisplayRotation : uint8_t
  * 3. Add to PlatformSetupComponent's setup_components list (before touch)
  */
 DEKI_CATEGORY("LovyanGFX")
-DEKI_DESCRIPTION("Drives an SPI display panel (ILI9341, ST7789, GC9A01, ...) through LovyanGFX.")
+DEKI_DESCRIPTION("Drives a display panel (ILI9341, ST7789, GC9A01, RM67162 AMOLED, ...) over SPI, QSPI or a parallel bus through LovyanGFX.")
 DEKI_FORMER_NAME("LGFXDisplayPanel")
 class DEKI_LOVYANGFX_API LGFXDisplayPanel : public Deki::SetupComponent
 {
@@ -124,7 +127,7 @@ public:
 
     DEKI_EXPORT
     DEKI_TOOLTIP("SPI clock pin")
-    DEKI_VISIBLE_WHEN(busType, SPI)
+    DEKI_VISIBLE_WHEN(busType, SPI, QSPI)
     DEKI_RANGE(-1, 48)
     int32_t clkPin = -1;
 
@@ -135,16 +138,42 @@ public:
     int32_t dcPin = -1;
 
     DEKI_EXPORT
-    DEKI_TOOLTIP("SPI host (0=VSPI, 1=HSPI)")
-    DEKI_VISIBLE_WHEN(busType, SPI)
-    DEKI_RANGE(0, 1)
+    DEKI_TOOLTIP("SPI host, as ESP-IDF numbers them (on an ESP32-S3: 1 = SPI2, 2 = SPI3)")
+    DEKI_VISIBLE_WHEN(busType, SPI, QSPI)
+    DEKI_RANGE(0, 2)
     int32_t spiPort = 0;
 
     DEKI_EXPORT
     DEKI_UNIT(Frequency)
     DEKI_TOOLTIP("SPI write frequency in Hz")
-    DEKI_VISIBLE_WHEN(busType, SPI)
+    DEKI_VISIBLE_WHEN(busType, SPI, QSPI)
     int32_t spiWriteHz = 40000000;
+
+    // --- QSPI Bus Pins (clock, host and frequency are the SPI ones above) ---
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("QSPI data pin IO0")
+    DEKI_VISIBLE_WHEN(busType, QSPI)
+    DEKI_RANGE(-1, 48)
+    int32_t io0Pin = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("QSPI data pin IO1")
+    DEKI_VISIBLE_WHEN(busType, QSPI)
+    DEKI_RANGE(-1, 48)
+    int32_t io1Pin = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("QSPI data pin IO2")
+    DEKI_VISIBLE_WHEN(busType, QSPI)
+    DEKI_RANGE(-1, 48)
+    int32_t io2Pin = -1;
+
+    DEKI_EXPORT
+    DEKI_TOOLTIP("QSPI data pin IO3")
+    DEKI_VISIBLE_WHEN(busType, QSPI)
+    DEKI_RANGE(-1, 48)
+    int32_t io3Pin = -1;
 
     // --- Parallel Bus Pins (8-bit and 16-bit) ---
 

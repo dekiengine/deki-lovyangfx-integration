@@ -129,7 +129,7 @@ bool LovyanGFXDisplay::InitializeWithDevice(lgfx::LGFX_Device* device, int32_t w
             }
         }
     }
-    // else: passthrough mode — no display buffers, Present pushes framebuffer directly
+    // else: passthrough mode - no display buffers, Present pushes framebuffer directly
 
     m_RenderIndex = 0;
     m_DmaInFlight = false;
@@ -143,8 +143,8 @@ bool LovyanGFXDisplay::InitializeWithDevice(lgfx::LGFX_Device* device, int32_t w
 
 bool LovyanGFXDisplay::Initialize(int32_t width, int32_t height)
 {
-    // No longer auto-creates device — use InitializeWithDevice() via LGFXDisplayPanel
-    DEKI_LOG_ERROR("LovyanGFXDisplay::Initialize() called directly — use LGFXDisplayPanel component instead");
+    // No longer auto-creates device - use InitializeWithDevice() via LGFXDisplayPanel
+    DEKI_LOG_ERROR("LovyanGFXDisplay::Initialize() called directly - use LGFXDisplayPanel component instead");
     return false;
 }
 
@@ -338,7 +338,11 @@ void LovyanGFXDisplay::PresentRegions(const uint8_t* framebuffer, int width, int
     {
         const Deki::Rect& r = rects[i];
         if (r.Empty()) continue;
-        m_BandScratch.push_back(Deki::Rect{ 0, r.top, width, r.bottom });
+        // Out to the panel's row alignment; PushRows clamps to the frame, whose
+        // height such a panel makes a multiple of it.
+        const int32_t top = r.top - (r.top % m_RowAlign);
+        const int32_t bottom = ((r.bottom + m_RowAlign - 1) / m_RowAlign) * m_RowAlign;
+        m_BandScratch.push_back(Deki::Rect{ 0, top, width, bottom });
     }
     std::sort(m_BandScratch.begin(), m_BandScratch.end(),
               [](const Deki::Rect& a, const Deki::Rect& b) { return a.top < b.top; });
@@ -398,7 +402,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
     {
         if (present_count == 1)
         {
-            DEKI_LOG_INTERNAL("LovyanGFX: Direct render buffer — skipping memcpy");
+            DEKI_LOG_INTERNAL("LovyanGFX: Direct render buffer - skipping memcpy");
         }
 
         // A direct or passthrough buffer belongs to the engine: it renders
@@ -705,7 +709,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
 #endif
 
     // Bulk byte swap for display controllers that expect big-endian RGB565.
-    // Done as a single tight loop — faster than per-pixel swap during rendering
+    // Done as a single tight loop - faster than per-pixel swap during rendering
     // or LovyanGFX's pixelcopy path.
     if (m_SwapBytes)
     {

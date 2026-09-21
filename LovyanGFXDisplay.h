@@ -52,6 +52,10 @@ class LovyanGFXDisplay : public Deki::IDisplay
     // larger bands mean fewer pushes and width * rows * 4 bytes of internal
     // RAM for the pair.
     static constexpr int kBandRows = 8;
+    // Bands start and end on a multiple of this many rows. 1 for most panels;
+    // the RM67162 ignores a write whose start or size is odd along its short
+    // axis, which in landscape is the rows. Must divide kBandRows.
+    int m_RowAlign = 1;
     uint16_t* m_Band[2] = { nullptr, nullptr };
     int m_BandIndex = 0;
     std::vector<Deki::Rect> m_BandScratch;
@@ -63,6 +67,9 @@ class LovyanGFXDisplay : public Deki::IDisplay
     // Initialize with a pre-configured LGFX device (created by LGFXDisplayPanel)
     bool InitializeWithDevice(lgfx::LGFX_Device* device, int32_t width, int32_t height,
                               bool swapBytes = false, bool usePSRAM = false, bool doubleBuffer = false);
+
+    // For a panel that only takes writes aligned to `rows` (1, 2, 4 or 8)
+    void SetRowAlignment(int rows) { m_RowAlign = (rows == 2 || rows == 4 || rows == 8) ? rows : 1; }
 
     // IPlatformDisplay interface
     bool Initialize(int32_t width, int32_t height) override;

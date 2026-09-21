@@ -60,9 +60,61 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
                  (int)mosiPin, (int)misoPin, (int)clkPin, (int)dcPin,
                  (int)spiPort, (int)spiWriteHz);
     }
+    else if (busType == DisplayBusType::QSPI)
+    {
+        ESP_LOGI(TAG, "QSPI pins: CLK=%d, IO0=%d, IO1=%d, IO2=%d, IO3=%d, host=%d, freq=%d",
+                 (int)clkPin, (int)io0Pin, (int)io1Pin, (int)io2Pin, (int)io3Pin,
+                 (int)spiPort, (int)spiWriteHz);
+    }
+
+    // The RM67162 speaks only QSPI, and it is the one QSPI panel here.
+    if ((panelType == DisplayPanelType::RM67162) != (busType == DisplayBusType::QSPI))
+    {
+        DEKI_LOG_ERROR("LGFXDisplayPanel: the RM67162 panel and the QSPI bus go together (panel=%d, bus=%d)",
+                       static_cast<int>(panelType), static_cast<int>(busType));
+        delete device;
+        onComplete(false);
+        return;
+    }
 
     // --- Configure Bus ---
-    if (busType == DisplayBusType::SPI)
+    if (busType == DisplayBusType::QSPI)
+    {
+        // LovyanGFX's SPI bus runs in quad mode once all four IO pins are set.
+        auto* bus = new lgfx::Bus_SPI();
+        auto cfg = bus->config();
+        cfg.pin_sclk = clkPin;
+        cfg.pin_io0 = io0Pin;
+        cfg.pin_io1 = io1Pin;
+        cfg.pin_io2 = io2Pin;
+        cfg.pin_io3 = io3Pin;
+        cfg.spi_host = static_cast<spi_host_device_t>(spiPort);
+        cfg.spi_mode = 0;
+        cfg.freq_write = spiWriteHz;
+        bus->config(cfg);
+        DEKI_LOG_INFO("LGFXDisplayPanel: QSPI bus configured (CLK=%d, IO0..3=%d,%d,%d,%d)",
+                      (int)clkPin, (int)io0Pin, (int)io1Pin, (int)io2Pin, (int)io3Pin);
+
+        auto* panel = new lgfx::Panel_RM67162();
+        auto panel_cfg = panel->config();
+        panel_cfg.pin_cs = csPin;
+        panel_cfg.pin_rst = rstPin;
+        panel_cfg.pin_busy = -1;
+        panel_cfg.panel_width = panelWidth;
+        panel_cfg.panel_height = panelHeight;
+        panel_cfg.memory_width = memoryWidth;
+        panel_cfg.memory_height = memoryHeight;
+        panel_cfg.offset_x = offsetX;
+        panel_cfg.offset_y = offsetY;
+        panel_cfg.offset_rotation = 0;
+        panel_cfg.readable = true;
+        panel->config(panel_cfg);
+        panel->setBus(bus);
+
+        // No backlight: an AMOLED's brightness is a panel command.
+        device->setPanel(panel);
+    }
+    else if (busType == DisplayBusType::SPI)
     {
         auto* bus = new lgfx::Bus_SPI();
         auto cfg = bus->config();
@@ -298,6 +350,11 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         onComplete(false);
         return;
     }
+
+    // The RM67162 ignores a write whose start or size is odd along its short
+    // axis. Full-width rows are always even across; this keeps them even down.
+    if (panelType == DisplayPanelType::RM67162)
+        s_LovyanGFXDisplay->SetRowAlignment(2);
 
     Deki::Engine::GetInstance().SetDisplay(s_LovyanGFXDisplay.get(), "LovyanGFX");
 

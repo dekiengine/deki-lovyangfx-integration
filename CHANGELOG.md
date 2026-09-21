@@ -10,7 +10,18 @@ alongside one that has them.
 
 ## Unreleased
 
+### Added
+- **RM67162 AMOLED panels over QSPI** (LilyGO T-Display S3 AMOLED).
+  `LGFXDisplayPanel` has a `QSPI` bus with four data pins (`io0Pin`..`io3Pin`;
+  the clock, host and frequency are the SPI ones) and an `RM67162` panel type.
+  The two go together, and the setup step says so when they are mixed up.
+  The RM67162 ignores a write whose start or size is odd along its short
+  axis, so partial presents on it are widened to even rows.
+  Compile-checked, not yet run on hardware.
+
 ### Changed
+- `spiPort` takes 0 to 2, ESP-IDF's own host numbers (on an ESP32-S3,
+  1 = SPI2 and 2 = SPI3). The tooltip named two hosts of the original ESP32.
 - **LovyanGFX 1.2.29** (was 1.2.19): the first release that builds on
   ESP-IDF 6.x.
 
@@ -18,8 +29,8 @@ alongside one that has them.
 
 ### Changed
 - **Moved into the `DekiLovyanGfx` namespace.** Every component was declared at global
-  scope, which made its identity a bare class name — the name a scene file
-  stores and the name the registry keys on — so two packages defining one name
+  scope, which made its identity a bare class name - the name a scene file
+  stores and the name the registry keys on - so two packages defining one name
   collided there with nothing to tell them apart. Each component carries
   `DEKI_FORMER_NAME` with the name it was saved under before, so existing
   scenes load unchanged and are written back qualified on the next save.

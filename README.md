@@ -28,6 +28,19 @@ Package Manager in the Deki Editor, or `DekiEditor --packages-add deki-lovyangfx
 | `deki-i2c` | Deki package |
 | `LovyanGFX` (1.2.29) | External (FreeBSD License) |
 
+## Panels and buses
+
+`LGFXDisplayPanel` drives ILI9341, ST7789, ST7789P3, ST7735, GC9A01 and SSD1351
+panels over SPI or an 8/16-bit parallel bus, and the RM67162 AMOLED over QSPI.
+`LGFXTouchPanel` reads FT5x06, GT911, CST816S/T and XPT2046 controllers.
+
+The RM67162 and the QSPI bus go together: set `busType` to `QSPI`, the clock on
+`clkPin` and the four data lines on `io0Pin`..`io3Pin`. That panel ignores a
+write whose start or size is odd along its short axis, so partial presents on
+it are widened to even rows. Compile-checked, not yet run on hardware.
+
+For ready-made boards see the `deki-lilygo-boards` package.
+
 ## Partial present (untested on hardware)
 
 `LovyanGFXDisplay::PresentRegions` collapses the changed rectangles to row
