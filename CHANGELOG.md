@@ -10,6 +10,10 @@ alongside one that has them.
 
 ## Unreleased
 
+### Fixed
+- A framebuffer of another size than the panel goes through the staging bands
+  rather than the direct push, which read it with the panel's stride.
+
 ### Added
 - **RM67162 AMOLED panels over QSPI** (LilyGO T-Display S3 AMOLED).
   `LGFXDisplayPanel` has a `QSPI` bus with four data pins (`io0Pin`..`io3Pin`;

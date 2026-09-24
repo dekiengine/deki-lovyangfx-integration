@@ -374,6 +374,16 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
 
     // Passthrough mode: no display buffer, push framebuffer directly (RGB565 only)
     const bool passthrough = (!conversion_buffer && format == Deki::ColorFormat::RGB565);
+    if (passthrough && (width != m_DisplayWidth || height != m_DisplayHeight))
+    {
+        // pushImage below reads the framebuffer as if it were panel-sized: a
+        // larger one would shear, a smaller one read past its end. The engine
+        // sizes the framebuffer to this panel, so this only guards a mismatch;
+        // the staging bands copy row by row and clamp to both.
+        PushRows(framebuffer, width, height, format, 0, height);
+        FinishPresent();
+        return;
+    }
     if (passthrough)
     {
         conversion_buffer = (uint16_t*)framebuffer;
