@@ -2,6 +2,7 @@
 
 #include <cstddef>  // for size_t
 
+#include <deki/Engine.h>  // ColorFormat
 #include <deki/providers/IDisplay.h>
 
 #include <vector>
@@ -79,6 +80,8 @@ class LovyanGFXDisplay : public Deki::IDisplay
     void PresentRegions(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format,
                         const Deki::Rect* rects, int32_t count) override;
     void GetDisplaySize(int32_t* width, int32_t* height) const override;
+    // Every panel LovyanGFX drives here takes RGB565 (byte-swapped on the wire when it asks).
+    Deki::ColorFormat GetColorFormat() const override { return Deki::ColorFormat::RGB565; }
     bool IsInitialized() const override;
     void RequestFullRefresh() override;
     bool ProcessEvents() override;

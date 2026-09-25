@@ -10,10 +10,6 @@ alongside one that has them.
 
 ## Unreleased
 
-### Fixed
-- A framebuffer of another size than the panel goes through the staging bands
-  rather than the direct push, which read it with the panel's stride.
-
 ### Added
 - **RM67162 AMOLED panels over QSPI** (LilyGO T-Display S3 AMOLED).
   `LGFXDisplayPanel` has a `QSPI` bus with four data pins (`io0Pin`..`io3Pin`;
@@ -24,10 +20,15 @@ alongside one that has them.
   Compile-checked, not yet run on hardware.
 
 ### Changed
+- The display reports RGB565, its panels' format.
 - `spiPort` takes 0 to 2, ESP-IDF's own host numbers (on an ESP32-S3,
   1 = SPI2 and 2 = SPI3). The tooltip named two hosts of the original ESP32.
 - **LovyanGFX 1.2.29** (was 1.2.19): the first release that builds on
   ESP-IDF 6.x.
+
+### Fixed
+- A framebuffer of another size than the panel goes through the staging bands
+  rather than the direct push, which read it with the panel's stride.
 
 ## 0.16.0
 
