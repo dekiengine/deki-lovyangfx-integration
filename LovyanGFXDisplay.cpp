@@ -898,13 +898,10 @@ void LovyanGFXDisplay::ClearActiveUIOverlay()
 
 uint8_t* LovyanGFXDisplay::GetRenderBuffer(int32_t* width, int32_t* height)
 {
-    // When using PSRAM, don't offer the display buffer for direct rendering.
-    // PSRAM is slow for random-access pixel operations (blending, blitting).
-    // Let DekiRendering::DekiRenderSystem allocate in fast internal RAM instead;
-    // Present() will do a fast sequential memcpy to the PSRAM DMA buffer.
-    if (m_UsePSRAM)
-        return nullptr;
-
+    // Offered wherever it lives. With usePsram the engine draws straight into
+    // PSRAM: slower blits than internal RAM, but a screen-sized buffer in
+    // internal RAM leaves too little for the scene on a 320x240 panel, and
+    // does not fit at all on larger ones.
     if (!initialized || !buffers[m_RenderIndex])
         return nullptr;
     if (width) *width = m_DisplayWidth;

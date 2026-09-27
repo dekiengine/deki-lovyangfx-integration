@@ -20,6 +20,10 @@ alongside one that has them.
   Compile-checked, not yet run on hardware.
 
 ### Changed
+- **`usePsram` puts the framebuffer in PSRAM.** The engine now draws straight
+  into the PSRAM buffer. Before, it refused it and kept a second,
+  screen-sized framebuffer in internal RAM, so the setting saved nothing
+  and a screen too big for internal RAM could not start at all.
 - The display reports RGB565, its panels' format.
 - `spiPort` takes 0 to 2, ESP-IDF's own host numbers (on an ESP32-S3,
   1 = SPI2 and 2 = SPI3). The tooltip named two hosts of the original ESP32.

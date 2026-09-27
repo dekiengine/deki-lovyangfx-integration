@@ -347,7 +347,7 @@ public:
     int32_t memoryHeight = 240;
 
     DEKI_EXPORT
-    DEKI_TOOLTIP("Allocate display buffers in PSRAM instead of internal RAM")
+    DEKI_TOOLTIP("Keep the framebuffer in PSRAM instead of internal RAM: frees a screen's worth of internal RAM, drawing is slower")
     bool usePsram = false;
 
     DEKI_EXPORT
