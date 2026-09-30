@@ -8,7 +8,7 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
-## Unreleased
+## 0.17.0
 
 ### Added
 - **RM67162 AMOLED panels over QSPI** (LilyGO T-Display S3 AMOLED).
@@ -20,6 +20,7 @@ alongside one that has them.
   Compile-checked, not yet run on hardware.
 
 ### Changed
+- `minEngine` 0.17.0. Reflection ABI 20: the package must be rebuilt.
 - **`usePsram` puts the framebuffer in PSRAM.** The engine now draws straight
   into the PSRAM buffer. Before, it refused it and kept a second,
   screen-sized framebuffer in internal RAM, so the setting saved nothing
