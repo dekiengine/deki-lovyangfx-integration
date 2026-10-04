@@ -8,7 +8,13 @@
 // Forward declaration (must match LovyanGFX's inline namespace).
 // Must stay at global scope: LovyanGFX declares ::lgfx, so declaring it inside
 // DekiLovyanGfx would create a distinct, never-defined DekiLovyanGfx::lgfx.
-namespace lgfx { inline namespace v1 { class LGFX_Device; } }
+namespace lgfx
+{
+inline namespace v1
+{
+class LGFX_Device;
+}
+}  // namespace lgfx
 
 namespace DekiLovyanGfx
 {
@@ -62,12 +68,12 @@ enum class DisplayRotation : uint8_t
  * 3. Add to PlatformSetupComponent's setup_components list (before touch)
  */
 DEKI_CATEGORY("LovyanGFX")
-DEKI_DESCRIPTION("Drives a display panel (ILI9341, ST7789, GC9A01, RM67162 AMOLED, ...) over SPI, QSPI or a parallel bus through LovyanGFX.")
+DEKI_DESCRIPTION("Drives a display panel (ILI9341, ST7789, GC9A01, RM67162 AMOLED, ...) over SPI, QSPI or a parallel "
+                 "bus through LovyanGFX.")
 DEKI_FORMER_NAME("LGFXDisplayPanel")
 class DEKI_LOVYANGFX_API LGFXDisplayPanel : public Deki::SetupComponent
 {
 public:
-
     // ========== Panel ==========
 
     DEKI_EXPORT
@@ -347,7 +353,8 @@ public:
     int32_t memoryHeight = 240;
 
     DEKI_EXPORT
-    DEKI_TOOLTIP("Keep the framebuffer in PSRAM instead of internal RAM: frees a screen's worth of internal RAM, drawing is slower")
+    DEKI_TOOLTIP("Keep the framebuffer in PSRAM instead of internal RAM: frees a screen's worth of internal RAM, "
+                 "drawing is slower")
     bool usePsram = false;
 
     DEKI_EXPORT

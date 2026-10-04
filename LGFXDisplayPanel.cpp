@@ -30,41 +30,34 @@ static std::unique_ptr<LovyanGFXDisplay> s_LovyanGFXDisplay;
 
 void LGFXDisplayPanel::Setup(SetupCallback onComplete)
 {
-    ESP_LOGI(TAG, "Setting up display (panel=%d, bus=%d, %dx%d)",
-             static_cast<int>(panelType), static_cast<int>(busType),
-             (int)panelWidth, (int)panelHeight);
-    DEKI_LOG_INFO("LGFXDisplayPanel: Setting up display (panel=%d, bus=%d, %dx%d)",
-                  static_cast<int>(panelType), static_cast<int>(busType),
-                  (int)panelWidth, (int)panelHeight);
+    ESP_LOGI(TAG, "Setting up display (panel=%d, bus=%d, %dx%d)", static_cast<int>(panelType),
+             static_cast<int>(busType), (int)panelWidth, (int)panelHeight);
+    DEKI_LOG_INFO("LGFXDisplayPanel: Setting up display (panel=%d, bus=%d, %dx%d)", static_cast<int>(panelType),
+                  static_cast<int>(busType), (int)panelWidth, (int)panelHeight);
 
     auto* device = new lgfx::LGFX_Device();
 
     // Dump all config so we can verify the msgpack scene contents
-    ESP_LOGI(TAG, "Panel config: invert=%d, rgbOrder=%d, swapBytes=%d",
-             (int)invertColor, (int)rgbOrder, (int)swapBytes);
-    ESP_LOGI(TAG, "Memory: %dx%d, offset: %d,%d, rotation=%d",
-             (int)memoryWidth, (int)memoryHeight, (int)offsetX, (int)offsetY, (int)rotation);
-    ESP_LOGI(TAG, "Control pins: CS=%d, RST=%d, BL=%d",
-             (int)csPin, (int)rstPin, (int)blPin);
+    ESP_LOGI(TAG, "Panel config: invert=%d, rgbOrder=%d, swapBytes=%d", (int)invertColor, (int)rgbOrder,
+             (int)swapBytes);
+    ESP_LOGI(TAG, "Memory: %dx%d, offset: %d,%d, rotation=%d", (int)memoryWidth, (int)memoryHeight, (int)offsetX,
+             (int)offsetY, (int)rotation);
+    ESP_LOGI(TAG, "Control pins: CS=%d, RST=%d, BL=%d", (int)csPin, (int)rstPin, (int)blPin);
     if (busType == DisplayBusType::Parallel8bit || busType == DisplayBusType::Parallel16bit)
     {
-        ESP_LOGI(TAG, "Parallel pins: RS=%d, WR=%d, RD=%d",
-                 (int)rsPin, (int)wrPin, (int)rdPin);
-        ESP_LOGI(TAG, "Data pins: D0=%d D1=%d D2=%d D3=%d D4=%d D5=%d D6=%d D7=%d",
-                 (int)d0Pin, (int)d1Pin, (int)d2Pin, (int)d3Pin,
-                 (int)d4Pin, (int)d5Pin, (int)d6Pin, (int)d7Pin);
+        ESP_LOGI(TAG, "Parallel pins: RS=%d, WR=%d, RD=%d", (int)rsPin, (int)wrPin, (int)rdPin);
+        ESP_LOGI(TAG, "Data pins: D0=%d D1=%d D2=%d D3=%d D4=%d D5=%d D6=%d D7=%d", (int)d0Pin, (int)d1Pin, (int)d2Pin,
+                 (int)d3Pin, (int)d4Pin, (int)d5Pin, (int)d6Pin, (int)d7Pin);
     }
     else if (busType == DisplayBusType::SPI)
     {
-        ESP_LOGI(TAG, "SPI pins: MOSI=%d, MISO=%d, CLK=%d, DC=%d, host=%d, freq=%d",
-                 (int)mosiPin, (int)misoPin, (int)clkPin, (int)dcPin,
-                 (int)spiPort, (int)spiWriteHz);
+        ESP_LOGI(TAG, "SPI pins: MOSI=%d, MISO=%d, CLK=%d, DC=%d, host=%d, freq=%d", (int)mosiPin, (int)misoPin,
+                 (int)clkPin, (int)dcPin, (int)spiPort, (int)spiWriteHz);
     }
     else if (busType == DisplayBusType::QSPI)
     {
-        ESP_LOGI(TAG, "QSPI pins: CLK=%d, IO0=%d, IO1=%d, IO2=%d, IO3=%d, host=%d, freq=%d",
-                 (int)clkPin, (int)io0Pin, (int)io1Pin, (int)io2Pin, (int)io3Pin,
-                 (int)spiPort, (int)spiWriteHz);
+        ESP_LOGI(TAG, "QSPI pins: CLK=%d, IO0=%d, IO1=%d, IO2=%d, IO3=%d, host=%d, freq=%d", (int)clkPin, (int)io0Pin,
+                 (int)io1Pin, (int)io2Pin, (int)io3Pin, (int)spiPort, (int)spiWriteHz);
     }
 
     // The RM67162 speaks only QSPI, and it is the one QSPI panel here.
@@ -92,8 +85,8 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         cfg.spi_mode = 0;
         cfg.freq_write = spiWriteHz;
         bus->config(cfg);
-        DEKI_LOG_INFO("LGFXDisplayPanel: QSPI bus configured (CLK=%d, IO0..3=%d,%d,%d,%d)",
-                      (int)clkPin, (int)io0Pin, (int)io1Pin, (int)io2Pin, (int)io3Pin);
+        DEKI_LOG_INFO("LGFXDisplayPanel: QSPI bus configured (CLK=%d, IO0..3=%d,%d,%d,%d)", (int)clkPin, (int)io0Pin,
+                      (int)io1Pin, (int)io2Pin, (int)io3Pin);
 
         auto* panel = new lgfx::Panel_RM67162();
         auto panel_cfg = panel->config();
@@ -125,20 +118,20 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         cfg.spi_host = static_cast<spi_host_device_t>(spiPort);
         cfg.freq_write = spiWriteHz;
         bus->config(cfg);
-        device->setPanel(nullptr); // Clear before setting bus
+        device->setPanel(nullptr);  // Clear before setting bus
         // Bus gets set on the panel below
-        DEKI_LOG_INFO("LGFXDisplayPanel: SPI bus configured (MOSI=%d, CLK=%d, DC=%d)",
-                      (int)mosiPin, (int)clkPin, (int)dcPin);
+        DEKI_LOG_INFO("LGFXDisplayPanel: SPI bus configured (MOSI=%d, CLK=%d, DC=%d)", (int)mosiPin, (int)clkPin,
+                      (int)dcPin);
 
         // Create panel and set bus
         lgfx::Panel_Device* panel = nullptr;
         switch (panelType)
         {
-            case DisplayPanelType::ILI9341:  panel = new lgfx::Panel_ILI9341();  break;
-            case DisplayPanelType::ST7789:   panel = new lgfx::Panel_ST7789();   break;
-            case DisplayPanelType::ST7735:   panel = new lgfx::Panel_ST7735();   break;
-            case DisplayPanelType::GC9A01:   panel = new lgfx::Panel_GC9A01();   break;
-            case DisplayPanelType::SSD1351:  panel = new lgfx::Panel_SSD1351();  break;
+            case DisplayPanelType::ILI9341: panel = new lgfx::Panel_ILI9341(); break;
+            case DisplayPanelType::ST7789: panel = new lgfx::Panel_ST7789(); break;
+            case DisplayPanelType::ST7735: panel = new lgfx::Panel_ST7735(); break;
+            case DisplayPanelType::GC9A01: panel = new lgfx::Panel_GC9A01(); break;
+            case DisplayPanelType::SSD1351: panel = new lgfx::Panel_SSD1351(); break;
             case DisplayPanelType::ST7789P3: panel = new lgfx::Panel_ST7789P3(); break;
             default:
                 DEKI_LOG_ERROR("LGFXDisplayPanel: Unknown panel type %d", static_cast<int>(panelType));
@@ -196,18 +189,18 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         cfg.pin_d6 = d6Pin;
         cfg.pin_d7 = d7Pin;
         bus->config(cfg);
-        DEKI_LOG_INFO("LGFXDisplayPanel: Parallel8 bus configured (RS=%d, WR=%d, RD=%d, D0=%d..D7=%d)",
-                      (int)rsPin, (int)wrPin, (int)rdPin, (int)d0Pin, (int)d7Pin);
+        DEKI_LOG_INFO("LGFXDisplayPanel: Parallel8 bus configured (RS=%d, WR=%d, RD=%d, D0=%d..D7=%d)", (int)rsPin,
+                      (int)wrPin, (int)rdPin, (int)d0Pin, (int)d7Pin);
 
         // Create panel and set bus
         lgfx::Panel_Device* panel = nullptr;
         switch (panelType)
         {
-            case DisplayPanelType::ILI9341:  panel = new lgfx::Panel_ILI9341();  break;
-            case DisplayPanelType::ST7789:   panel = new lgfx::Panel_ST7789();   break;
-            case DisplayPanelType::ST7735:   panel = new lgfx::Panel_ST7735();   break;
-            case DisplayPanelType::GC9A01:   panel = new lgfx::Panel_GC9A01();   break;
-            case DisplayPanelType::SSD1351:  panel = new lgfx::Panel_SSD1351();  break;
+            case DisplayPanelType::ILI9341: panel = new lgfx::Panel_ILI9341(); break;
+            case DisplayPanelType::ST7789: panel = new lgfx::Panel_ST7789(); break;
+            case DisplayPanelType::ST7735: panel = new lgfx::Panel_ST7735(); break;
+            case DisplayPanelType::GC9A01: panel = new lgfx::Panel_GC9A01(); break;
+            case DisplayPanelType::SSD1351: panel = new lgfx::Panel_SSD1351(); break;
             case DisplayPanelType::ST7789P3: panel = new lgfx::Panel_ST7789P3(); break;
             default:
                 DEKI_LOG_ERROR("LGFXDisplayPanel: Unknown panel type %d", static_cast<int>(panelType));
@@ -255,16 +248,16 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         cfg.pin_rs = rsPin;
         cfg.pin_wr = wrPin;
         cfg.pin_rd = rdPin;
-        cfg.pin_d0  = d0Pin;
-        cfg.pin_d1  = d1Pin;
-        cfg.pin_d2  = d2Pin;
-        cfg.pin_d3  = d3Pin;
-        cfg.pin_d4  = d4Pin;
-        cfg.pin_d5  = d5Pin;
-        cfg.pin_d6  = d6Pin;
-        cfg.pin_d7  = d7Pin;
-        cfg.pin_d8  = d8Pin;
-        cfg.pin_d9  = d9Pin;
+        cfg.pin_d0 = d0Pin;
+        cfg.pin_d1 = d1Pin;
+        cfg.pin_d2 = d2Pin;
+        cfg.pin_d3 = d3Pin;
+        cfg.pin_d4 = d4Pin;
+        cfg.pin_d5 = d5Pin;
+        cfg.pin_d6 = d6Pin;
+        cfg.pin_d7 = d7Pin;
+        cfg.pin_d8 = d8Pin;
+        cfg.pin_d9 = d9Pin;
         cfg.pin_d10 = d10Pin;
         cfg.pin_d11 = d11Pin;
         cfg.pin_d12 = d12Pin;
@@ -272,18 +265,18 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         cfg.pin_d14 = d14Pin;
         cfg.pin_d15 = d15Pin;
         bus->config(cfg);
-        DEKI_LOG_INFO("LGFXDisplayPanel: Parallel16 bus configured (RS=%d, WR=%d, D0=%d..D15=%d)",
-                      (int)rsPin, (int)wrPin, (int)d0Pin, (int)d15Pin);
+        DEKI_LOG_INFO("LGFXDisplayPanel: Parallel16 bus configured (RS=%d, WR=%d, D0=%d..D15=%d)", (int)rsPin,
+                      (int)wrPin, (int)d0Pin, (int)d15Pin);
 
         // Create panel and set bus
         lgfx::Panel_Device* panel = nullptr;
         switch (panelType)
         {
-            case DisplayPanelType::ILI9341:  panel = new lgfx::Panel_ILI9341();  break;
-            case DisplayPanelType::ST7789:   panel = new lgfx::Panel_ST7789();   break;
-            case DisplayPanelType::ST7735:   panel = new lgfx::Panel_ST7735();   break;
-            case DisplayPanelType::GC9A01:   panel = new lgfx::Panel_GC9A01();   break;
-            case DisplayPanelType::SSD1351:  panel = new lgfx::Panel_SSD1351();  break;
+            case DisplayPanelType::ILI9341: panel = new lgfx::Panel_ILI9341(); break;
+            case DisplayPanelType::ST7789: panel = new lgfx::Panel_ST7789(); break;
+            case DisplayPanelType::ST7735: panel = new lgfx::Panel_ST7735(); break;
+            case DisplayPanelType::GC9A01: panel = new lgfx::Panel_GC9A01(); break;
+            case DisplayPanelType::SSD1351: panel = new lgfx::Panel_SSD1351(); break;
             case DisplayPanelType::ST7789P3: panel = new lgfx::Panel_ST7789P3(); break;
             default:
                 DEKI_LOG_ERROR("LGFXDisplayPanel: Unknown panel type %d", static_cast<int>(panelType));
@@ -343,7 +336,8 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
 
     // Create LovyanGFXDisplay wrapper and register with engine
     s_LovyanGFXDisplay = std::make_unique<LovyanGFXDisplay>();
-    if (!s_LovyanGFXDisplay->InitializeWithDevice(device, device->width(), device->height(), swapBytes, usePsram, doubleBuffer))
+    if (!s_LovyanGFXDisplay->InitializeWithDevice(device, device->width(), device->height(), swapBytes, usePsram,
+                                                  doubleBuffer))
     {
         DEKI_LOG_ERROR("LGFXDisplayPanel: Failed to initialize display wrapper");
         s_LovyanGFXDisplay.reset();
@@ -354,7 +348,9 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
     // The RM67162 ignores a write whose start or size is odd along its short
     // axis. Full-width rows are always even across; this keeps them even down.
     if (panelType == DisplayPanelType::RM67162)
+    {
         s_LovyanGFXDisplay->SetRowAlignment(2);
+    }
 
     Deki::Engine::GetInstance().SetDisplay(s_LovyanGFXDisplay.get(), "LovyanGFX");
 
@@ -367,7 +363,7 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
     onComplete(true);
 }
 
-#else // !ESP32 (Editor build)
+#else  // !ESP32 (Editor build)
 
 void LGFXDisplayPanel::Setup(SetupCallback onComplete)
 {

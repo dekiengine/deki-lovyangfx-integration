@@ -8,7 +8,13 @@
 // Forward declaration (must match LovyanGFX's inline namespace).
 // Must stay at global scope: LovyanGFX declares ::lgfx, so declaring it inside
 // DekiLovyanGfx would create a distinct, never-defined DekiLovyanGfx::lgfx.
-namespace lgfx { inline namespace v1 { class LGFX_Device; } }
+namespace lgfx
+{
+inline namespace v1
+{
+class LGFX_Device;
+}
+}  // namespace lgfx
 
 namespace DekiLovyanGfx
 {

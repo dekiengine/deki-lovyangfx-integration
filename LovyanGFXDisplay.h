@@ -10,7 +10,13 @@
 // Forward declaration (must match LovyanGFX's inline namespace).
 // Must stay at global scope: LovyanGFX declares ::lgfx, so declaring it inside
 // DekiLovyanGfx would create a distinct, never-defined DekiLovyanGfx::lgfx.
-namespace lgfx { inline namespace v1 { class LGFX_Device; } }
+namespace lgfx
+{
+inline namespace v1
+{
+class LGFX_Device;
+}
+}  // namespace lgfx
 
 namespace DekiLovyanGfx
 {
@@ -23,16 +29,16 @@ namespace DekiLovyanGfx
  */
 class LovyanGFXDisplay : public Deki::IDisplay
 {
-   private:
+private:
     lgfx::LGFX_Device* tft;
     int32_t m_DisplayWidth;
     int32_t m_DisplayHeight;
     bool initialized;
 
     // Double-buffer support for async DMA
-    uint16_t* buffers[2];        // [0] = primary, [1] = secondary (null if single-buffer)
+    uint16_t* buffers[2];  // [0] = primary, [1] = secondary (null if single-buffer)
     size_t m_BufferPixelCount;
-    int m_RenderIndex;            // Index of buffer currently being rendered to
+    int m_RenderIndex;  // Index of buffer currently being rendered to
     bool m_DmaInFlight;
     bool m_UsePSRAM;
     bool m_DoubleBuffer;
@@ -61,13 +67,13 @@ class LovyanGFXDisplay : public Deki::IDisplay
     int m_BandIndex = 0;
     std::vector<Deki::Rect> m_BandScratch;
 
-   public:
+public:
     LovyanGFXDisplay();
     virtual ~LovyanGFXDisplay();
 
     // Initialize with a pre-configured LGFX device (created by LGFXDisplayPanel)
-    bool InitializeWithDevice(lgfx::LGFX_Device* device, int32_t width, int32_t height,
-                              bool swapBytes = false, bool usePSRAM = false, bool doubleBuffer = false);
+    bool InitializeWithDevice(lgfx::LGFX_Device* device, int32_t width, int32_t height, bool swapBytes = false,
+                              bool usePSRAM = false, bool doubleBuffer = false);
 
     // For a panel that only takes writes aligned to `rows` (1, 2, 4 or 8)
     void SetRowAlignment(int rows) { m_RowAlign = (rows == 2 || rows == 4 || rows == 8) ? rows : 1; }
@@ -88,11 +94,9 @@ class LovyanGFXDisplay : public Deki::IDisplay
 
     // UI Overlay methods (required by IPlatformDisplay)
     void* CreateUIOverlay(int32_t width, int32_t height) override;
-    bool UpdateUIOverlay(void* overlay, int32_t x, int32_t y,
-                        int32_t width, int32_t height,
-                        const uint32_t* buffer) override;
-    bool UpdateUIOverlayRGB565A8(void* overlay, int32_t x, int32_t y,
-                                 int32_t width, int32_t height,
+    bool UpdateUIOverlay(void* overlay, int32_t x, int32_t y, int32_t width, int32_t height,
+                         const uint32_t* buffer) override;
+    bool UpdateUIOverlayRGB565A8(void* overlay, int32_t x, int32_t y, int32_t width, int32_t height,
                                  const uint8_t* rgb565a8_pixels) override;
     void DestroyUIOverlay(void* overlay) override;
     void SetActiveUIOverlay(void* overlay) override;
@@ -103,7 +107,7 @@ class LovyanGFXDisplay : public Deki::IDisplay
     // LovyanGFX-specific methods
     lgfx::LGFX_Device* GetTFT() const { return tft; }
 
-   private:
+private:
     void ConvertAndRenderFramebuffer(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format);
     bool EnsureBands();
     void FreeBands();

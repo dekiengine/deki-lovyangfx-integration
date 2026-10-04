@@ -49,7 +49,6 @@ DEKI_FORMER_NAME("LGFXTouchPanel")
 class DEKI_LOVYANGFX_API LGFXTouchPanel : public Deki::SetupComponent
 {
 public:
-
     // ========== Driver Selection ==========
 
     DEKI_EXPORT

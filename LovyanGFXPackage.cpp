@@ -30,92 +30,92 @@ namespace DekiLovyanGfx
 // Track if already registered to avoid duplicates
 static bool s_LovyanGFXRegistered = false;
 
-
 // The exports below are C symbols at global scope; the package's own
 // registration helpers and statics live in its namespace.
 using namespace DekiLovyanGfx;
 
-extern "C" {
-
-/**
- * @brief Ensure deki-lovyangfx package is loaded and components are registered
- *
- * Call this from the editor at startup. Simply calling this function is enough
- * to force the linker to include the DLL and trigger static initializers.
- *
- * @return Number of components registered by this package
- */
-DEKI_LOVYANGFX_API int DekiLovyanGFX_EnsureRegistered(void)
+extern "C"
 {
-    if (s_LovyanGFXRegistered)
+    /**
+     * @brief Ensure deki-lovyangfx package is loaded and components are registered
+     *
+     * Call this from the editor at startup. Simply calling this function is enough
+     * to force the linker to include the DLL and trigger static initializers.
+     *
+     * @return Number of components registered by this package
+     */
+    DEKI_LOVYANGFX_API int DekiLovyanGFX_EnsureRegistered(void)
+    {
+        if (s_LovyanGFXRegistered)
+        {
+            return ::DekiLovyanGFX_GetAutoComponentCount();
+        }
+        s_LovyanGFXRegistered = true;
+
+        // Auto-generated: registers all LovyanGFX components with ComponentRegistry + ComponentFactory
+        ::DekiLovyanGFX_RegisterComponents();
+
         return ::DekiLovyanGFX_GetAutoComponentCount();
-    s_LovyanGFXRegistered = true;
+    }
 
-    // Auto-generated: registers all LovyanGFX components with ComponentRegistry + ComponentFactory
-    ::DekiLovyanGFX_RegisterComponents();
+    // =============================================================================
+    // Plugin metadata (for dynamic loading compatibility)
+    // =============================================================================
 
-    return ::DekiLovyanGFX_GetAutoComponentCount();
-}
+    DEKI_PLUGIN_API const char* DekiPlugin_GetName(void)
+    {
+        return "Deki LovyanGFX Package";
+    }
 
-// =============================================================================
-// Plugin metadata (for dynamic loading compatibility)
-// =============================================================================
-
-DEKI_PLUGIN_API const char* DekiPlugin_GetName(void)
-{
-    return "Deki LovyanGFX Package";
-}
-
-DEKI_PLUGIN_API const char* DekiPlugin_GetVersion(void)
-{
+    DEKI_PLUGIN_API const char* DekiPlugin_GetVersion(void)
+    {
 #ifdef DEKI_PACKAGE_VERSION
-    return DEKI_PACKAGE_VERSION;
+        return DEKI_PACKAGE_VERSION;
 #else
-    return "0.0.0-dev";
+        return "0.0.0-dev";
 #endif
-}
+    }
 
-DEKI_PLUGIN_API int DekiPlugin_Init(void)
-{
-    return 0;
-}
+    DEKI_PLUGIN_API int DekiPlugin_Init(void)
+    {
+        return 0;
+    }
 
-DEKI_PLUGIN_API void DekiPlugin_Shutdown(void)
-{
-    s_LovyanGFXRegistered = false;
-}
+    DEKI_PLUGIN_API void DekiPlugin_Shutdown(void)
+    {
+        s_LovyanGFXRegistered = false;
+    }
 
-DEKI_PLUGIN_API int DekiPlugin_GetComponentCount(void)
-{
-    return ::DekiLovyanGFX_GetAutoComponentCount();
-}
+    DEKI_PLUGIN_API int DekiPlugin_GetComponentCount(void)
+    {
+        return ::DekiLovyanGFX_GetAutoComponentCount();
+    }
 
-DEKI_PLUGIN_API const Deki::ComponentMeta* DekiPlugin_GetComponentMeta(int index)
-{
-    return ::DekiLovyanGFX_GetAutoComponentMeta(index);
-}
+    DEKI_PLUGIN_API const Deki::ComponentMeta* DekiPlugin_GetComponentMeta(int index)
+    {
+        return ::DekiLovyanGFX_GetAutoComponentMeta(index);
+    }
 
-DEKI_PLUGIN_API void DekiPlugin_RegisterComponents(void)
-{
-    DekiLovyanGFX_EnsureRegistered();
-}
+    DEKI_PLUGIN_API void DekiPlugin_RegisterComponents(void)
+    {
+        DekiLovyanGFX_EnsureRegistered();
+    }
 
-// =============================================================================
-// Package-specific feature API (for linked DLL access without name conflicts)
-// =============================================================================
+    // =============================================================================
+    // Package-specific feature API (for linked DLL access without name conflicts)
+    // =============================================================================
 
-DEKI_LOVYANGFX_API const char* DekiLovyanGFX_GetName(void)
-{
-    return "LovyanGFX";
-}
+    DEKI_LOVYANGFX_API const char* DekiLovyanGFX_GetName(void)
+    {
+        return "LovyanGFX";
+    }
 
-} // extern "C"
+}  // extern "C"
 
-#else // !DEKI_EDITOR - Runtime (ESP32) registration
+#else  // !DEKI_EDITOR - Runtime (ESP32) registration
 
 // For runtime builds, component registration happens via static initializers
 // or explicit calls from the application
 
-#endif // DEKI_EDITOR
+#endif  // DEKI_EDITOR
 }  // namespace DekiLovyanGfx
-

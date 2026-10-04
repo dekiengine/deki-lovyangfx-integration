@@ -11,20 +11,19 @@ namespace DekiLovyanGfx
 
 #if defined(ESP32)
 
-
 // millis() was provided by Arduino — use LovyanGFX's implementation instead
 using lgfx::v1::millis;
 
 LovyanGFXTouch::LovyanGFXTouch()
-: gfx(nullptr)
-, initialized(false)
-, m_TouchPressed(false)
-, m_TouchX(0)
-, m_TouchY(0)
-, m_LastTouchX(0)
-, m_LastTouchY(0)
-, intPin(-1)
-, m_StaleFrameCount(0)
+    : gfx(nullptr),
+      initialized(false),
+      m_TouchPressed(false),
+      m_TouchX(0),
+      m_TouchY(0),
+      m_LastTouchX(0),
+      m_LastTouchY(0),
+      intPin(-1),
+      m_StaleFrameCount(0)
 {
 }
 
@@ -216,8 +215,14 @@ bool LovyanGFXTouch::IsInitialized() const
 
 bool LovyanGFXTouch::GetPointerPosition(int32_t* x, int32_t* y) const
 {
-    if (x) *x = m_TouchX;
-    if (y) *y = m_TouchY;
+    if (x)
+    {
+        *x = m_TouchX;
+    }
+    if (y)
+    {
+        *y = m_TouchY;
+    }
     return m_TouchPressed;
 }
 
@@ -229,16 +234,41 @@ bool LovyanGFXTouch::IsKeyPressed(uint32_t key) const
 #else
 
 // Stub implementation for non-Arduino builds
-LovyanGFXTouch::LovyanGFXTouch() : initialized(false) {}
-LovyanGFXTouch::~LovyanGFXTouch() {}
-void LovyanGFXTouch::SetPinInt(int32_t) {}
-bool LovyanGFXTouch::Initialize() { return false; }
-void LovyanGFXTouch::Shutdown() {}
-void LovyanGFXTouch::Update() {}
-void LovyanGFXTouch::RegisterEventCallback(const DekiInput::InputEventCallback& callback) {}
-bool LovyanGFXTouch::IsInitialized() const { return false; }
-bool LovyanGFXTouch::GetPointerPosition(int32_t* x, int32_t* y) const { return false; }
-bool LovyanGFXTouch::IsKeyPressed(uint32_t key) const { return false; }
+LovyanGFXTouch::LovyanGFXTouch()
+    : initialized(false)
+{
+}
+LovyanGFXTouch::~LovyanGFXTouch()
+{
+}
+void LovyanGFXTouch::SetPinInt(int32_t)
+{
+}
+bool LovyanGFXTouch::Initialize()
+{
+    return false;
+}
+void LovyanGFXTouch::Shutdown()
+{
+}
+void LovyanGFXTouch::Update()
+{
+}
+void LovyanGFXTouch::RegisterEventCallback(const DekiInput::InputEventCallback& callback)
+{
+}
+bool LovyanGFXTouch::IsInitialized() const
+{
+    return false;
+}
+bool LovyanGFXTouch::GetPointerPosition(int32_t* x, int32_t* y) const
+{
+    return false;
+}
+bool LovyanGFXTouch::IsKeyPressed(uint32_t key) const
+{
+    return false;
+}
 
 #endif
 
