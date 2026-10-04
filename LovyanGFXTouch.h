@@ -5,9 +5,10 @@
 
 #include "IDekiInput.h"  // from deki-input
 
-// Forward declaration (must match LovyanGFX's inline namespace).
-// Must stay at global scope: LovyanGFX declares ::lgfx, so declaring it inside
-// DekiLovyanGfx would create a distinct, never-defined DekiLovyanGfx::lgfx.
+// Forward declaration; must match LovyanGFX's inline namespace. Must stay at
+// global scope: LovyanGFX declares ::lgfx, so declaring it inside
+// DekiLovyanGfx would create a separate DekiLovyanGfx::lgfx that is never
+// defined.
 namespace lgfx
 {
 inline namespace v1
@@ -19,13 +20,9 @@ class LGFX_Device;
 namespace DekiLovyanGfx
 {
 
-/**
- * @brief LovyanGFX Touch input package
- *
- * Implements DekiInput::IDekiInput interface using LovyanGFX's built-in touch support.
- * Works with any touch controller supported by LovyanGFX (XPT2046, FT5x06, etc.).
- * The touch controller is configured via the LGFXTouchPanel SetupComponent.
- */
+/// DekiInput::IDekiInput on LovyanGFX's built-in touch support. Works with any
+/// touch controller LovyanGFX supports (XPT2046, FT5x06, etc.). The controller
+/// is configured by the LGFXTouchPanel SetupComponent.
 class LovyanGFXTouch : public DekiInput::IDekiInput
 {
 public:

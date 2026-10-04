@@ -11,14 +11,14 @@
 #ifdef ESP32
 #include <esp_heap_caps.h>
 #include <esp_idf_version.h>
-#include <esp_task_wdt.h>  // For watchdog feeding during long display writes
+#include <esp_task_wdt.h>  // feeds the watchdog during long display writes
 
-// Must come after esp_idf_version.h: ESP_IDF_VERSION and ESP_IDF_VERSION_VAL
-// are defined there. Testing them earlier makes the #if evaluate as 0 and
-// silently drops esp_cache.h, leaving esp_cache_msync undeclared.
+// Must come after esp_idf_version.h, which defines ESP_IDF_VERSION and
+// ESP_IDF_VERSION_VAL. Tested earlier, the #if is 0 and esp_cache.h is left
+// out without warning, so esp_cache_msync is undeclared.
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
 #include <esp_cache.h>
-#include <esp_dma_utils.h>  // For esp_dma_malloc (ensures DMA + cache alignment)
+#include <esp_dma_utils.h>  // esp_dma_malloc, which gives DMA and cache alignment
 #endif
 
 #include <LovyanGFX.hpp>
@@ -28,8 +28,6 @@ namespace DekiLovyanGfx
 {
 
 #ifdef ESP32
-
-// ESP32-specific includes for DMA memory allocation and cache management
 
 LovyanGFXDisplay::LovyanGFXDisplay()
     : tft(nullptr),
@@ -54,23 +52,20 @@ LovyanGFXDisplay::~LovyanGFXDisplay()
 
 static uint16_t* AllocateDisplayBuffer(size_t bufferBytes, bool usePSRAM, const char* label)
 {
-    // Through the engine, which owns placement. The panel driver reads this
-    // buffer by DMA, so an internal one must carry the DMA capability rather
-    // than be merely internal: some internal regions on this part are not
-    // reachable, and a peripheral reading one of those corrupts the display
-    // silently instead of failing.
+    // Through the engine, which decides placement. The panel driver reads
+    // this buffer by DMA, so it must be DMA-capable memory, not just internal:
+    // some internal regions on this chip are out of a peripheral's reach, and
+    // DMA from one corrupts the display without any error.
     //
-    // usePSRAM comes from the board's own config, so it states what the
-    // hardware is rather than a caller guessing, and it maps onto the use.
-    // Placement and reachability are separate questions. The board's config
-    // answers the first; the second is true either way, because the panel
-    // driver reads this buffer by DMA wherever it lives.
+    // usePSRAM comes from the board's config and decides where the buffer
+    // goes. DMA capability is needed either way, since the panel driver reads
+    // the buffer by DMA wherever it lives.
     const Deki::Memory::Region region = usePSRAM ? Deki::Memory::External : Deki::Memory::Internal;
     uint16_t* buf = (uint16_t*)Deki::Memory::AllocateDma(bufferBytes, region);
 
-    // `label` still names which buffer this is in the lines below. It is not
-    // the allocation's identity: the engine records the call site itself, and
-    // both buffers are allocated from here.
+    // `label` only names the buffer in the log lines below. The engine
+    // identifies the allocation by its call site, which is the same for both
+    // buffers.
 
     if (buf)
     {
@@ -133,7 +128,7 @@ bool LovyanGFXDisplay::InitializeWithDevice(lgfx::LGFX_Device* device, int32_t w
             }
         }
     }
-    // else: passthrough mode - no display buffers, Present pushes framebuffer directly
+    // Otherwise passthrough mode: no display buffers; Present pushes the framebuffer directly.
 
     m_RenderIndex = 0;
     m_DmaInFlight = false;
@@ -147,7 +142,7 @@ bool LovyanGFXDisplay::InitializeWithDevice(lgfx::LGFX_Device* device, int32_t w
 
 bool LovyanGFXDisplay::Initialize(int32_t width, int32_t height)
 {
-    // No longer auto-creates device - use InitializeWithDevice() via LGFXDisplayPanel
+    // The device comes from LGFXDisplayPanel through InitializeWithDevice().
     DEKI_LOG_ERROR("LovyanGFXDisplay::Initialize() called directly - use LGFXDisplayPanel component instead");
     return false;
 }
@@ -197,10 +192,9 @@ bool LovyanGFXDisplay::SupportsPartialPresent() const
 }
 
 // ---- Partial present ------------------------------------------------------
-// UNTESTED ON HARDWARE (September 2026): written against the LovyanGFX API
-// used by the full path above (pushImage / startWrite / endWrite / waitDMA)
-// and compile-checked only. Please run a scene with dirty-rect tracking on and
-// report.
+// Not yet tested on hardware: written against the LovyanGFX API the full path
+// above uses (pushImage / startWrite / endWrite / waitDMA) and only
+// compile-checked. Run a scene with dirty-rect tracking on to try it.
 
 bool LovyanGFXDisplay::EnsureBands()
 {
@@ -215,7 +209,7 @@ bool LovyanGFXDisplay::EnsureBands()
         {
             continue;
         }
-        // Band buffers are handed to the panel by DMA, same as the framebuffer.
+        // The panel reads band buffers by DMA, like the framebuffer.
         m_Band[i] = static_cast<uint16_t*>(Deki::Memory::AllocateDma(bytes, Deki::Memory::Internal));
         if (!m_Band[i])
         {
@@ -258,9 +252,9 @@ void LovyanGFXDisplay::PushRows(const uint8_t* framebuffer, int width, int heigh
         const int rows = (y1 - y < kBandRows) ? (y1 - y) : kBandRows;
         uint16_t* band = m_Band[m_BandIndex];
 
-        // The band we are about to fill may still be read by the DMA of the
-        // push before last. waitDMA waits for every transfer, which costs
-        // the overlap between conversion and transfer; correct first.
+        // The DMA of the push before last may still be reading the band we
+        // are about to fill. waitDMA waits for every transfer, which loses the
+        // overlap of conversion and transfer but is correct.
         if (m_DmaInFlight)
         {
             tft->waitDMA();
@@ -326,8 +320,8 @@ void LovyanGFXDisplay::FinishPresent()
     if (m_DoubleBuffer)
     {
         // The engine renders the next frame into the other buffer while the
-        // last band's DMA finishes (the bands are private, so this is safe
-        // even in direct-render mode).
+        // last band's DMA finishes. The bands are private, so this is safe
+        // even in direct-render mode.
         m_RenderIndex = 1 - m_RenderIndex;
     }
     else if (m_DmaInFlight)
@@ -356,8 +350,8 @@ void LovyanGFXDisplay::PresentRegions(const uint8_t* framebuffer, int width, int
         return;
     }
 
-    // pushImage takes a packed rectangle and the framebuffer's rows are only
-    // contiguous at full width, so rectangles collapse to row bands.
+    // pushImage takes a packed rectangle, and the framebuffer's rows are only
+    // contiguous at full width, so rectangles become row bands.
     m_BandScratch.clear();
     for (int32_t i = 0; i < count; ++i)
     {
@@ -366,8 +360,8 @@ void LovyanGFXDisplay::PresentRegions(const uint8_t* framebuffer, int width, int
         {
             continue;
         }
-        // Out to the panel's row alignment; PushRows clamps to the frame, whose
-        // height such a panel makes a multiple of it.
+        // Widen to the panel's row alignment. PushRows clamps to the frame,
+        // whose height on such a panel is a multiple of it.
         const int32_t top = r.top - (r.top % m_RowAlign);
         const int32_t bottom = ((r.bottom + m_RowAlign - 1) / m_RowAlign) * m_RowAlign;
         m_BandScratch.push_back(Deki::Rect{ 0, top, width, bottom });
@@ -405,14 +399,14 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
 {
     uint16_t* conversionBuffer = buffers[m_RenderIndex];
 
-    // Passthrough mode: no display buffer, push framebuffer directly (RGB565 only)
+    // Passthrough mode: no display buffer; push the framebuffer directly (RGB565 only).
     const bool passthrough = (!conversionBuffer && format == Deki::ColorFormat::RGB565);
     if (passthrough && (width != m_DisplayWidth || height != m_DisplayHeight))
     {
         // pushImage below reads the framebuffer as if it were panel-sized: a
-        // larger one would shear, a smaller one read past its end. The engine
-        // sizes the framebuffer to this panel, so this only guards a mismatch;
-        // the staging bands copy row by row and clamp to both.
+        // larger one would shear, a smaller one would be read past its end.
+        // The engine sizes the framebuffer to this panel, so this only guards
+        // a mismatch; the staging bands copy row by row and clamp to both.
         PushRows(framebuffer, width, height, format, 0, height);
         FinishPresent();
         return;
@@ -427,7 +421,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
         return;
     }
 
-    // Debug: Log first Present call
+    // Log the first Present call.
     static int presentCount = 0;
     if (presentCount == 0)
     {
@@ -438,7 +432,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
     }
     presentCount++;
 
-    // Fast path: framebuffer IS the output buffer (direct rendering or passthrough)
+    // Fast path: the framebuffer is the output buffer (direct rendering or passthrough).
     const bool directBuffer =
         passthrough || (format == Deki::ColorFormat::RGB565 && (const uint16_t*)framebuffer == conversionBuffer);
 
@@ -451,9 +445,8 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
 
         // A direct or passthrough buffer belongs to the engine: it renders
         // into it and blends against its contents next frame, so the byte
-        // swap for big-endian panels must not happen in place (it used to,
-        // which only worked because every pixel was redrawn every frame).
-        // Push through the staging bands, which swap while copying.
+        // swap for big-endian panels must not happen in place. Push through
+        // the staging bands, which swap while copying.
         if (m_SwapBytes && !(m_ActiveOverlay && m_ActiveOverlay->buffer))
         {
             PushRows(framebuffer, width, height, format, 0, height);
@@ -464,7 +457,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
 
     if (!directBuffer)
     {
-        // Flush source framebuffer from CPU cache if it resides in PSRAM
+        // Flush the source framebuffer from the CPU cache if it is in PSRAM.
 #if defined(ESP32) && ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
         if (esp_ptr_external_ram(framebuffer))
         {
@@ -476,12 +469,12 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
         }
 #endif
 
-        // Optimized conversion using direct pointer arithmetic
+        // Conversion with direct pointer arithmetic.
         int effectiveWidth = (width < m_DisplayWidth) ? width : m_DisplayWidth;
         int effectiveHeight = (height < m_DisplayHeight) ? height : m_DisplayHeight;
         size_t pixelCount = effectiveWidth * effectiveHeight;
 
-        if (format == Deki::ColorFormat::ARGB8888)  // ARGB8888 - most common path
+        if (format == Deki::ColorFormat::ARGB8888)  // the most common path
         {
             const uint32_t* src = (const uint32_t*)framebuffer;
             uint16_t* dst = conversionBuffer;
@@ -554,13 +547,13 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
         }
         else
         {
-            // Unknown format - fill with black
+            // Unknown format: fill with black.
             memset(conversionBuffer, 0, pixelCount * sizeof(uint16_t));
         }
 
     }  // if (!directBuffer)
 
-    // Composite UI overlay on top if active (ARGB8888 format)
+    // Composite the active UI overlay (ARGB8888) on top.
     if (m_ActiveOverlay && m_ActiveOverlay->buffer)
     {
         int overlayWidth = m_ActiveOverlay->width < m_DisplayWidth ? m_ActiveOverlay->width : m_DisplayWidth;
@@ -574,7 +567,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
             const uint32_t* overlayRow = overlayBase + y * m_ActiveOverlay->width;
             uint16_t* dstRow = dstBase + y * m_DisplayWidth;
 
-            // Process 4 pixels at a time when possible (unrolled loop for better CPU pipelining)
+            // 4 pixels at a time where possible (unrolled for better CPU pipelining).
             int x = 0;
             for (; x + 3 < overlayWidth; x += 4)
             {
@@ -696,7 +689,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
                 }
             }
 
-            // Handle remaining pixels
+            // The remaining pixels.
             for (; x < overlayWidth; x++)
             {
                 uint32_t argb = overlayRow[x];
@@ -732,7 +725,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
         }
     }
 
-    // Flush PSRAM display buffer from CPU cache before DMA reads it
+    // Flush the PSRAM display buffer from the CPU cache before DMA reads it.
 #if defined(ESP32) && ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
     if (m_UsePSRAM)
     {
@@ -745,8 +738,8 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
 #endif
 
     // Bulk byte swap for display controllers that expect big-endian RGB565.
-    // Done as a single tight loop - faster than per-pixel swap during rendering
-    // or LovyanGFX's pixelcopy path.
+    // One tight loop is faster than swapping per pixel while rendering or
+    // using LovyanGFX's pixelcopy path.
     if (m_SwapBytes)
     {
         uint32_t* buf32 = (uint32_t*)conversionBuffer;
@@ -800,12 +793,12 @@ bool LovyanGFXDisplay::IsInitialized() const
 
 void LovyanGFXDisplay::RequestFullRefresh()
 {
-    // For LovyanGFX, we always do full refresh, so this is a no-op
+    // Every Present refreshes the whole screen, so there is nothing to do.
 }
 
 bool LovyanGFXDisplay::ProcessEvents()
 {
-    // For embedded platforms, there are no windowing events to process
+    // There are no window events on embedded platforms.
     return true;
 }
 
@@ -931,8 +924,8 @@ void LovyanGFXDisplay::ClearActiveUIOverlay()
 uint8_t* LovyanGFXDisplay::GetRenderBuffer(int32_t* width, int32_t* height)
 {
     // Offered wherever it lives. With usePsram the engine draws straight into
-    // PSRAM: slower blits than internal RAM, but a screen-sized buffer in
-    // internal RAM leaves too little for the scene on a 320x240 panel, and
+    // PSRAM: blits are slower than in internal RAM, but a screen-sized buffer
+    // in internal RAM leaves too little for the scene on a 320x240 panel and
     // does not fit at all on larger ones.
     if (!initialized || !buffers[m_RenderIndex])
     {
@@ -959,7 +952,7 @@ void LovyanGFXDisplay::SetBacklight(bool on)
 }
 
 #else
-// Non-ESP32 stub implementation
+// Stub for builds other than ESP32.
 LovyanGFXDisplay::LovyanGFXDisplay()
     : tft(nullptr),
       m_DisplayWidth(0),

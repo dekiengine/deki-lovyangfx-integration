@@ -5,9 +5,10 @@
 #include <deki/reflection/Property.h>
 #include "LovyanGFXPackage.h"
 
-// Forward declaration (must match LovyanGFX's inline namespace).
-// Must stay at global scope: LovyanGFX declares ::lgfx, so declaring it inside
-// DekiLovyanGfx would create a distinct, never-defined DekiLovyanGfx::lgfx.
+// Forward declaration; must match LovyanGFX's inline namespace. Must stay at
+// global scope: LovyanGFX declares ::lgfx, so declaring it inside
+// DekiLovyanGfx would create a separate DekiLovyanGfx::lgfx that is never
+// defined.
 namespace lgfx
 {
 inline namespace v1
@@ -51,22 +52,17 @@ enum class DisplayRotation : uint8_t
     Landscape270Mirror = 7
 };
 
-/**
- * @brief Component to configure and initialize a LovyanGFX display at runtime
- *
- * Add this component to your boot scene to set up display hardware.
- * Configure the display panel type, bus type, and pin mappings in the Inspector.
- * Replaces the compile-time LGFX_Config.h approach with runtime configuration.
- *
- * Inherits from SetupComponent to participate in boot sequence.
- * PlatformSetupComponent calls Setup() to initialize the display.
- * Must run BEFORE LGFXTouchPanel in the boot sequence.
- *
- * Usage:
- * 1. Add LGFXDisplayPanel to your boot scene
- * 2. Configure panel type, bus, and pins in Inspector
- * 3. Add to PlatformSetupComponent's setup_components list (before touch)
- */
+/// Configures and starts a LovyanGFX display at runtime, from the boot scene.
+/// The panel type, bus and pins are set in the Inspector, with no compile-time
+/// LGFX_Config.h.
+///
+/// As a SetupComponent it is part of the boot sequence: PlatformSetupComponent
+/// calls Setup() to start the display. It must run before LGFXTouchPanel.
+///
+/// Usage:
+/// 1. Add LGFXDisplayPanel to your boot scene
+/// 2. Set the panel type, bus and pins in the Inspector
+/// 3. Add it to PlatformSetupComponent's setup_components list, before touch
 DEKI_CATEGORY("LovyanGFX")
 DEKI_DESCRIPTION("Drives a display panel (ILI9341, ST7789, GC9A01, RM67162 AMOLED, ...) over SPI, QSPI or a parallel "
                  "bus through LovyanGFX.")
@@ -117,7 +113,7 @@ public:
     DEKI_TOOLTIP("Display bus type")
     DisplayBusType busType = DisplayBusType::Parallel8bit;
 
-    // --- SPI Bus Pins ---
+    // --- SPI bus pins ---
 
     DEKI_EXPORT
     DEKI_TOOLTIP("SPI MOSI pin")
@@ -155,7 +151,7 @@ public:
     DEKI_VISIBLE_WHEN(busType, SPI, QSPI)
     int32_t spiWriteHz = 40000000;
 
-    // --- QSPI Bus Pins (clock, host and frequency are the SPI ones above) ---
+    // --- QSPI bus pins (clock, host and frequency are the SPI ones above) ---
 
     DEKI_EXPORT
     DEKI_TOOLTIP("QSPI data pin IO0")
@@ -181,7 +177,7 @@ public:
     DEKI_RANGE(-1, 48)
     int32_t io3Pin = -1;
 
-    // --- Parallel Bus Pins (8-bit and 16-bit) ---
+    // --- Parallel bus pins (8-bit and 16-bit) ---
 
     DEKI_EXPORT
     DEKI_UNIT(Frequency)
@@ -305,7 +301,7 @@ public:
     DEKI_RANGE(-1, 48)
     int32_t d15Pin = -1;
 
-    // ========== Control Pins ==========
+    // ========== Control pins ==========
 
     DEKI_GROUP("Control Pins")
     DEKI_EXPORT
@@ -361,20 +357,13 @@ public:
     DEKI_TOOLTIP("Use double buffering for async DMA (overlaps render and display transfer)")
     bool doubleBuffer = false;
 
-    // ========== SetupComponent Implementation ==========
+    // ========== SetupComponent ==========
 
     void Setup(SetupCallback onComplete) override;
     const char* GetSetupName() const override { return "Display Panel"; }
 
-    // ========== Static Accessor ==========
-
-    /**
-     * @brief Get the initialized LGFX device instance
-     * @return Pointer to device, or nullptr if not yet initialized
-     */
+    /// The started LGFX device, or nullptr before Setup() has run.
     static lgfx::LGFX_Device* GetLGFXDevice();
 };
-
-// Generated property metadata
 
 }  // namespace DekiLovyanGfx

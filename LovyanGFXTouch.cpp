@@ -11,7 +11,7 @@ namespace DekiLovyanGfx
 
 #if defined(ESP32)
 
-// millis() was provided by Arduino — use LovyanGFX's implementation instead
+// No Arduino here, so millis() comes from LovyanGFX.
 using lgfx::v1::millis;
 
 LovyanGFXTouch::LovyanGFXTouch()
@@ -42,7 +42,7 @@ bool LovyanGFXTouch::Initialize()
         return true;
     }
 
-    // Get LGFX device from display panel component
+    // The LGFX device, from the display panel component.
     gfx = LGFXDisplayPanel::GetLGFXDevice();
 
     if (!gfx)
@@ -51,11 +51,11 @@ bool LovyanGFXTouch::Initialize()
         return false;
     }
 
-    // Check if touch panel is actually available
+    // Is a touch panel actually available?
     if (!gfx->touch())
     {
         DEKI_LOG_WARNING("LovyanGFXTouch: Touch panel not available (not configured or pin conflict)");
-        // Still return true - touch is optional, and we'll safely skip in Update()
+        // Still return true: touch is optional, and Update() skips it safely.
     }
 
     initialized = true;
@@ -122,9 +122,9 @@ void LovyanGFXTouch::Update()
     int32_t screenX = rawX;
     int32_t screenY = raw_y;
 
-    // Software release detection when no INT pin is wired.
-    // Without INT, the FT5x06 driver can report stale touch data after
-    // finger lift. Detect this by checking for unchanged position.
+    // Detect release in software when no INT pin is wired: without INT, the
+    // FT5x06 driver can keep reporting the last touch after the finger lifts,
+    // so an unchanged position counts as released.
     if (intPin == -1 && m_TouchPressed)
     {
         if (screenX == m_LastTouchX && screenY == m_LastTouchY)
@@ -233,7 +233,7 @@ bool LovyanGFXTouch::IsKeyPressed(uint32_t key) const
 
 #else
 
-// Stub implementation for non-Arduino builds
+// Stub for builds without the hardware.
 LovyanGFXTouch::LovyanGFXTouch()
     : initialized(false)
 {

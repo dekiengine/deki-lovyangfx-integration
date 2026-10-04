@@ -1,13 +1,8 @@
-/**
- * @file LovyanGFXPackage.cpp
- * @brief Package entry point for deki-lovyangfx DLL
- *
- * This file exports the standard Deki plugin interface so the editor
- * can load deki-lovyangfx.dll and discover available LovyanGFX components.
- *
- * For linked DLLs (not dynamically loaded), DekiLovyanGFXEnsureRegistered()
- * must be called from the main executable to trigger the static initializers.
- */
+// Entry point of the deki-lovyangfx DLL. Exports the standard Deki plugin
+// interface, so the editor can load it and find its LovyanGFX components.
+//
+// When the DLL is linked rather than loaded at run time, the main executable
+// must call DekiLovyanGFXEnsureRegistered() to run the static initialisers.
 
 #include "LovyanGFXPackage.h"
 #include <deki/interop/Plugin.h>
@@ -25,9 +20,7 @@ namespace DekiLovyanGfx
 
 #ifdef DEKI_EDITOR
 
-// Auto-generated registration helpers
-
-// Track if already registered to avoid duplicates
+// Set once registered, so registration never runs twice.
 static bool s_LovyanGFXRegistered = false;
 
 // The exports below are C symbols at global scope; the package's own
@@ -36,14 +29,10 @@ using namespace DekiLovyanGfx;
 
 extern "C"
 {
-    /**
-     * @brief Ensure deki-lovyangfx package is loaded and components are registered
-     *
-     * Call this from the editor at startup. Simply calling this function is enough
-     * to force the linker to include the DLL and trigger static initializers.
-     *
-     * @return Number of components registered by this package
-     */
+    /// Makes sure the package is loaded and its components registered, and
+    /// returns how many components it registered. Call it from the editor at
+    /// startup; the call alone makes the linker keep the DLL and run its
+    /// static initialisers.
     DEKI_LOVYANGFX_API int DekiLovyanGFXEnsureRegistered(void)
     {
         if (s_LovyanGFXRegistered)
@@ -52,14 +41,14 @@ extern "C"
         }
         s_LovyanGFXRegistered = true;
 
-        // Auto-generated: registers all LovyanGFX components with ComponentRegistry + ComponentFactory
+        // Generated: registers every LovyanGFX component with ComponentRegistry and ComponentFactory.
         ::DekiLovyanGFXRegisterComponents();
 
         return ::DekiLovyanGFXGetAutoComponentCount();
     }
 
     // =============================================================================
-    // Plugin metadata (for dynamic loading compatibility)
+    // Plugin metadata, for dynamic loading
     // =============================================================================
 
     DEKI_PLUGIN_API const char* DekiPluginGetName(void)
@@ -102,7 +91,7 @@ extern "C"
     }
 
     // =============================================================================
-    // Package-specific feature API (for linked DLL access without name conflicts)
+    // Package-specific API, named so linked DLLs do not clash
     // =============================================================================
 
     DEKI_LOVYANGFX_API const char* DekiLovyanGFXGetName(void)
@@ -112,10 +101,10 @@ extern "C"
 
 }  // extern "C"
 
-#else  // !DEKI_EDITOR - Runtime (ESP32) registration
+#else  // !DEKI_EDITOR: runtime (ESP32) registration
 
-// For runtime builds, component registration happens via static initializers
-// or explicit calls from the application
+// In runtime builds, components are registered by static initialisers or by
+// explicit calls from the application.
 
 #endif  // DEKI_EDITOR
 }  // namespace DekiLovyanGfx

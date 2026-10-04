@@ -33,7 +33,7 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
         return;
     }
 
-    // Resolve shared I2C bus (only for capacitive drivers; XPT2046 is SPI).
+    // Find the shared I2C bus (capacitive drivers only; XPT2046 is SPI).
     int busSda = -1;
     int busScl = -1;
     int busFreq = 0;
@@ -58,7 +58,7 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
 
     lgfx::ITouch* touch = nullptr;
 
-    // Create the appropriate touch driver
+    // Create the touch driver.
     switch (driverType)
     {
         case TouchDriverType::FT5x06:
@@ -157,19 +157,18 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             return;
     }
 
-    // Attach touch controller to the display panel
+    // Attach the touch controller to the display panel.
     auto* panel = gfxDevice->getPanel();
     if (panel)
     {
         panel->setTouch(touch);
         ESP_LOGI(TAG, "Touch panel attached OK");
 
-        // Explicitly initialize touch hardware. device->init() called
-        // panel->initTouch() earlier, but touch was null at that point.
-        // We must call it now to perform I2C bus init, hardware reset,
-        // and touch controller register validation.
-        // The FT5x06 may need time after I2C bus init to respond,
-        // so retry with delays if the first attempt fails.
+        // Start the touch hardware now. device->init() already called
+        // panel->initTouch(), but touch was null then, so this call does the
+        // I2C bus init, the hardware reset and the controller register check.
+        // The FT5x06 may need time after I2C bus init to respond, so retry
+        // with delays if the first attempt fails.
         bool touchOk = false;
         for (int attempt = 0; attempt < 5; attempt++)
         {
@@ -185,12 +184,12 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
         if (!touchOk)
         {
             ESP_LOGE(TAG, "Touch controller failed to initialize after all retries");
-            // Don't register touch input — polling a non-responsive I2C device
-            // causes ~7ms timeout per frame, killing performance
+            // Do not register touch input: polling an I2C device that does not
+            // answer costs a ~7 ms timeout every frame.
         }
         else
         {
-            // Create and register LovyanGFXTouch with input backend
+            // Create LovyanGFXTouch and register it as the input backend.
             auto input = std::make_unique<LovyanGFXTouch>();
             input->SetPinInt(intPin);
             if (input->Initialize())
@@ -205,7 +204,7 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             }
         }
 
-        // Mark owner as Persistent so touch persists across scene changes
+        // Make the owner persistent, so touch survives scene changes.
         if (GetOwner())
         {
             Deki::Engine::GetInstance().GetSceneSystem().MarkPersistent(GetOwner());
@@ -221,11 +220,11 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
     }
 }
 
-#else  // !ESP32 (Editor build)
+#else  // !ESP32 (editor build)
 
 void LGFXTouchPanel::Setup(SetupCallback onComplete)
 {
-    // Touch panel is hardware-only; in editor, just report success
+    // There is no touch hardware in the editor; report success.
     onComplete(true);
 }
 

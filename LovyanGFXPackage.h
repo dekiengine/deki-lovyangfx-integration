@@ -1,15 +1,9 @@
 #pragma once
 
-/**
- * @file LovyanGFXPackage.h
- * @brief Central header for the Deki LovyanGFX Package
- *
- * This package provides LovyanGFX-specific components:
- * - Display panel configuration (SPI/Parallel bus, panel type, backlight)
- * - Touch panel configuration (capacitive/resistive)
- */
+// The LovyanGFX package's components:
+// - display panel setup (SPI or parallel bus, panel type, backlight)
+// - touch panel setup (capacitive or resistive)
 
-// DLL export macro
 #ifdef _WIN32
 #ifdef DEKI_LOVYANGFX_EXPORTS
 #define DEKI_LOVYANGFX_API __declspec(dllexport)

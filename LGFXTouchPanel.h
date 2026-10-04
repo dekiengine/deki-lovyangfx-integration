@@ -28,28 +28,24 @@ enum class TouchRotation : uint8_t
     Mirror_CW_270 = 7
 };
 
-/**
- * @brief Component to configure and initialize a touch panel at runtime
- *
- * Add this component to your boot scene to enable touch input.
- * Supports multiple LovyanGFX touch drivers: FT5x06, GT911, XPT2046, CST816S.
- *
- * Inherits from SetupComponent to participate in boot sequence.
- * PlatformSetupComponent calls Setup() to initialize the touch controller
- * and attach it to the LovyanGFX display panel.
- *
- * Usage:
- * 1. Add LGFXTouchPanel to your boot scene
- * 2. Set driver type and pin values in Inspector
- * 3. Add to PlatformSetupComponent's setup_components list
- */
+/// Configures and starts a touch panel at runtime, from the boot scene.
+/// Supports these LovyanGFX touch drivers: FT5x06, GT911, XPT2046, CST816S.
+///
+/// As a SetupComponent it is part of the boot sequence: PlatformSetupComponent
+/// calls Setup() to start the touch controller and attach it to the LovyanGFX
+/// display panel.
+///
+/// Usage:
+/// 1. Add LGFXTouchPanel to your boot scene
+/// 2. Set the driver type and pins in the Inspector
+/// 3. Add it to PlatformSetupComponent's setup_components list
 DEKI_CATEGORY("LovyanGFX")
 DEKI_DESCRIPTION("Reads a touch controller (FT5x06, GT911, CST816S, XPT2046) through LovyanGFX.")
 DEKI_FORMER_NAME("LGFXTouchPanel")
 class DEKI_LOVYANGFX_API LGFXTouchPanel : public Deki::SetupComponent
 {
 public:
-    // ========== Driver Selection ==========
+    // ========== Driver ==========
 
     DEKI_EXPORT
     DEKI_TOOLTIP("Touch controller IC")
@@ -99,7 +95,7 @@ public:
     DEKI_RANGE(-1, 48)
     int32_t rstPin = -1;
 
-    // ========== Touch Panel Bounds ==========
+    // ========== Touch panel bounds ==========
 
     DEKI_GROUP("Touch Panel DekiParticles::Bounds")
     DEKI_EXPORT
@@ -129,12 +125,10 @@ public:
     DEKI_TOOLTIP("Enable if touch shares the SPI bus with the display")
     bool busShared = false;
 
-    // ========== SetupComponent Implementation ==========
+    // ========== SetupComponent ==========
 
     void Setup(SetupCallback onComplete) override;
     const char* GetSetupName() const override { return "Touch Panel"; }
 };
-
-// Generated property metadata
 
 }  // namespace DekiLovyanGfx

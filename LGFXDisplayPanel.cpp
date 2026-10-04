@@ -12,7 +12,6 @@
 namespace DekiLovyanGfx
 {
 
-// Static LGFX device instance
 static lgfx::LGFX_Device* s_LGFXDevice = nullptr;
 
 lgfx::LGFX_Device* LGFXDisplayPanel::GetLGFXDevice()
@@ -24,8 +23,8 @@ lgfx::LGFX_Device* LGFXDisplayPanel::GetLGFXDevice()
 
 static const char* TAG = "LGFXDisplay";
 
-// Package owns the LovyanGFXDisplay lifetime now. File-scope unique_ptr keeps
-// it alive for the program's lifetime.
+// The package owns the LovyanGFXDisplay; this file-scope pointer keeps it
+// alive for the life of the program.
 static std::unique_ptr<LovyanGFXDisplay> s_LovyanGFXDisplay;
 
 void LGFXDisplayPanel::Setup(SetupCallback onComplete)
@@ -37,7 +36,7 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
 
     auto* device = new lgfx::LGFX_Device();
 
-    // Dump all config so we can verify the msgpack scene contents
+    // Log the whole config, to check what the scene file held.
     ESP_LOGI(TAG, "Panel config: invert=%d, rgbOrder=%d, swapBytes=%d", (int)invertColor, (int)rgbOrder,
              (int)swapBytes);
     ESP_LOGI(TAG, "Memory: %dx%d, offset: %d,%d, rotation=%d", (int)memoryWidth, (int)memoryHeight, (int)offsetX,
@@ -70,7 +69,7 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         return;
     }
 
-    // --- Configure Bus ---
+    // --- Bus ---
     if (busType == DisplayBusType::QSPI)
     {
         // LovyanGFX's SPI bus runs in quad mode once all four IO pins are set.
@@ -118,8 +117,8 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         cfg.spi_host = static_cast<spi_host_device_t>(spiPort);
         cfg.freq_write = spiWriteHz;
         bus->config(cfg);
-        device->setPanel(nullptr);  // Clear before setting bus
-        // Bus gets set on the panel below
+        device->setPanel(nullptr);  // clear before setting the bus
+        // The bus is set on the panel below.
         DEKI_LOG_INFO("LGFXDisplayPanel: SPI bus configured (MOSI=%d, CLK=%d, DC=%d)", (int)mosiPin, (int)clkPin,
                       (int)dcPin);
 
@@ -319,7 +318,6 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         device->setPanel(panel);
     }
 
-    // Initialize the display hardware
     if (!device->init())
     {
         ESP_LOGE(TAG, "device->init() failed");
@@ -331,10 +329,9 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
     device->setRotation(static_cast<uint8_t>(rotation));
     ESP_LOGI(TAG, "Display initialized (%dx%d, rotation=%d)", (int)panelWidth, (int)panelHeight, (int)rotation);
 
-    // Store for static accessor
     s_LGFXDevice = device;
 
-    // Create LovyanGFXDisplay wrapper and register with engine
+    // Wrap the device in a LovyanGFXDisplay and give it to the engine.
     s_LovyanGFXDisplay = std::make_unique<LovyanGFXDisplay>();
     if (!s_LovyanGFXDisplay->InitializeWithDevice(device, device->width(), device->height(), swapBytes, usePsram,
                                                   doubleBuffer))
@@ -354,7 +351,7 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
 
     Deki::Engine::GetInstance().SetDisplay(s_LovyanGFXDisplay.get(), "LovyanGFX");
 
-    // Mark owner as Persistent so display persists across scene changes
+    // Make the owner persistent, so the display survives scene changes.
     if (GetOwner())
     {
         Deki::Engine::GetInstance().GetSceneSystem().MarkPersistent(GetOwner());
@@ -363,11 +360,11 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
     onComplete(true);
 }
 
-#else  // !ESP32 (Editor build)
+#else  // !ESP32 (editor build)
 
 void LGFXDisplayPanel::Setup(SetupCallback onComplete)
 {
-    // Display setup is hardware-only; in editor, just report success
+    // There is no display hardware in the editor; report success.
     onComplete(true);
 }
 
