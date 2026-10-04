@@ -89,19 +89,19 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
                       (int)io1Pin, (int)io2Pin, (int)io3Pin);
 
         auto* panel = new lgfx::Panel_RM67162();
-        auto panel_cfg = panel->config();
-        panel_cfg.pin_cs = csPin;
-        panel_cfg.pin_rst = rstPin;
-        panel_cfg.pin_busy = -1;
-        panel_cfg.panel_width = panelWidth;
-        panel_cfg.panel_height = panelHeight;
-        panel_cfg.memory_width = memoryWidth;
-        panel_cfg.memory_height = memoryHeight;
-        panel_cfg.offset_x = offsetX;
-        panel_cfg.offset_y = offsetY;
-        panel_cfg.offset_rotation = 0;
-        panel_cfg.readable = true;
-        panel->config(panel_cfg);
+        auto panelCfg = panel->config();
+        panelCfg.pin_cs = csPin;
+        panelCfg.pin_rst = rstPin;
+        panelCfg.pin_busy = -1;
+        panelCfg.panel_width = panelWidth;
+        panelCfg.panel_height = panelHeight;
+        panelCfg.memory_width = memoryWidth;
+        panelCfg.memory_height = memoryHeight;
+        panelCfg.offset_x = offsetX;
+        panelCfg.offset_y = offsetY;
+        panelCfg.offset_rotation = 0;
+        panelCfg.readable = true;
+        panel->config(panelCfg);
         panel->setBus(bus);
 
         // No backlight: an AMOLED's brightness is a panel command.
@@ -141,32 +141,32 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
                 return;
         }
 
-        auto panel_cfg = panel->config();
-        panel_cfg.pin_cs = csPin;
-        panel_cfg.pin_rst = rstPin;
-        panel_cfg.pin_busy = -1;
-        panel_cfg.panel_width = panelWidth;
-        panel_cfg.panel_height = panelHeight;
-        panel_cfg.memory_width = memoryWidth;
-        panel_cfg.memory_height = memoryHeight;
-        panel_cfg.offset_x = offsetX;
-        panel_cfg.offset_y = offsetY;
-        panel_cfg.offset_rotation = 0;
-        panel_cfg.readable = true;
-        panel_cfg.invert = invertColor;
-        panel_cfg.rgb_order = rgbOrder;
-        panel->config(panel_cfg);
+        auto panelCfg = panel->config();
+        panelCfg.pin_cs = csPin;
+        panelCfg.pin_rst = rstPin;
+        panelCfg.pin_busy = -1;
+        panelCfg.panel_width = panelWidth;
+        panelCfg.panel_height = panelHeight;
+        panelCfg.memory_width = memoryWidth;
+        panelCfg.memory_height = memoryHeight;
+        panelCfg.offset_x = offsetX;
+        panelCfg.offset_y = offsetY;
+        panelCfg.offset_rotation = 0;
+        panelCfg.readable = true;
+        panelCfg.invert = invertColor;
+        panelCfg.rgb_order = rgbOrder;
+        panel->config(panelCfg);
         panel->setBus(bus);
 
         // Backlight
         if (blPin >= 0)
         {
             auto* light = new lgfx::Light_PWM();
-            auto light_cfg = light->config();
-            light_cfg.pin_bl = blPin;
-            light_cfg.pwm_channel = blPwmChannel;
-            light_cfg.invert = blInvert;
-            light->config(light_cfg);
+            auto lightCfg = light->config();
+            lightCfg.pin_bl = blPin;
+            lightCfg.pwm_channel = blPwmChannel;
+            lightCfg.invert = blInvert;
+            light->config(lightCfg);
             panel->setLight(light);
         }
 
@@ -209,32 +209,32 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
                 onComplete(false);
                 return;
         }
-        auto panel_cfg = panel->config();
-        panel_cfg.pin_cs = csPin;
-        panel_cfg.pin_rst = rstPin;
-        panel_cfg.pin_busy = -1;
-        panel_cfg.panel_width = panelWidth;
-        panel_cfg.panel_height = panelHeight;
-        panel_cfg.memory_width = memoryWidth;
-        panel_cfg.memory_height = memoryHeight;
-        panel_cfg.offset_x = offsetX;
-        panel_cfg.offset_y = offsetY;
-        panel_cfg.offset_rotation = 0;
-        panel_cfg.readable = true;
-        panel_cfg.invert = invertColor;
-        panel_cfg.rgb_order = rgbOrder;
-        panel->config(panel_cfg);
+        auto panelCfg = panel->config();
+        panelCfg.pin_cs = csPin;
+        panelCfg.pin_rst = rstPin;
+        panelCfg.pin_busy = -1;
+        panelCfg.panel_width = panelWidth;
+        panelCfg.panel_height = panelHeight;
+        panelCfg.memory_width = memoryWidth;
+        panelCfg.memory_height = memoryHeight;
+        panelCfg.offset_x = offsetX;
+        panelCfg.offset_y = offsetY;
+        panelCfg.offset_rotation = 0;
+        panelCfg.readable = true;
+        panelCfg.invert = invertColor;
+        panelCfg.rgb_order = rgbOrder;
+        panel->config(panelCfg);
         panel->setBus(bus);
 
         // Backlight
         if (blPin >= 0)
         {
             auto* light = new lgfx::Light_PWM();
-            auto light_cfg = light->config();
-            light_cfg.pin_bl = blPin;
-            light_cfg.pwm_channel = blPwmChannel;
-            light_cfg.invert = blInvert;
-            light->config(light_cfg);
+            auto lightCfg = light->config();
+            lightCfg.pin_bl = blPin;
+            lightCfg.pwm_channel = blPwmChannel;
+            lightCfg.invert = blInvert;
+            light->config(lightCfg);
             panel->setLight(light);
         }
 
@@ -286,33 +286,33 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
                 return;
         }
 
-        auto panel_cfg = panel->config();
-        panel_cfg.pin_cs = csPin;
-        panel_cfg.pin_rst = rstPin;
-        panel_cfg.pin_busy = -1;
-        panel_cfg.panel_width = panelWidth;
-        panel_cfg.panel_height = panelHeight;
-        panel_cfg.memory_width = memoryWidth;
-        panel_cfg.memory_height = memoryHeight;
-        panel_cfg.offset_x = offsetX;
-        panel_cfg.offset_y = offsetY;
-        panel_cfg.offset_rotation = 0;
-        panel_cfg.readable = true;
-        panel_cfg.invert = invertColor;
-        panel_cfg.rgb_order = rgbOrder;
-        panel_cfg.dlen_16bit = true;
-        panel->config(panel_cfg);
+        auto panelCfg = panel->config();
+        panelCfg.pin_cs = csPin;
+        panelCfg.pin_rst = rstPin;
+        panelCfg.pin_busy = -1;
+        panelCfg.panel_width = panelWidth;
+        panelCfg.panel_height = panelHeight;
+        panelCfg.memory_width = memoryWidth;
+        panelCfg.memory_height = memoryHeight;
+        panelCfg.offset_x = offsetX;
+        panelCfg.offset_y = offsetY;
+        panelCfg.offset_rotation = 0;
+        panelCfg.readable = true;
+        panelCfg.invert = invertColor;
+        panelCfg.rgb_order = rgbOrder;
+        panelCfg.dlen_16bit = true;
+        panel->config(panelCfg);
         panel->setBus(bus);
 
         // Backlight
         if (blPin >= 0)
         {
             auto* light = new lgfx::Light_PWM();
-            auto light_cfg = light->config();
-            light_cfg.pin_bl = blPin;
-            light_cfg.pwm_channel = blPwmChannel;
-            light_cfg.invert = blInvert;
-            light->config(light_cfg);
+            auto lightCfg = light->config();
+            lightCfg.pin_bl = blPin;
+            lightCfg.pwm_channel = blPwmChannel;
+            lightCfg.invert = blInvert;
+            light->config(lightCfg);
             panel->setLight(light);
         }
 

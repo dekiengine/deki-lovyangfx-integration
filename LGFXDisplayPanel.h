@@ -43,12 +43,12 @@ enum class DisplayRotation : uint8_t
 {
     Portrait = 0,
     Landscape = 1,
-    Portrait_180 = 2,
-    Landscape_270 = 3,
-    Portrait_Mirror = 4,
-    Landscape_Mirror = 5,
-    Portrait_180_Mirror = 6,
-    Landscape_270_Mirror = 7
+    Portrait180 = 2,
+    Landscape270 = 3,
+    PortraitMirror = 4,
+    LandscapeMirror = 5,
+    Portrait180Mirror = 6,
+    Landscape270Mirror = 7
 };
 
 /**

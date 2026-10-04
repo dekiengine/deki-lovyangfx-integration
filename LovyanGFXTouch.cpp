@@ -95,12 +95,12 @@ void LovyanGFXTouch::Update()
         return;
     }
 
-    uint16_t raw_x = 0, raw_y = 0;
-    uint8_t simple_count = gfx->getTouch(&raw_x, &raw_y);
+    uint16_t rawX = 0, raw_y = 0;
+    uint8_t simpleCount = gfx->getTouch(&rawX, &raw_y);
 
-    bool is_touching = (simple_count > 0);
+    bool isTouching = (simpleCount > 0);
 
-    if (!is_touching)
+    if (!isTouching)
     {
         m_StaleFrameCount = 0;
         if (m_TouchPressed)
@@ -108,7 +108,7 @@ void LovyanGFXTouch::Update()
             m_TouchPressed = false;
 
             DekiInput::InputEvent event;
-            event.type = DekiInput::InputEventType::MOUSE_BUTTON_UP;
+            event.type = DekiInput::InputEventType::MouseButtonUp;
             event.x = m_TouchX;
             event.y = m_TouchY;
             event.pressed = false;
@@ -119,15 +119,15 @@ void LovyanGFXTouch::Update()
         return;
     }
 
-    int32_t screen_x = raw_x;
-    int32_t screen_y = raw_y;
+    int32_t screenX = rawX;
+    int32_t screenY = raw_y;
 
     // Software release detection when no INT pin is wired.
     // Without INT, the FT5x06 driver can report stale touch data after
     // finger lift. Detect this by checking for unchanged position.
     if (intPin == -1 && m_TouchPressed)
     {
-        if (screen_x == m_LastTouchX && screen_y == m_LastTouchY)
+        if (screenX == m_LastTouchX && screenY == m_LastTouchY)
         {
             m_StaleFrameCount++;
             if (m_StaleFrameCount >= STALE_THRESHOLD)
@@ -136,7 +136,7 @@ void LovyanGFXTouch::Update()
                 m_StaleFrameCount = 0;
 
                 DekiInput::InputEvent event;
-                event.type = DekiInput::InputEventType::MOUSE_BUTTON_UP;
+                event.type = DekiInput::InputEventType::MouseButtonUp;
                 event.x = m_TouchX;
                 event.y = m_TouchY;
                 event.pressed = false;
@@ -156,15 +156,15 @@ void LovyanGFXTouch::Update()
     {
         m_TouchPressed = true;
         m_StaleFrameCount = 0;
-        m_TouchX = screen_x;
-        m_TouchY = screen_y;
-        m_LastTouchX = screen_x;
-        m_LastTouchY = screen_y;
+        m_TouchX = screenX;
+        m_TouchY = screenY;
+        m_LastTouchX = screenX;
+        m_LastTouchY = screenY;
 
         DekiInput::InputEvent event;
-        event.type = DekiInput::InputEventType::MOUSE_BUTTON_DOWN;
-        event.x = screen_x;
-        event.y = screen_y;
+        event.type = DekiInput::InputEventType::MouseButtonDown;
+        event.x = screenX;
+        event.y = screenY;
         event.pressed = true;
         event.timestamp = millis();
 
@@ -172,21 +172,21 @@ void LovyanGFXTouch::Update()
     }
     else
     {
-        if (screen_x != m_LastTouchX || screen_y != m_LastTouchY)
+        if (screenX != m_LastTouchX || screenY != m_LastTouchY)
         {
-            m_TouchX = screen_x;
-            m_TouchY = screen_y;
+            m_TouchX = screenX;
+            m_TouchY = screenY;
 
             DekiInput::InputEvent event;
-            event.type = DekiInput::InputEventType::MOUSE_MOVE;
-            event.x = screen_x;
-            event.y = screen_y;
+            event.type = DekiInput::InputEventType::MouseMove;
+            event.x = screenX;
+            event.y = screenY;
             event.timestamp = millis();
 
             NotifyCallbacks(event);
 
-            m_LastTouchX = screen_x;
-            m_LastTouchY = screen_y;
+            m_LastTouchX = screenX;
+            m_LastTouchY = screenY;
         }
     }
 }

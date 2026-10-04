@@ -8,6 +8,13 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
+## Unreleased
+
+### Changed
+- **Names follow the code style** (deki-engine/docs/codestyle): types, functions and enum values are PascalCase, constants kPascalCase, members m_PascalCase, locals and parameters camelCase. The code is formatted with clang-format 22.
+- The functions the editor finds by name are PascalCase: DekiLovyanGFXRegisterComponents, DekiLovyanGFXGetAutoComponentCount, DekiLovyanGFXEnsureRegistered and the rest. Built against engine ABI 21; a build of this package from before does not load and is rebuilt.
+- `DisplayRotation` values are PascalCase (`Portrait180`, `LandscapeMirror`, ...). Boot scenes that saved the old names still load.
+
 ## 0.17.0
 
 ### Added

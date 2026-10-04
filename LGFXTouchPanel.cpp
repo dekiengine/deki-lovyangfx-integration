@@ -34,13 +34,13 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
     }
 
     // Resolve shared I2C bus (only for capacitive drivers; XPT2046 is SPI).
-    int bus_sda = -1;
-    int bus_scl = -1;
-    int bus_freq = 0;
-    const bool is_i2c_driver = driverType == TouchDriverType::FT5x06 || driverType == TouchDriverType::GT911 ||
-                               driverType == TouchDriverType::CST816S;
+    int busSda = -1;
+    int busScl = -1;
+    int busFreq = 0;
+    const bool isI2cDriver = driverType == TouchDriverType::FT5x06 || driverType == TouchDriverType::GT911 ||
+                             driverType == TouchDriverType::CST816S;
 
-    if (is_i2c_driver)
+    if (isI2cDriver)
     {
         DekiI2c::IDekiI2C* bus = DekiI2c::DekiI2C::GetBus(i2cPort);
         if (!bus)
@@ -51,9 +51,9 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             onComplete(false);
             return;
         }
-        bus_sda = bus->GetSdaPin();
-        bus_scl = bus->GetSclPin();
-        bus_freq = bus->GetFrequencyHz();
+        busSda = bus->GetSdaPin();
+        busScl = bus->GetSclPin();
+        busFreq = bus->GetFrequencyHz();
     }
 
     lgfx::ITouch* touch = nullptr;
@@ -71,17 +71,17 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             cfg.y_max = yMax;
             cfg.pin_int = intPin;
             cfg.pin_rst = rstPin;
-            cfg.pin_sda = bus_sda;
-            cfg.pin_scl = bus_scl;
+            cfg.pin_sda = busSda;
+            cfg.pin_scl = busScl;
             cfg.i2c_addr = 0x38;
             cfg.i2c_port = i2cPort;
-            cfg.freq = bus_freq;
+            cfg.freq = busFreq;
             cfg.bus_shared = true;
             cfg.offset_rotation = static_cast<uint8_t>(offsetRotation);
             t->config(cfg);
             touch = t;
-            DEKI_LOG_INFO("LGFXTouchPanel: FT5x06 on I2C port %d (SDA=%d SCL=%d freq=%d)", (int)i2cPort, bus_sda,
-                          bus_scl, bus_freq);
+            DEKI_LOG_INFO("LGFXTouchPanel: FT5x06 on I2C port %d (SDA=%d SCL=%d freq=%d)", (int)i2cPort, busSda, busScl,
+                          busFreq);
             break;
         }
         case TouchDriverType::GT911:
@@ -94,17 +94,17 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             cfg.y_max = yMax;
             cfg.pin_int = intPin;
             cfg.pin_rst = rstPin;
-            cfg.pin_sda = bus_sda;
-            cfg.pin_scl = bus_scl;
+            cfg.pin_sda = busSda;
+            cfg.pin_scl = busScl;
             cfg.i2c_addr = 0x5D;
             cfg.i2c_port = i2cPort;
-            cfg.freq = bus_freq;
+            cfg.freq = busFreq;
             cfg.bus_shared = true;
             cfg.offset_rotation = static_cast<uint8_t>(offsetRotation);
             t->config(cfg);
             touch = t;
-            DEKI_LOG_INFO("LGFXTouchPanel: GT911 on I2C port %d (SDA=%d SCL=%d freq=%d)", (int)i2cPort, bus_sda,
-                          bus_scl, bus_freq);
+            DEKI_LOG_INFO("LGFXTouchPanel: GT911 on I2C port %d (SDA=%d SCL=%d freq=%d)", (int)i2cPort, busSda, busScl,
+                          busFreq);
             break;
         }
         case TouchDriverType::CST816S:
@@ -117,17 +117,17 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             cfg.y_max = yMax;
             cfg.pin_int = intPin;
             cfg.pin_rst = rstPin;
-            cfg.pin_sda = bus_sda;
-            cfg.pin_scl = bus_scl;
+            cfg.pin_sda = busSda;
+            cfg.pin_scl = busScl;
             cfg.i2c_addr = 0x15;
             cfg.i2c_port = i2cPort;
-            cfg.freq = bus_freq;
+            cfg.freq = busFreq;
             cfg.bus_shared = true;
             cfg.offset_rotation = static_cast<uint8_t>(offsetRotation);
             t->config(cfg);
             touch = t;
-            DEKI_LOG_INFO("LGFXTouchPanel: CST816S on I2C port %d (SDA=%d SCL=%d freq=%d)", (int)i2cPort, bus_sda,
-                          bus_scl, bus_freq);
+            DEKI_LOG_INFO("LGFXTouchPanel: CST816S on I2C port %d (SDA=%d SCL=%d freq=%d)", (int)i2cPort, busSda,
+                          busScl, busFreq);
             break;
         }
         case TouchDriverType::XPT2046:
