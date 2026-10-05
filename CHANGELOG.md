@@ -15,6 +15,10 @@ alongside one that has them.
 - The functions the editor finds by name are PascalCase: DekiLovyanGFXRegisterComponents, DekiLovyanGFXGetAutoComponentCount, DekiLovyanGFXEnsureRegistered and the rest. Built against engine ABI 21; a build of this package from before does not load and is rebuilt.
 - `DisplayRotation` values are PascalCase (`Portrait180`, `LandscapeMirror`, ...). Boot scenes that saved the old names still load.
 
+### Removed
+- The former names from before 0.16.0 (bare class names, and deki-gpio's
+  `DekiEsp32::ESP32PinSetup`). A scene that old is upgraded with 0.17 first.
+
 ## 0.17.0
 
 ### Added

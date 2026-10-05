@@ -38,10 +38,9 @@ enum class TouchRotation : uint8_t
 /// Usage:
 /// 1. Add LGFXTouchPanel to your boot scene
 /// 2. Set the driver type and pins in the Inspector
-/// 3. Add it to PlatformSetupComponent's setup_components list
+/// 3. Add it to PlatformSetupComponent's setupComponents list
 DEKI_CATEGORY("LovyanGFX")
 DEKI_DESCRIPTION("Reads a touch controller (FT5x06, GT911, CST816S, XPT2046) through LovyanGFX.")
-DEKI_FORMER_NAME("LGFXTouchPanel")
 class DEKI_LOVYANGFX_API LGFXTouchPanel : public Deki::SetupComponent
 {
 public:

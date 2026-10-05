@@ -62,11 +62,10 @@ enum class DisplayRotation : uint8_t
 /// Usage:
 /// 1. Add LGFXDisplayPanel to your boot scene
 /// 2. Set the panel type, bus and pins in the Inspector
-/// 3. Add it to PlatformSetupComponent's setup_components list, before touch
+/// 3. Add it to PlatformSetupComponent's setupComponents list, before touch
 DEKI_CATEGORY("LovyanGFX")
 DEKI_DESCRIPTION("Drives a display panel (ILI9341, ST7789, GC9A01, RM67162 AMOLED, ...) over SPI, QSPI or a parallel "
                  "bus through LovyanGFX.")
-DEKI_FORMER_NAME("LGFXDisplayPanel")
 class DEKI_LOVYANGFX_API LGFXDisplayPanel : public Deki::SetupComponent
 {
 public:
