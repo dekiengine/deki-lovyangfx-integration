@@ -35,6 +35,12 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
                   static_cast<int>(busType), (int)panelWidth, (int)panelHeight);
 
     auto* device = new lgfx::LGFX_Device();
+    // Kept by the device and applied by init(), which starts the backlight at
+    // it; set now, before there is a panel, so nothing is sent yet. Set after
+    // init(), the backlight would first run at LovyanGFX's default (127, a
+    // 1.2 kHz PWM wave), and a driver that counts pulses would be left at
+    // whatever level that wave stepped it to.
+    device->setBrightness(static_cast<uint8_t>(blBrightness < 0 ? 0 : (blBrightness > 255 ? 255 : blBrightness)));
 
     // Log the whole config, to check what the scene file held.
     ESP_LOGI(TAG, "Panel config: invert=%d, rgbOrder=%d, swapBytes=%d", (int)invertColor, (int)rgbOrder,

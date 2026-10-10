@@ -330,6 +330,13 @@ public:
     DEKI_TOOLTIP("Invert backlight signal (active low)")
     bool blInvert = false;
 
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Backlight brightness at start, 0-255 (PWM duty). 255 holds the pin high. A backlight driver dimmed "
+                 "by counting pulses (the LilyGO T-Deck's) needs 255: a PWM wave steps it through its levels, which "
+                 "flickers")
+    DEKI_RANGE(0, 255)
+    int32_t blBrightness = 255;
+
     // ========== Advanced ==========
 
     DEKI_GROUP("Advanced")

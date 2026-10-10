@@ -8,6 +8,18 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
+## Unreleased
+
+### Fixed
+- The backlight starts at full brightness (`blBrightness`, 255 by default),
+  as it is after waking from sleep. It started at LovyanGFX's 127, a 1.2 kHz
+  PWM wave, and a backlight driver that dims by counting pulses, as the
+  LilyGO T-Deck's does, read every cycle of it as a step down and flickered.
+- The touch panel's bounds group was labelled "Touch Panel
+  DekiParticles::Bounds". The bounds' tooltips say they run along the panel
+  before the display is rotated, and `offsetRotation`'s that it is added to
+  the display rotation (it is not the display rotation).
+
 ## 0.18.0
 
 ### Changed

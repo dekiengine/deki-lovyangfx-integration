@@ -96,28 +96,28 @@ public:
 
     // ========== Touch panel bounds ==========
 
-    DEKI_GROUP("Touch Panel DekiParticles::Bounds")
+    DEKI_GROUP("Touch Panel Bounds")
     DEKI_EXPORT
-    DEKI_TOOLTIP("Minimum raw X value from touch controller")
+    DEKI_TOOLTIP("Minimum raw X from the touch controller, along the panel's width before the display is rotated")
     int32_t xMin = 0;
 
     DEKI_EXPORT
-    DEKI_TOOLTIP("Maximum raw X value from touch controller")
+    DEKI_TOOLTIP("Maximum raw X from the touch controller, along the panel's width before the display is rotated (a 240x320 panel shown in landscape: 239)")
     int32_t xMax = 239;
 
     DEKI_EXPORT
-    DEKI_TOOLTIP("Minimum raw Y value from touch controller")
+    DEKI_TOOLTIP("Minimum raw Y from the touch controller, along the panel's height before the display is rotated")
     int32_t yMin = 0;
 
     DEKI_EXPORT
-    DEKI_TOOLTIP("Maximum raw Y value from touch controller")
+    DEKI_TOOLTIP("Maximum raw Y from the touch controller, along the panel's height before the display is rotated (a 240x320 panel shown in landscape: 319)")
     int32_t yMax = 319;
 
     // ========== Advanced ==========
 
     DEKI_GROUP("Advanced")
     DEKI_EXPORT
-    DEKI_TOOLTIP("Touch coordinate rotation, must match display rotation")
+    DEKI_TOOLTIP("How the touch controller is turned against the panel, added to the display rotation. None when the controller reports in the panel's own orientation")
     TouchRotation offsetRotation = TouchRotation::None;
 
     DEKI_EXPORT
