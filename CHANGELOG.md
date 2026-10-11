@@ -8,7 +8,7 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
-## Unreleased
+## 0.18.2
 
 ### Added
 - `asyncPresent` on the display panel: a frame is sent from the other core
