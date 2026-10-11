@@ -247,19 +247,18 @@ void LovyanGFXDisplay::PushRows(const uint8_t* framebuffer, int width, int heigh
     y1 = y1 > height ? height : y1;
     y1 = y1 > m_DisplayHeight ? m_DisplayHeight : y1;
 
+    // One transaction for all the bands, so each goes out by DMA while the CPU
+    // fills the other: band N is converted while band N-1 is still being
+    // sent, which it reads from the other buffer. Ending the transaction
+    // waits for the last band (Panel_LCD::end_transaction), so the bands are
+    // free again when this returns. Separate transactions per band would wait
+    // for each band before converting the next, the conversion and the
+    // transfer one after the other.
+    tft->startWrite();
     for (int y = y0; y < y1; y += kBandRows)
     {
         const int rows = (y1 - y < kBandRows) ? (y1 - y) : kBandRows;
         uint16_t* band = m_Band[m_BandIndex];
-
-        // The DMA of the push before last may still be reading the band we
-        // are about to fill. waitDMA waits for every transfer, which loses the
-        // overlap of conversion and transfer but is correct.
-        if (m_DmaInFlight)
-        {
-            tft->waitDMA();
-            m_DmaInFlight = false;
-        }
 
         for (int i = 0; i < rows; ++i)
         {
@@ -307,12 +306,13 @@ void LovyanGFXDisplay::PushRows(const uint8_t* framebuffer, int width, int heigh
             }
         }
 
-        tft->startWrite();
-        tft->pushImage(0, y, w, rows, band);
-        tft->endWrite();
-        m_DmaInFlight = true;
+        // Waits for the band before (setting the window waits for the bus),
+        // then starts this one and returns while it is sent.
+        tft->pushImageDMA(0, y, w, rows, band);
         m_BandIndex = 1 - m_BandIndex;
     }
+    tft->endWrite();
+    m_DmaInFlight = false;
 }
 
 void LovyanGFXDisplay::FinishPresent()

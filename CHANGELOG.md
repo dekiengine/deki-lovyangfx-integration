@@ -10,6 +10,12 @@ alongside one that has them.
 
 ## Unreleased
 
+### Changed
+- A frame goes to the panel by DMA, in bands within one transaction: each
+  band is converted while the one before is being sent. Each band used to be
+  fed to the SPI FIFO by the CPU and waited for before the next was
+  converted, the conversion and the transfer one after the other.
+
 ### Fixed
 - The backlight starts at full brightness (`blBrightness`, 255 by default),
   as it is after waking from sleep. It started at LovyanGFX's 127, a 1.2 kHz
