@@ -347,6 +347,10 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         onComplete(false);
         return;
     }
+    if (asyncPresent)
+    {
+        s_LovyanGFXDisplay->SetAsyncPresent(true);
+    }
 
     // The RM67162 ignores a write whose start or size is odd along its short
     // axis. Full-width rows are always even across; this keeps them even down.

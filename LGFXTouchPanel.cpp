@@ -76,7 +76,10 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             cfg.i2c_addr = 0x38;
             cfg.i2c_port = i2cPort;
             cfg.freq = busFreq;
-            cfg.bus_shared = true;
+            // On I2C: it shares nothing with the display's SPI bus. Shared, a
+            // touch read ends the display's SPI transaction first, which
+            // breaks a frame being sent from the other core.
+            cfg.bus_shared = false;
             cfg.offset_rotation = static_cast<uint8_t>(offsetRotation);
             t->config(cfg);
             touch = t;
@@ -99,7 +102,10 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             cfg.i2c_addr = 0x5D;
             cfg.i2c_port = i2cPort;
             cfg.freq = busFreq;
-            cfg.bus_shared = true;
+            // On I2C: it shares nothing with the display's SPI bus. Shared, a
+            // touch read ends the display's SPI transaction first, which
+            // breaks a frame being sent from the other core.
+            cfg.bus_shared = false;
             cfg.offset_rotation = static_cast<uint8_t>(offsetRotation);
             t->config(cfg);
             touch = t;
@@ -122,7 +128,10 @@ void LGFXTouchPanel::Setup(SetupCallback onComplete)
             cfg.i2c_addr = 0x15;
             cfg.i2c_port = i2cPort;
             cfg.freq = busFreq;
-            cfg.bus_shared = true;
+            // On I2C: it shares nothing with the display's SPI bus. Shared, a
+            // touch read ends the display's SPI transaction first, which
+            // breaks a frame being sent from the other core.
+            cfg.bus_shared = false;
             cfg.offset_rotation = static_cast<uint8_t>(offsetRotation);
             t->config(cfg);
             touch = t;

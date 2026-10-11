@@ -363,6 +363,12 @@ public:
     DEKI_TOOLTIP("Use double buffering for async DMA (overlaps render and display transfer)")
     bool doubleBuffer = false;
 
+    DEKI_EXPORT
+    DEKI_TOOLTIP("Send each frame from the chip's other core while the next is drawn: a frame costs the longer of "
+                 "drawing and sending instead of both. Takes two frames of external memory (PSRAM) and a dual-core "
+                 "chip; for a byte-swapped panel (swapBytes) presenting whole frames.")
+    bool asyncPresent = false;
+
     // ========== SetupComponent ==========
 
     void Setup(SetupCallback onComplete) override;

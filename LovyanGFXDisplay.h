@@ -104,6 +104,15 @@ public:
     // LovyanGFX-specific
     lgfx::LGFX_Device* GetTFT() const { return tft; }
 
+    /// Sends frames to the panel from a task on the other core, so the engine
+    /// draws the next frame while this one goes out: Present copies the frame
+    /// to a buffer in external memory and returns, and waits only if the
+    /// frame before is still being sent. A frame then costs the longer of
+    /// drawing and sending rather than both. Needs a dual-core chip and the
+    /// external memory for one frame; without them it stays off. Applies to
+    /// the full-frame present of a byte-swapped panel (the T-Deck's).
+    bool SetAsyncPresent(bool on);
+
 private:
     void ConvertAndRenderFramebuffer(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format);
     bool EnsureBands();
@@ -112,6 +121,26 @@ private:
     void PushRows(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format, int y0, int y1);
     // Flips the render buffer (double buffering) or waits for DMA (single).
     void FinishPresent();
+
+    // Async present (SetAsyncPresent): two copies of frames, so the next is
+    // copied while the last is sent; the task on the other core that sends
+    // them; the queue of copies to send and the count of free ones (FreeRTOS
+    // handles, kept opaque here so the header builds without FreeRTOS).
+    static void PresentTaskMain(void* self);
+    // Blocks until the task has sent every frame it was given.
+    void WaitForAsyncPresent();
+    // Whether this frame goes to the task (the full-frame, byte-swapped path).
+    bool CanPresentAsync(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format) const;
+    bool m_AsyncPresent = false;
+    uint8_t* m_Staging[2] = { nullptr, nullptr };
+    int m_NextStaging = 0;
+    size_t m_StagingBytes = 0;
+    int m_StagingWidth = 0;
+    int m_StagingHeight = 0;
+    Deki::ColorFormat m_StagingFormat = Deki::ColorFormat::RGB565;
+    void* m_PresentTask = nullptr;
+    void* m_FrameReady = nullptr;  // queue of staging indices to send
+    void* m_FreeStaging = nullptr; // counting semaphore: staging copies not in use
 };
 
 }  // namespace DekiLovyanGfx

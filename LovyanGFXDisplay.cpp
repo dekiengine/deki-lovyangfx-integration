@@ -12,6 +12,11 @@
 #include <esp_heap_caps.h>
 #include <esp_idf_version.h>
 #include <esp_task_wdt.h>  // feeds the watchdog during long display writes
+#include <freertos/FreeRTOS.h>
+#include <freertos/queue.h>
+#include <freertos/semphr.h>
+#include <freertos/task.h>
+#include <soc/soc_caps.h>
 
 // Must come after esp_idf_version.h, which defines ESP_IDF_VERSION and
 // ESP_IDF_VERSION_VAL. Tested earlier, the #if is 0 and esp_cache.h is left
@@ -154,6 +159,9 @@ void LovyanGFXDisplay::Shutdown()
         return;
     }
 
+    // The async task finishes its frame and stops before anything it uses goes.
+    SetAsyncPresent(false);
+
     // Wait for any in-flight DMA before freeing buffers
     if (m_DmaInFlight && tft)
     {
@@ -174,6 +182,123 @@ void LovyanGFXDisplay::Shutdown()
     DEKI_LOG_INTERNAL("LovyanGFX: Freed display buffers");
 
     initialized = false;
+}
+
+bool LovyanGFXDisplay::SetAsyncPresent(bool on)
+{
+    if (!on)
+    {
+        if (m_PresentTask)
+        {
+            WaitForAsyncPresent();
+            vTaskDelete(static_cast<TaskHandle_t>(m_PresentTask));
+            m_PresentTask = nullptr;
+        }
+        if (m_FrameReady)
+        {
+            vQueueDelete(static_cast<QueueHandle_t>(m_FrameReady));
+            m_FrameReady = nullptr;
+        }
+        if (m_FreeStaging)
+        {
+            vSemaphoreDelete(static_cast<SemaphoreHandle_t>(m_FreeStaging));
+            m_FreeStaging = nullptr;
+        }
+        for (uint8_t*& staging : m_Staging)
+        {
+            heap_caps_free(staging);
+            staging = nullptr;
+        }
+        m_StagingBytes = 0;
+        m_NextStaging = 0;
+        m_AsyncPresent = false;
+        return true;
+    }
+    if (m_AsyncPresent)
+    {
+        return true;
+    }
+
+#if !defined(CONFIG_FREERTOS_UNICORE) && (SOC_CPU_CORES_NUM > 1)
+    // Two frames in external memory: the task sends one while the engine
+    // copies the next frame into the other, then draws on into its own
+    // buffer. With one, the copy waited for the whole send.
+    const size_t bytes = Deki::FrameBufferBytes(Deki::ColorFormat::RGB565, m_DisplayWidth, m_DisplayHeight);
+    for (uint8_t*& staging : m_Staging)
+    {
+        staging = static_cast<uint8_t*>(heap_caps_malloc(bytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
+    }
+    m_FrameReady = xQueueCreate(2, sizeof(int));
+    m_FreeStaging = xSemaphoreCreateCounting(2, 2);
+    TaskHandle_t task = nullptr;
+    // The other core from the one setting this up, which runs the engine.
+    const BaseType_t core = xPortGetCoreID() == 0 ? 1 : 0;
+    if (m_Staging[0] && m_Staging[1] && m_FrameReady && m_FreeStaging)
+    {
+        m_StagingBytes = bytes;
+        if (xTaskCreatePinnedToCore(&PresentTaskMain, "deki_present", 4096, this, 5, &task, core) == pdPASS)
+        {
+            m_PresentTask = task;
+            m_AsyncPresent = true;
+            DEKI_LOG_INFO("LovyanGFX: frames are sent from core %d while the next is drawn", (int)core);
+            return true;
+        }
+    }
+    DEKI_LOG_ERROR("LovyanGFX: cannot send frames from the other core (no external memory for two %u-byte copies, or "
+                   "no task); they are sent as they are drawn",
+                   (unsigned)bytes);
+    SetAsyncPresent(false);
+    return false;
+#else
+    DEKI_LOG_WARNING("LovyanGFX: a single-core chip cannot send frames while drawing; they are sent as they are drawn");
+    return false;
+#endif
+}
+
+// The task on the other core: sends each frame Present copies for it.
+void LovyanGFXDisplay::PresentTaskMain(void* arg)
+{
+    auto* self = static_cast<LovyanGFXDisplay*>(arg);
+    uint32_t frames = 0;
+    for (;;)
+    {
+        // At full speed the next frame is always waiting, so this task never
+        // blocks and the core's idle task never runs, which the task watchdog
+        // reports. A tick's pause every 30 frames lets it.
+        if (++frames % 30 == 0)
+        {
+            vTaskDelay(1);
+        }
+        int index = 0;
+        xQueueReceive(static_cast<QueueHandle_t>(self->m_FrameReady), &index, portMAX_DELAY);
+        self->PushRows(self->m_Staging[index], self->m_StagingWidth, self->m_StagingHeight, self->m_StagingFormat, 0,
+                       self->m_StagingHeight);
+        xSemaphoreGive(static_cast<SemaphoreHandle_t>(self->m_FreeStaging));
+    }
+}
+
+void LovyanGFXDisplay::WaitForAsyncPresent()
+{
+    if (!m_AsyncPresent)
+    {
+        return;
+    }
+    // Both copies free: nothing queued or being sent.
+    auto* freeStaging = static_cast<SemaphoreHandle_t>(m_FreeStaging);
+    xSemaphoreTake(freeStaging, portMAX_DELAY);
+    xSemaphoreTake(freeStaging, portMAX_DELAY);
+    xSemaphoreGive(freeStaging);
+    xSemaphoreGive(freeStaging);
+}
+
+bool LovyanGFXDisplay::CanPresentAsync(const uint8_t* framebuffer, int width, int height,
+                                       Deki::ColorFormat format) const
+{
+    // The passthrough, byte-swapped, full-frame path below, and nothing else.
+    return m_AsyncPresent && framebuffer && format == Deki::ColorFormat::RGB565 && !buffers[m_RenderIndex] &&
+           width == m_DisplayWidth && height == m_DisplayHeight && m_SwapBytes &&
+           !(m_ActiveOverlay && m_ActiveOverlay->buffer) &&
+           Deki::FrameBufferBytes(format, width, height) <= m_StagingBytes;
 }
 
 void LovyanGFXDisplay::Present(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format)
@@ -338,6 +463,7 @@ void LovyanGFXDisplay::PresentRegions(const uint8_t* framebuffer, int width, int
     {
         return;
     }
+    WaitForAsyncPresent();
     if (count == 0)
     {
         return;  // nothing changed on the panel
@@ -397,6 +523,24 @@ void LovyanGFXDisplay::PresentRegions(const uint8_t* framebuffer, int width, int
 void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, int width, int height,
                                                    Deki::ColorFormat format)
 {
+    // Async: copy the frame into a free staging copy and queue it for the
+    // task on the other core, then return, so the engine draws the next frame
+    // while this one is sent. Waits only when both copies are in use.
+    if (CanPresentAsync(framebuffer, width, height, format))
+    {
+        xSemaphoreTake(static_cast<SemaphoreHandle_t>(m_FreeStaging), portMAX_DELAY);
+        const int index = m_NextStaging;
+        m_NextStaging = 1 - m_NextStaging;
+        memcpy(m_Staging[index], framebuffer, Deki::FrameBufferBytes(format, width, height));
+        m_StagingWidth = width;
+        m_StagingHeight = height;
+        m_StagingFormat = format;
+        xQueueSend(static_cast<QueueHandle_t>(m_FrameReady), &index, portMAX_DELAY);
+        return;
+    }
+    // Any other present goes after the frames the task has: it uses the bus
+    // and the bands.
+    WaitForAsyncPresent();
     uint16_t* conversionBuffer = buffers[m_RenderIndex];
 
     // Passthrough mode: no display buffer; push the framebuffer directly (RGB565 only).
@@ -984,6 +1128,20 @@ void LovyanGFXDisplay::Shutdown()
 }
 void LovyanGFXDisplay::Present(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format)
 {
+}
+bool LovyanGFXDisplay::SetAsyncPresent(bool)
+{
+    return false;
+}
+void LovyanGFXDisplay::PresentTaskMain(void*)
+{
+}
+void LovyanGFXDisplay::WaitForAsyncPresent()
+{
+}
+bool LovyanGFXDisplay::CanPresentAsync(const uint8_t*, int, int, Deki::ColorFormat) const
+{
+    return false;
 }
 bool LovyanGFXDisplay::SupportsPartialPresent() const
 {

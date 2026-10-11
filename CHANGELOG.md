@@ -10,6 +10,12 @@ alongside one that has them.
 
 ## Unreleased
 
+### Added
+- `asyncPresent` on the display panel: a frame is sent from the other core
+  while the next is drawn, through two staging buffers in PSRAM. Drawing and
+  sending each fit in a 60 Hz frame on a LilyGO T-Deck, one after the other
+  they did not. On ESP32 with two cores; off by default.
+
 ### Changed
 - A frame goes to the panel by DMA, in bands within one transaction: each
   band is converted while the one before is being sent. Each band used to be
@@ -17,6 +23,9 @@ alongside one that has them.
   converted, the conversion and the transfer one after the other.
 
 ### Fixed
+- An I2C touch panel no longer shares the display's bus. Shared, each touch
+  read ended the display's SPI transaction, which broke a frame being sent
+  from the other core.
 - The backlight starts at full brightness (`blBrightness`, 255 by default),
   as it is after waking from sleep. It started at LovyanGFX's 127, a 1.2 kHz
   PWM wave, and a backlight driver that dims by counting pulses, as the
