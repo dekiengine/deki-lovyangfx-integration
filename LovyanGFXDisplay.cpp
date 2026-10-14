@@ -294,9 +294,11 @@ void LovyanGFXDisplay::WaitForAsyncPresent()
 bool LovyanGFXDisplay::CanPresentAsync(const uint8_t* framebuffer, int width, int height,
                                        Deki::ColorFormat format) const
 {
-    // The passthrough, byte-swapped, full-frame path below, and nothing else.
+    // The passthrough, full-frame path below, for a panel that takes RGB565
+    // big-endian (byte-swapped from a little-endian build, as it is from a
+    // big-endian one), and nothing else.
     return m_AsyncPresent && framebuffer && format == Deki::ColorFormat::RGB565 && !buffers[m_RenderIndex] &&
-           width == m_DisplayWidth && height == m_DisplayHeight && m_SwapBytes &&
+           width == m_DisplayWidth && height == m_DisplayHeight && (m_SwapBytes || Deki::kRGB565BigEndian) &&
            !(m_ActiveOverlay && m_ActiveOverlay->buffer) &&
            Deki::FrameBufferBytes(format, width, height) <= m_StagingBytes;
 }
@@ -360,6 +362,31 @@ static inline uint16_t SwapBytes16(uint16_t v)
     return static_cast<uint16_t>((v >> 8) | (v << 8));
 }
 
+// An overlay pixel (ARGB8888, alpha not 0) over an RGB565 one, both values in
+// the CPU's byte order.
+static inline uint16_t BlendOverlayPixel(uint16_t bg, uint32_t argb)
+{
+    if ((argb & 0xFF000000) == 0xFF000000)
+    {
+        return static_cast<uint16_t>(((argb >> 8) & 0xF800) | ((argb >> 5) & 0x07E0) | ((argb >> 3) & 0x001F));
+    }
+    const uint8_t alpha = argb >> 24;
+    const uint8_t r = (argb >> 16) & 0xFF;
+    const uint8_t g = (argb >> 8) & 0xFF;
+    const uint8_t b = argb & 0xFF;
+
+    const uint8_t bgR = (bg >> 8) & 0xF8;
+    const uint8_t bgG = (bg >> 3) & 0xFC;
+    const uint8_t bgB = (bg << 3) & 0xF8;
+
+    const uint8_t invAlpha = 255 - alpha;
+    const uint8_t outR = (r * alpha + bgR * invAlpha + 128) >> 8;
+    const uint8_t outG = (g * alpha + bgG * invAlpha + 128) >> 8;
+    const uint8_t outB = (b * alpha + bgB * invAlpha + 128) >> 8;
+
+    return static_cast<uint16_t>(((outR & 0xF8) << 8) | ((outG & 0xFC) << 3) | (outB >> 3));
+}
+
 void LovyanGFXDisplay::PushRows(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format, int y0,
                                 int y1)
 {
@@ -392,7 +419,7 @@ void LovyanGFXDisplay::PushRows(const uint8_t* framebuffer, int width, int heigh
             if (format == Deki::ColorFormat::RGB565)  // RGB565
             {
                 const uint16_t* src = reinterpret_cast<const uint16_t*>(framebuffer) + static_cast<size_t>(sy) * width;
-                if (m_SwapBytes)
+                if (m_SwapBytes != Deki::kRGB565BigEndian)  // the panel takes the other byte order
                 {
                     for (int x = 0; x < w; ++x)
                     {
@@ -586,17 +613,6 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
         {
             DEKI_LOG_INTERNAL("LovyanGFX: Direct render buffer - skipping memcpy");
         }
-
-        // A direct or passthrough buffer belongs to the engine: it renders
-        // into it and blends against its contents next frame, so the byte
-        // swap for big-endian panels must not happen in place. Push through
-        // the staging bands, which swap while copying.
-        if (m_SwapBytes && !(m_ActiveOverlay && m_ActiveOverlay->buffer))
-        {
-            PushRows(framebuffer, width, height, format, 0, height);
-            FinishPresent();
-            return;
-        }
     }
 
     if (!directBuffer)
@@ -697,179 +713,63 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
 
     }  // if (!directBuffer)
 
+    // RGB565 copied from the framebuffer, or the framebuffer itself, is in
+    // memory's byte order (Deki::kRGB565BigEndian); a conversion from another
+    // format is in the CPU's.
+    const bool bufferBigEndian = Deki::kRGB565BigEndian && format == Deki::ColorFormat::RGB565;
+
     // Composite the active UI overlay (ARGB8888) on top.
     if (m_ActiveOverlay && m_ActiveOverlay->buffer)
     {
-        int overlayWidth = m_ActiveOverlay->width < m_DisplayWidth ? m_ActiveOverlay->width : m_DisplayWidth;
-        int overlayHeight = m_ActiveOverlay->height < m_DisplayHeight ? m_ActiveOverlay->height : m_DisplayHeight;
-
-        const uint32_t* overlayBase = m_ActiveOverlay->buffer;
-        uint16_t* dstBase = conversionBuffer;
+        const int overlayWidth = m_ActiveOverlay->width < m_DisplayWidth ? m_ActiveOverlay->width : m_DisplayWidth;
+        const int overlayHeight =
+            m_ActiveOverlay->height < m_DisplayHeight ? m_ActiveOverlay->height : m_DisplayHeight;
 
         for (int y = 0; y < overlayHeight; y++)
         {
-            const uint32_t* overlayRow = overlayBase + y * m_ActiveOverlay->width;
-            uint16_t* dstRow = dstBase + y * m_DisplayWidth;
-
-            // 4 pixels at a time where possible (unrolled for better CPU pipelining).
-            int x = 0;
-            for (; x + 3 < overlayWidth; x += 4)
+            const uint32_t* overlayRow = m_ActiveOverlay->buffer + y * m_ActiveOverlay->width;
+            uint16_t* dstRow = conversionBuffer + y * m_DisplayWidth;
+            for (int x = 0; x < overlayWidth; x++)
             {
-                uint32_t argb0 = overlayRow[x];
-                uint32_t argb1 = overlayRow[x + 1];
-                uint32_t argb2 = overlayRow[x + 2];
-                uint32_t argb3 = overlayRow[x + 3];
-
-                // Process pixel 0
-                if ((argb0 & 0xFF000000) != 0)
-                {
-                    if ((argb0 & 0xFF000000) == 0xFF000000)
-                    {
-                        dstRow[x] = ((argb0 >> 8) & 0xF800) | ((argb0 >> 5) & 0x07E0) | ((argb0 >> 3) & 0x001F);
-                    }
-                    else
-                    {
-                        uint8_t alpha = argb0 >> 24;
-                        uint8_t r = (argb0 >> 16) & 0xFF;
-                        uint8_t g = (argb0 >> 8) & 0xFF;
-                        uint8_t b = argb0 & 0xFF;
-
-                        uint16_t bg = dstRow[x];
-                        uint8_t bgR = (bg >> 8) & 0xF8;
-                        uint8_t bgG = (bg >> 3) & 0xFC;
-                        uint8_t bgB = (bg << 3) & 0xF8;
-
-                        uint8_t invAlpha = 255 - alpha;
-                        uint8_t outR = (r * alpha + bgR * invAlpha + 128) >> 8;
-                        uint8_t outG = (g * alpha + bgG * invAlpha + 128) >> 8;
-                        uint8_t outB = (b * alpha + bgB * invAlpha + 128) >> 8;
-
-                        dstRow[x] = ((outR & 0xF8) << 8) | ((outG & 0xFC) << 3) | (outB >> 3);
-                    }
-                }
-
-                // Process pixel 1
-                if ((argb1 & 0xFF000000) != 0)
-                {
-                    if ((argb1 & 0xFF000000) == 0xFF000000)
-                    {
-                        dstRow[x + 1] = ((argb1 >> 8) & 0xF800) | ((argb1 >> 5) & 0x07E0) | ((argb1 >> 3) & 0x001F);
-                    }
-                    else
-                    {
-                        uint8_t alpha = argb1 >> 24;
-                        uint8_t r = (argb1 >> 16) & 0xFF;
-                        uint8_t g = (argb1 >> 8) & 0xFF;
-                        uint8_t b = argb1 & 0xFF;
-
-                        uint16_t bg = dstRow[x + 1];
-                        uint8_t bgR = (bg >> 8) & 0xF8;
-                        uint8_t bgG = (bg >> 3) & 0xFC;
-                        uint8_t bgB = (bg << 3) & 0xF8;
-
-                        uint8_t invAlpha = 255 - alpha;
-                        uint8_t outR = (r * alpha + bgR * invAlpha + 128) >> 8;
-                        uint8_t outG = (g * alpha + bgG * invAlpha + 128) >> 8;
-                        uint8_t outB = (b * alpha + bgB * invAlpha + 128) >> 8;
-
-                        dstRow[x + 1] = ((outR & 0xF8) << 8) | ((outG & 0xFC) << 3) | (outB >> 3);
-                    }
-                }
-
-                // Process pixel 2
-                if ((argb2 & 0xFF000000) != 0)
-                {
-                    if ((argb2 & 0xFF000000) == 0xFF000000)
-                    {
-                        dstRow[x + 2] = ((argb2 >> 8) & 0xF800) | ((argb2 >> 5) & 0x07E0) | ((argb2 >> 3) & 0x001F);
-                    }
-                    else
-                    {
-                        uint8_t alpha = argb2 >> 24;
-                        uint8_t r = (argb2 >> 16) & 0xFF;
-                        uint8_t g = (argb2 >> 8) & 0xFF;
-                        uint8_t b = argb2 & 0xFF;
-
-                        uint16_t bg = dstRow[x + 2];
-                        uint8_t bgR = (bg >> 8) & 0xF8;
-                        uint8_t bgG = (bg >> 3) & 0xFC;
-                        uint8_t bgB = (bg << 3) & 0xF8;
-
-                        uint8_t invAlpha = 255 - alpha;
-                        uint8_t outR = (r * alpha + bgR * invAlpha + 128) >> 8;
-                        uint8_t outG = (g * alpha + bgG * invAlpha + 128) >> 8;
-                        uint8_t outB = (b * alpha + bgB * invAlpha + 128) >> 8;
-
-                        dstRow[x + 2] = ((outR & 0xF8) << 8) | ((outG & 0xFC) << 3) | (outB >> 3);
-                    }
-                }
-
-                // Process pixel 3
-                if ((argb3 & 0xFF000000) != 0)
-                {
-                    if ((argb3 & 0xFF000000) == 0xFF000000)
-                    {
-                        dstRow[x + 3] = ((argb3 >> 8) & 0xF800) | ((argb3 >> 5) & 0x07E0) | ((argb3 >> 3) & 0x001F);
-                    }
-                    else
-                    {
-                        uint8_t alpha = argb3 >> 24;
-                        uint8_t r = (argb3 >> 16) & 0xFF;
-                        uint8_t g = (argb3 >> 8) & 0xFF;
-                        uint8_t b = argb3 & 0xFF;
-
-                        uint16_t bg = dstRow[x + 3];
-                        uint8_t bgR = (bg >> 8) & 0xF8;
-                        uint8_t bgG = (bg >> 3) & 0xFC;
-                        uint8_t bgB = (bg << 3) & 0xF8;
-
-                        uint8_t invAlpha = 255 - alpha;
-                        uint8_t outR = (r * alpha + bgR * invAlpha + 128) >> 8;
-                        uint8_t outG = (g * alpha + bgG * invAlpha + 128) >> 8;
-                        uint8_t outB = (b * alpha + bgB * invAlpha + 128) >> 8;
-
-                        dstRow[x + 3] = ((outR & 0xF8) << 8) | ((outG & 0xFC) << 3) | (outB >> 3);
-                    }
-                }
-            }
-
-            // The remaining pixels.
-            for (; x < overlayWidth; x++)
-            {
-                uint32_t argb = overlayRow[x];
+                const uint32_t argb = overlayRow[x];
                 if ((argb & 0xFF000000) == 0)
                 {
                     continue;
                 }
-
-                if ((argb & 0xFF000000) == 0xFF000000)
-                {
-                    dstRow[x] = ((argb >> 8) & 0xF800) | ((argb >> 5) & 0x07E0) | ((argb >> 3) & 0x001F);
-                }
-                else
-                {
-                    uint8_t alpha = argb >> 24;
-                    uint8_t r = (argb >> 16) & 0xFF;
-                    uint8_t g = (argb >> 8) & 0xFF;
-                    uint8_t b = argb & 0xFF;
-
-                    uint16_t bg = dstRow[x];
-                    uint8_t bgR = (bg >> 8) & 0xF8;
-                    uint8_t bgG = (bg >> 3) & 0xFC;
-                    uint8_t bgB = (bg << 3) & 0xF8;
-
-                    uint8_t invAlpha = 255 - alpha;
-                    uint8_t outR = (r * alpha + bgR * invAlpha + 128) >> 8;
-                    uint8_t outG = (g * alpha + bgG * invAlpha + 128) >> 8;
-                    uint8_t outB = (b * alpha + bgB * invAlpha + 128) >> 8;
-
-                    dstRow[x] = ((outR & 0xF8) << 8) | ((outG & 0xFC) << 3) | (outB >> 3);
-                }
+                const uint16_t bg = bufferBigEndian ? SwapBytes16(dstRow[x]) : dstRow[x];
+                const uint16_t out = BlendOverlayPixel(bg, argb);
+                dstRow[x] = bufferBigEndian ? SwapBytes16(out) : out;
             }
         }
     }
 
-    // Flush the PSRAM display buffer from the CPU cache before DMA reads it.
+    // A direct or passthrough buffer belongs to the engine: it renders into it
+    // and blends against its contents next frame, so a byte swap for the
+    // panel must not happen in place. Push through the staging bands, which
+    // swap while copying.
+    if (directBuffer && bufferBigEndian != m_SwapBytes)
+    {
+        PushRows(framebuffer, width, height, format, 0, height);
+        FinishPresent();
+        return;
+    }
+
+    // Bulk byte swap when the panel takes the other byte order. One tight loop
+    // is faster than swapping per pixel while rendering or using LovyanGFX's
+    // pixelcopy path.
+    if (bufferBigEndian != m_SwapBytes)
+    {
+        uint32_t* buf32 = (uint32_t*)conversionBuffer;
+        size_t count32 = m_BufferPixelCount / 2;
+        for (size_t i = 0; i < count32; i++)
+        {
+            uint32_t v = buf32[i];
+            buf32[i] = ((v >> 8) & 0x00FF00FF) | ((v & 0x00FF00FF) << 8);
+        }
+    }
+
+    // Flush the PSRAM display buffer from the CPU cache before DMA reads it,
+    // after the last write to it.
 #if defined(ESP32) && ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
     if (m_UsePSRAM)
     {
@@ -880,20 +780,6 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
         esp_cache_msync((void*)alignedAddr, alignedBytes, ESP_CACHE_MSYNC_FLAG_DIR_C2M);
     }
 #endif
-
-    // Bulk byte swap for display controllers that expect big-endian RGB565.
-    // One tight loop is faster than swapping per pixel while rendering or
-    // using LovyanGFX's pixelcopy path.
-    if (m_SwapBytes)
-    {
-        uint32_t* buf32 = (uint32_t*)conversionBuffer;
-        size_t count32 = m_BufferPixelCount / 2;
-        for (size_t i = 0; i < count32; i++)
-        {
-            uint32_t v = buf32[i];
-            buf32[i] = ((v >> 8) & 0x00FF00FF) | ((v & 0x00FF00FF) << 8);
-        }
-    }
 
     if (m_DoubleBuffer)
     {

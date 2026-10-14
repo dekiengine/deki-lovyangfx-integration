@@ -8,6 +8,22 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
+## Unreleased
+
+### Added
+- Big-endian RGB565 (`DEKI_RGB565_BIG_ENDIAN`): an RGB565 frame is swapped only when
+  the panel takes the other byte order than the build (`swapBytes` differs
+  from `Deki::kRGB565BigEndian`), so a big-endian build sends frames to an
+  SPI panel without a swap. `asyncPresent` works in such a build.
+
+### Fixed
+- With a UI overlay showing, a frame the engine draws straight into (direct
+  or passthrough) was byte-swapped in place for the panel, so the next frame
+  blended against swapped pixels. It goes through the staging bands, which
+  swap while copying, as it does without an overlay.
+- A PSRAM display buffer was flushed from the cache before the byte swap
+  wrote to it; it is flushed after.
+
 ## 0.18.2
 
 ### Added
