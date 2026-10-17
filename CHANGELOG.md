@@ -11,8 +11,9 @@ alongside one that has them.
 ## Unreleased
 
 ### Added
-- Japanese: `editor/lang/ja.json` translates the names, tooltips and enum
-  values this package's components show in the Inspector.
+- Japanese, Simplified Chinese and Korean: `editor/lang/ja.json`, `zh.json`
+  and `ko.json` translate the names, tooltips and enum values this
+  package's components show in the Inspector.
 
 ## 0.18.2
 
