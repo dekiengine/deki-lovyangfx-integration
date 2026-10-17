@@ -1,0 +1,340 @@
+<!-- HTML header for doxygen 1.18.0 - Deki.
+     Doxygen's own template plus the site's webfonts and the dekiengine.com
+     bar. The $-placeholders and the BEGIN/END comment markers are Doxygen's
+     template language, not commentary. See README.md in this directory. -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.18.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>deki-lovyangfx-integration: deki-lovyangfx-integration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="codefolding.js"></script>
+<script type="text/javascript" src="clipboard.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript" src="cookie.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
+<link href="deki.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div class="deki-bar">
+  <a class="deki-brand" href="https://dekiengine.com/zh/">
+    <span class="deki-mark"><span class="deki-dot"></span></span>
+    <span class="deki-brand-name">DEKI<span class="deki-slash">/</span>ENGINE</span>
+  </a>
+  <span class="deki-bar-tag">文档</span>
+  <div class="deki-bar-links">
+    <a href="https://dekiengine.com/zh/"><span class="deki-nav-label">网站</span></a>
+    <a href="https://dekiengine.com/zh/packages/"><span class="deki-nav-label">包</span></a>
+    <a href="https://dekiengine.com/zh/blog/"><span class="deki-nav-label">博客</span></a>
+    <span class="deki-bar-sep"></span>
+    <a class="deki-chip" href="https://github.com/orgs/dekiengine/repositories" rel="noopener"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg><span>github</span></a>
+    <a class="deki-chip deki-chip-accent" href="https://dekiengine.com/zh/discord/" rel="noopener"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg><span>discord</span></a>
+    <a class="deki-chip deki-chip-solid" href="https://dekiengine.com/zh/donate/"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5 3.9 12.4a4.8 4.8 0 0 1 0-6.8 4.8 4.8 0 0 1 6.8 0l1.3 1.3 1.3-1.3a4.8 4.8 0 0 1 6.8 0 4.8 4.8 0 0 1 0 6.8Z"/></svg><span>捐赠</span></a>
+    <details class="deki-lang"><summary aria-label="语言: 简体中文"><span class="deki-nav-label">简体中文</span></summary><div class="deki-lang-menu"><a href="../index.html" data-deki-root="../" hreflang="en" lang="en">English</a><a href="../ja/index.html" data-deki-root="../ja/" hreflang="ja" lang="ja">日本語</a><a href="../zh/index.html" data-deki-root="../zh/" hreflang="zh" lang="zh" aria-current="true">简体中文</a><a href="../ko/index.html" data-deki-root="../ko/" hreflang="ko" lang="ko">한국어</a></div></details>
+    <script>(function () {
+      var page = location.pathname.split('/').pop() || 'index.html';
+      if (!/^(index|pages|engine-core|settings|guide-[a-z0-9-]+)\.html$/.test(page)) return;
+      document.querySelectorAll('[data-deki-root]').forEach(function (a) {
+        a.href = a.getAttribute('data-deki-root') + page + location.hash;
+      });
+    })();</script>
+  </div>
+</div>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">deki-lovyangfx-integration<span id="projectnumber">&#160;0.19.0</span>
+   </div>
+   <div id="projectbrief">Deki 包参考</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 制作者 Doxygen 1.18.0 -->
+<script type="text/javascript">
+document.addEventListener('DOMContentLoaded', codefold.init);
+</script>
+<script type="application/json" id="doxygen-config">
+{
+  "relPath": "",
+  "generateTreeView": true,
+  "searchEngine": false,
+  "serverBasedSearch": false,
+  "disableIndex": false,
+  "dynamicMenus": true,
+  "fullSidebar": false
+}
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<div id="main-nav-mobile">
+</div><!-- main-nav-mobile -->
+<div id="main-nav">
+  <ul class="sm sm-dox" id="main-menu">
+    <li id="searchBoxPos2">
+    </li>
+  </ul>
+</div><!-- main-nav -->
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html','',''); });
+</script>
+<div id="container">
+<div id="doc-content">
+<div><div class="header">
+  <div class="headertitle"><div class="title">deki-lovyangfx-integration </div></div>
+</div><!--header-->
+<div class="contents">
+<div class="textblock"><p><a class="anchor" id="mainpage"></a></p>
+<div class="image">
+<img src="deki-lovyangfx-integration.png" alt=""/>
+</div>
+    <p>通过 LovyanGFX 1.2.19 实现嵌入式显示和触摸。驱动常见的 SPI/并口 TFT 屏和 FT6336U 电容触摸面板。</p>
+<p>仓库：<a href="https://github.com/dekiengine/deki-lovyangfx-integration">github.com/dekiengine/deki-lovyangfx-integration</a> · 最新版本：0.19.0 · 需要引擎 0.19.0 或更高版本 · 依赖：<a href="https://dekiengine.github.io/deki-i2c/zh/">deki-i2c</a>, <a href="https://dekiengine.github.io/deki-input/zh/">deki-input</a></p>
+<p>使用 <span class="tt">DekiEditor --packages-add deki-lovyangfx-integration &lt;project&gt;</span> 或通过包管理器安装。引擎自身的组件和 C++ API 见 <a href="https://dekiengine.github.io/docs/zh/">Deki 文档</a>。</p>
+<p>在编辑器中显示为 **LovyanGFX Integration**。</p>
+<h1 class="doxsection"><a class="anchor" id="components"></a>
+组件</h1>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">组件  </th><th class="markdownTableHeadNone">类别  </th><th class="markdownTableHeadNone">说明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="#c-lgfxdisplaypanel" title="LGFXDisplayPanel">LGFXDisplayPanel</a>  </td><td class="markdownTableBodyNone">LovyanGFX  </td><td class="markdownTableBodyNone">通过 LovyanGFX，经由 SPI、QSPI 或并行总线驱动显示面板（ILI9341、ST7789、GC9A01、RM67162 AMOLED 等）。  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="#c-lgfxtouchpanel" title="LGFXTouchPanel">LGFXTouchPanel</a>  </td><td class="markdownTableBodyNone">LovyanGFX  </td><td class="markdownTableBodyNone">通过 LovyanGFX 读取触摸控制器（FT5x06、GT911、CST816S、XPT2046）。  </td></tr>
+</table>
+<h1 class="doxsection"><a class="anchor" id="feature-flags"></a>
+功能开关</h1>
+<p>可以从构建中去掉的部分。带有 define 的功能通过该 define 开关，其余的随其组件一起被剥离。</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">功能  </th><th class="markdownTableHeadNone">define  </th><th class="markdownTableHeadNone">默认值  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Display Panel  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_LGFX_DISPLAY_PANEL</span>  </td><td class="markdownTableBodyNone">开  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Touch Panel  </td><td class="markdownTableBodyNone"><span class="tt">DEKI_FEATURE_LGFX_TOUCH_PANEL</span>  </td><td class="markdownTableBodyNone">开  </td></tr>
+</table>
+<h1 class="doxsection"><a class="anchor" id="component-reference"></a>
+组件参考</h1>
+<h2 class="doxsection"><a class="anchor" id="c-lgfxdisplaypanel"></a>
+LGFXDisplayPanel</h2>
+<p>通过 LovyanGFX，经由 SPI、QSPI 或并行总线驱动显示面板（ILI9341、ST7789、GC9A01、RM67162 AMOLED 等）。</p>
+<p>检视器中的名称：LGFX 显示面板 · 类别：LovyanGFX · 类型：<span class="tt">DekiLovyanGfx::LGFXDisplayPanel</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">属性  </th><th class="markdownTableHeadNone">类型  </th><th class="markdownTableHeadNone">默认值  </th><th class="markdownTableHeadNone">约束  </th><th class="markdownTableHeadNone">说明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">panelType</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"ILI9341"</span>  </td><td class="markdownTableBodyNone"><span class="tt">ILI9341</span>, <span class="tt">ST7789</span>, <span class="tt">ST7735</span>, <span class="tt">GC9A01</span>, <span class="tt">SSD1351</span>, <span class="tt">ST7789P3</span>, <span class="tt">RM67162</span>  </td><td class="markdownTableBodyNone">显示面板驱动 IC  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">panelWidth</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">320</span>  </td><td class="markdownTableBodyNone">1 到 1024  </td><td class="markdownTableBodyNone">显示屏宽度（像素）  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">panelHeight</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">240</span>  </td><td class="markdownTableBodyNone">1 到 1024  </td><td class="markdownTableBodyNone">显示屏高度（像素）  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">rotation</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Landscape"</span>  </td><td class="markdownTableBodyNone"><span class="tt">Portrait</span>, <span class="tt">Landscape</span>, <span class="tt">Portrait180</span>, <span class="tt">Landscape270</span>, <span class="tt">PortraitMirror</span>, <span class="tt">LandscapeMirror</span>, <span class="tt">Portrait180Mirror</span>, <span class="tt">Landscape270Mirror</span>  </td><td class="markdownTableBodyNone">显示屏旋转  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">offsetX</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">像素偏移 X（用于原点不为 0 的面板）  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">offsetY</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">像素偏移 Y（用于原点不为 0 的面板）  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">invertColor</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">反转显示屏颜色  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">rgbOrder</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">交换 R 和 B 颜色通道（RGB 与 BGR）  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">busType</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"Parallel8bit"</span>  </td><td class="markdownTableBodyNone"><span class="tt">SPI</span>, <span class="tt">Parallel8bit</span>, <span class="tt">Parallel16bit</span>, <span class="tt">QSPI</span>  </td><td class="markdownTableBodyNone">显示屏总线类型  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">mosiPin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">SPI MOSI 引脚  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">misoPin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">SPI MISO 引脚（-1 = 不使用）  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">clkPin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">SPI 时钟引脚  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">dcPin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">SPI 数据/命令引脚  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">spiPort</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">0 到 2；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">SPI 主机，按 ESP-IDF 的编号（在 ESP32-S3 上：1 = SPI2，2 = SPI3）  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">spiWriteHz</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">40000000</span>  </td><td class="markdownTableBodyNone"><span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">SPI 写入频率 (Hz)  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">io0Pin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">QSPI 数据引脚 IO0  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">io1Pin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">QSPI 数据引脚 IO1  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">io2Pin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">QSPI 数据引脚 IO2  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">io3Pin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">QSPI 数据引脚 IO3  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">parWriteHz</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">40000000</span>  </td><td class="markdownTableBodyNone"><span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">并行总线写入频率 (Hz)  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">rsPin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">寄存器选择 / 数据-命令引脚 (RS/DC)  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">wrPin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">并行总线写选通引脚  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">rdPin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">并行总线读选通引脚（-1 = 不使用）  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">d0Pin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">并行数据引脚 D0  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">d1Pin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">并行数据引脚 D1  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">d2Pin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">并行数据引脚 D2  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">d3Pin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">并行数据引脚 D3  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">d4Pin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">并行数据引脚 D4  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">d5Pin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">并行数据引脚 D5  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">d6Pin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">并行数据引脚 D6  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">d7Pin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">并行数据引脚 D7  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">d8Pin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">并行数据引脚 D8  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">d9Pin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">并行数据引脚 D9  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">d10Pin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">并行数据引脚 D10  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">d11Pin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">并行数据引脚 D11  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">d12Pin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">并行数据引脚 D12  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">d13Pin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">并行数据引脚 D13  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">d14Pin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">并行数据引脚 D14  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">d15Pin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">busType</span> 允许时显示  </td><td class="markdownTableBodyNone">并行数据引脚 D15  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">csPin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48  </td><td class="markdownTableBodyNone">片选引脚（-1 = 不使用）  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">rstPin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48  </td><td class="markdownTableBodyNone">复位引脚（-1 = 未连接）  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">blPin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48  </td><td class="markdownTableBodyNone">背光引脚（-1 = 无）  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">blPwmChannel</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">0 到 15  </td><td class="markdownTableBodyNone">背光的 PWM 通道  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">blInvert</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">反转背光信号（低电平有效）  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">blBrightness</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">255</span>  </td><td class="markdownTableBodyNone">0 到 255  </td><td class="markdownTableBodyNone">启动时的背光亮度，0-255（PWM 占空比）。255 时引脚保持高电平。靠计数脉冲调光的背光驱动（如 LilyGO T-Deck 上的）需要设为 255：PWM 波形会让它在各亮度级别间不断切换，导致闪烁  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">swapBytes</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">向显示屏传输时交换 RGB565 的字节顺序  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">memoryWidth</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">320</span>  </td><td class="markdownTableBodyNone">1 到 1024  </td><td class="markdownTableBodyNone">面板显存宽度（可能与可见宽度不同）  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">memoryHeight</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">240</span>  </td><td class="markdownTableBodyNone">1 到 1024  </td><td class="markdownTableBodyNone">面板显存高度（可能与可见高度不同）  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">usePsram</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">将帧缓冲放在 PSRAM 而不是内部 RAM 中：可腾出一屏大小的内部 RAM，但绘制会变慢  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">doubleBuffer</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">为异步 DMA 使用双缓冲（渲染与显示屏传输同时进行）  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">asyncPresent</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">在绘制下一帧的同时，由芯片的另一个核心发送当前帧：每帧耗时为绘制和发送中较长的一项，而不是两者之和。需要两帧大小的外部内存 (PSRAM) 和双核芯片；适用于呈现整帧、需要交换字节 (swapBytes) 的面板。  </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="c-lgfxtouchpanel"></a>
+LGFXTouchPanel</h2>
+<p>通过 LovyanGFX 读取触摸控制器（FT5x06、GT911、CST816S、XPT2046）。</p>
+<p>检视器中的名称：LGFX 触摸面板 · 类别：LovyanGFX · 类型：<span class="tt">DekiLovyanGfx::LGFXTouchPanel</span></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">属性  </th><th class="markdownTableHeadNone">类型  </th><th class="markdownTableHeadNone">默认值  </th><th class="markdownTableHeadNone">约束  </th><th class="markdownTableHeadNone">说明  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">driverType</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"FT5x06"</span>  </td><td class="markdownTableBodyNone"><span class="tt">FT5x06</span>, <span class="tt">GT911</span>, <span class="tt">CST816S</span>, <span class="tt">XPT2046</span>  </td><td class="markdownTableBodyNone">触摸控制器 IC  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">i2cPort</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone">0 到 3；<span class="tt">driverType</span> 允许时显示  </td><td class="markdownTableBodyNone">I2C 总线端口（必须与启动场景中的 I2C 总线组件一致）  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">csPin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">driverType</span> 允许时显示  </td><td class="markdownTableBodyNone">SPI 片选引脚（-1 = 不使用）  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">mosiPin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">driverType</span> 允许时显示  </td><td class="markdownTableBodyNone">SPI MOSI 引脚（-1 = 不使用）  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">misoPin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">driverType</span> 允许时显示  </td><td class="markdownTableBodyNone">SPI MISO 引脚（-1 = 不使用）  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">clkPin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48；<span class="tt">driverType</span> 允许时显示  </td><td class="markdownTableBodyNone">SPI 时钟引脚（-1 = 不使用）  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">intPin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48  </td><td class="markdownTableBodyNone">触摸事件的中断引脚（-1 = 轮询模式）  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">rstPin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">-1</span>  </td><td class="markdownTableBodyNone">-1 到 48  </td><td class="markdownTableBodyNone">触摸控制器的复位引脚（-1 = 未连接）  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">xMin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">触摸控制器报告的原始 X 最小值，沿显示屏旋转前的面板宽度方向  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">xMax</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">239</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">触摸控制器报告的原始 X 最大值，沿显示屏旋转前的面板宽度方向（240x320 面板横向显示时：239）  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">yMin</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">0</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">触摸控制器报告的原始 Y 最小值，沿显示屏旋转前的面板高度方向  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">yMax</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">319</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">触摸控制器报告的原始 Y 最大值，沿显示屏旋转前的面板高度方向（240x320 面板横向显示时：319）  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">offsetRotation</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"None"</span>  </td><td class="markdownTableBodyNone"><span class="tt">None</span>, <span class="tt">CW_90</span>, <span class="tt">CW_180</span>, <span class="tt">CW_270</span>, <span class="tt">Mirror</span>, <span class="tt">Mirror_CW_90</span>, <span class="tt">Mirror_CW_180</span>, <span class="tt">Mirror_CW_270</span>  </td><td class="markdownTableBodyNone">触摸控制器相对面板的旋转方向，会叠加到显示屏旋转上。控制器按面板自身方向报告坐标时选择“无”  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">busShared</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">触摸与显示屏共用 SPI 总线时启用  </td></tr>
+</table>
+<h1 class="doxsection"><a class="anchor" id="changelog"></a>
+更新日志</h1>
+<p>更新日志为英文。</p>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md0"></a>
+0.19.0</h2>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md1"></a>
+Changed</h2>
+<ul>
+<li><span class="tt">minEngine</span> 0.19.0: built against engine 0.19.0, whose component metadata records the package each class is in. A build of this package from before does not load and is rebuilt.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
+Added</h2>
+<ul>
+<li>Japanese, Simplified Chinese and Korean: <span class="tt">editor/lang/ja.json</span>, <span class="tt">zh.json</span> and <span class="tt">ko.json</span> translate the names, tooltips and enum values this package's components show in the Inspector.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
+0.18.2</h2>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
+Added</h2>
+<ul>
+<li><span class="tt">asyncPresent</span> on the display panel: a frame is sent from the other core while the next is drawn, through two staging buffers in PSRAM. Drawing and sending each fit in a 60 Hz frame on a LilyGO T-Deck, one after the other they did not. On ESP32 with two cores; off by default.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
+Changed</h2>
+<ul>
+<li>A frame goes to the panel by DMA, in bands within one transaction: each band is converted while the one before is being sent. Each band used to be fed to the SPI FIFO by the CPU and waited for before the next was converted, the conversion and the transfer one after the other.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md6"></a>
+Fixed</h2>
+<ul>
+<li>An I2C touch panel no longer shares the display's bus. Shared, each touch read ended the display's SPI transaction, which broke a frame being sent from the other core.</li>
+<li>The backlight starts at full brightness (<span class="tt">blBrightness</span>, 255 by default), as it is after waking from sleep. It started at LovyanGFX's 127, a 1.2 kHz PWM wave, and a backlight driver that dims by counting pulses, as the LilyGO T-Deck's does, read every cycle of it as a step down and flickered.</li>
+<li>The touch panel's bounds group was labelled "Touch Panel
+  DekiParticles::Bounds". The bounds' tooltips say they run along the panel before the display is rotated, and <span class="tt">offsetRotation</span>'s that it is added to the display rotation (it is not the display rotation).</li>
+</ul>
+<p>更早的版本：<a href="https://github.com/dekiengine/deki-lovyangfx-integration/blob/master/CHANGELOG.md">CHANGELOG.md</a></p>
+<hr  />
+<p>由包的反射数据生成（引擎 0.19.0）。属性名就是场景文件中使用的键。重命名后会保留别名（<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">兼容性</a>）。 </p>
+</div></div><!-- PageDoc -->
+<a href="doxygen_crawl.html"></a>
+</div><!-- contents -->
+</div><!-- doc-content -->
+</div><!-- container -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">制作者 <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.18.0 </li>
+  </ul>
+</div>
+</body>
+</html>
