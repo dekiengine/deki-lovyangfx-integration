@@ -162,5 +162,8 @@
     "X Min": "X 最小",
     "XPT2046": "XPT2046",
     "Y Max": "Y 最大",
-    "Y Min": "Y 最小"
+    "Y Min": "Y 最小",
+    "Drives a display panel (ILI9341, ST7789, GC9A01, RM67162 AMOLED, ...) over SPI, QSPI or a parallel bus through LovyanGFX.": "LovyanGFX を通して、SPI、QSPI、パラレルバスでディスプレイパネル (ILI9341、ST7789、GC9A01、RM67162 AMOLED など) を駆動します。",
+    "LovyanGFX": "LovyanGFX",
+    "Reads a touch controller (FT5x06, GT911, CST816S, XPT2046) through LovyanGFX.": "LovyanGFX を通して、タッチコントローラー (FT5x06、GT911、CST816S、XPT2046) を読み取ります。"
 }
