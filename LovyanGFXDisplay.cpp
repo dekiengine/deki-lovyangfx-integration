@@ -178,6 +178,7 @@ void LovyanGFXDisplay::Shutdown()
         }
     }
     FreeBands();
+    FreeStrips();
     m_BufferPixelCount = 0;
     DEKI_LOG_INTERNAL("LovyanGFX: Freed display buffers");
 
@@ -228,7 +229,7 @@ bool LovyanGFXDisplay::SetAsyncPresent(bool on)
     {
         staging = static_cast<uint8_t*>(heap_caps_malloc(bytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
     }
-    m_FrameReady = xQueueCreate(2, sizeof(int));
+    m_FrameReady = xQueueCreate(2, sizeof(PresentJob));
     m_FreeStaging = xSemaphoreCreateCounting(2, 2);
     TaskHandle_t task = nullptr;
     // The other core from the one setting this up, which runs the engine.
@@ -255,26 +256,164 @@ bool LovyanGFXDisplay::SetAsyncPresent(bool on)
 #endif
 }
 
-// The task on the other core: sends each frame Present copies for it.
+static inline uint16_t SwapBytes16(uint16_t v)
+{
+    return static_cast<uint16_t>((v >> 8) | (v << 8));
+}
+
+// The task on the other core: sends the frames and strips Present and
+// PresentRegions copy for it.
 void LovyanGFXDisplay::PresentTaskMain(void* arg)
 {
     auto* self = static_cast<LovyanGFXDisplay*>(arg);
-    uint32_t frames = 0;
+    uint32_t jobs = 0;
     for (;;)
     {
-        // At full speed the next frame is always waiting, so this task never
+        // At full speed the next job is always waiting, so this task never
         // blocks and the core's idle task never runs, which the task watchdog
-        // reports. A tick's pause every 30 frames lets it.
-        if (++frames % 30 == 0)
+        // reports. A tick's pause every 30 jobs lets it.
+        if (++jobs % 30 == 0)
         {
             vTaskDelay(1);
         }
-        int index = 0;
-        xQueueReceive(static_cast<QueueHandle_t>(self->m_FrameReady), &index, portMAX_DELAY);
-        self->PushRows(self->m_Staging[index], self->m_StagingWidth, self->m_StagingHeight, self->m_StagingFormat, 0,
-                       self->m_StagingHeight);
+        PresentJob job{};
+        xQueueReceive(static_cast<QueueHandle_t>(self->m_FrameReady), &job, portMAX_DELAY);
+        if (job.strip)
+        {
+            self->SendStrip(self->m_Strip[job.index], job.top, job.bottom - job.top);
+        }
+        else
+        {
+            // The overlay was blended over the copy as it was made, on the
+            // drawing core.
+            self->PushRows(self->m_Staging[job.index], self->m_StagingWidth, self->m_StagingHeight,
+                           self->m_StagingFormat, job.top, job.bottom, false);
+        }
         xSemaphoreGive(static_cast<SemaphoreHandle_t>(self->m_FreeStaging));
     }
+}
+
+void LovyanGFXDisplay::SendStrip(uint16_t* strip, int top, int rows)
+{
+    const int w = m_DisplayWidth;
+    if (m_SwapBytes != Deki::kRGB565BigEndian)  // the panel takes the other byte order
+    {
+        const size_t pixels = static_cast<size_t>(w) * rows;
+        auto* words = reinterpret_cast<uint32_t*>(strip);
+        for (size_t i = 0; i < pixels / 2; ++i)
+        {
+            const uint32_t v = words[i];
+            words[i] = ((v >> 8) & 0x00FF00FF) | ((v & 0x00FF00FF) << 8);
+        }
+        if (pixels & 1)
+        {
+            strip[pixels - 1] = SwapBytes16(strip[pixels - 1]);
+        }
+    }
+
+    // One SPI transfer sends at most 32 KB; LovyanGFX sends a longer one in
+    // pieces with a 1 ms sleep between them. So the strip goes in chunks that
+    // fit, each started as the one before it ends, in whole pairs of rows for
+    // the panels that need them.
+    constexpr size_t kMaxTransfer = 32 * 1024;
+    int chunkRows = static_cast<int>(kMaxTransfer / (static_cast<size_t>(w) * sizeof(uint16_t)));
+    chunkRows -= chunkRows % m_RowAlign;
+    chunkRows = chunkRows < m_RowAlign ? m_RowAlign : chunkRows;
+
+    tft->startWrite();
+    for (int y = 0; y < rows; y += chunkRows)
+    {
+        const int n = (rows - y < chunkRows) ? (rows - y) : chunkRows;
+        tft->pushImageDMA(0, top + y, w, n, strip + static_cast<size_t>(y) * w);
+    }
+    tft->endWrite();  // waits for the last chunk, so the copy is free again
+}
+
+bool LovyanGFXDisplay::EnsureStrips(int rows)
+{
+    if (rows <= m_StripRows && m_Strip[0] && m_Strip[1])
+    {
+        return true;
+    }
+    const size_t bytes = static_cast<size_t>(m_DisplayWidth) * rows * sizeof(uint16_t);
+    if (bytes > kMaxStripBytes)
+    {
+        return false;
+    }
+    // Growing: the task may still be sending from the old copies.
+    WaitForAsyncPresent();
+    FreeStrips();
+    for (uint16_t*& strip : m_Strip)
+    {
+        strip = static_cast<uint16_t*>(Deki::Memory::AllocateDma(bytes, Deki::Memory::Internal));
+        if (!strip)
+        {
+            DEKI_LOG_WARNING("LovyanGFX: no internal DMA memory for two %zu-byte strip copies; strips go through "
+                             "external memory",
+                             bytes);
+            FreeStrips();
+            return false;
+        }
+    }
+    m_StripRows = rows;
+    DEKI_LOG_INFO("LovyanGFX: strips of up to %d rows are sent from core 1 while the next is drawn", rows);
+    return true;
+}
+
+void LovyanGFXDisplay::FreeStrips()
+{
+    for (uint16_t*& strip : m_Strip)
+    {
+        Deki::Memory::Free(strip);
+        strip = nullptr;
+    }
+    m_StripRows = 0;
+}
+
+bool LovyanGFXDisplay::PresentRowsAsync(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format,
+                                        int top, int bottom)
+{
+    if (!m_AsyncPresent || format != Deki::ColorFormat::RGB565 || width != m_DisplayWidth ||
+        height != m_DisplayHeight || Deki::FrameBufferBytes(format, width, height) > m_StagingBytes)
+    {
+        return false;
+    }
+    // Widened to the panel's row alignment, as the synchronous path does.
+    top -= top % m_RowAlign;
+    bottom = ((bottom + m_RowAlign - 1) / m_RowAlign) * m_RowAlign;
+    top = top < 0 ? 0 : top;
+    bottom = bottom > height ? height : bottom;
+    if (bottom <= top)
+    {
+        return true;
+    }
+
+    // A strip that fits the strip copies goes there and is sent from them as
+    // it is. Anything taller goes to the same rows of a whole-frame copy, sent
+    // through the bands like any other frame. Both kinds share the queue and
+    // the count of free copies, and their indices alternate, so the copy a
+    // job takes is always one whose last job has finished.
+    const bool strip = EnsureStrips(bottom - top);
+    xSemaphoreTake(static_cast<SemaphoreHandle_t>(m_FreeStaging), portMAX_DELAY);
+    const int index = m_NextStaging;
+    m_NextStaging = 1 - m_NextStaging;
+    const size_t pitch = static_cast<size_t>(width) * sizeof(uint16_t);
+    const uint8_t* rows = framebuffer + static_cast<size_t>(top) * pitch;
+    const size_t bytes = static_cast<size_t>(bottom - top) * pitch;
+    uint16_t* copy =
+        strip ? m_Strip[index] : reinterpret_cast<uint16_t*>(m_Staging[index] + static_cast<size_t>(top) * pitch);
+    memcpy(copy, rows, bytes);
+    // The copy is in memory's byte order, as the frame is.
+    BlendOverlayRows(copy, width, width, top, bottom, Deki::kRGB565BigEndian);
+    if (!strip)
+    {
+        m_StagingWidth = width;
+        m_StagingHeight = height;
+        m_StagingFormat = format;
+    }
+    const PresentJob job{ index, top, bottom, strip };
+    xQueueSend(static_cast<QueueHandle_t>(m_FrameReady), &job, portMAX_DELAY);
+    return true;
 }
 
 void LovyanGFXDisplay::WaitForAsyncPresent()
@@ -299,7 +438,6 @@ bool LovyanGFXDisplay::CanPresentAsync(const uint8_t* framebuffer, int width, in
     // big-endian one), and nothing else.
     return m_AsyncPresent && framebuffer && format == Deki::ColorFormat::RGB565 && !buffers[m_RenderIndex] &&
            width == m_DisplayWidth && height == m_DisplayHeight && (m_SwapBytes || Deki::kRGB565BigEndian) &&
-           !(m_ActiveOverlay && m_ActiveOverlay->buffer) &&
            Deki::FrameBufferBytes(format, width, height) <= m_StagingBytes;
 }
 
@@ -319,9 +457,7 @@ bool LovyanGFXDisplay::SupportsPartialPresent() const
 }
 
 // ---- Partial present ------------------------------------------------------
-// Not yet tested on hardware: written against the LovyanGFX API the full path
-// above uses (pushImage / startWrite / endWrite / waitDMA) and only
-// compile-checked. Run a scene with dirty-rect tracking on to try it.
+// Run on hardware on the LilyGO T-Deck Plus.
 
 bool LovyanGFXDisplay::EnsureBands()
 {
@@ -357,11 +493,6 @@ void LovyanGFXDisplay::FreeBands()
     }
 }
 
-static inline uint16_t SwapBytes16(uint16_t v)
-{
-    return static_cast<uint16_t>((v >> 8) | (v << 8));
-}
-
 // An overlay pixel (ARGB8888, alpha not 0) over an RGB565 one, both values in
 // the CPU's byte order.
 static inline uint16_t BlendOverlayPixel(uint16_t bg, uint32_t argb)
@@ -387,8 +518,64 @@ static inline uint16_t BlendOverlayPixel(uint16_t bg, uint32_t argb)
     return static_cast<uint16_t>(((outR & 0xF8) << 8) | ((outG & 0xFC) << 3) | (outB >> 3));
 }
 
+void LovyanGFXDisplay::BlendOverlayRows(uint16_t* rows, size_t pitch, int width, int y0, int y1, bool swapped) const
+{
+    if (!m_ActiveOverlay || !m_ActiveOverlay->buffer)
+    {
+        return;
+    }
+    // The overlay covers the screen from its top left corner.
+    const int w = std::min({ width, static_cast<int>(m_DisplayWidth), static_cast<int>(m_ActiveOverlay->width) });
+    const int end = std::min({ y1, static_cast<int>(m_DisplayHeight), static_cast<int>(m_ActiveOverlay->height) });
+    for (int y = y0 < 0 ? 0 : y0; y < end; ++y)
+    {
+        const int right = std::min(w, static_cast<int>(m_ActiveOverlay->spanRight[y]));
+        const uint32_t* overlayRow = m_ActiveOverlay->buffer + static_cast<size_t>(y) * m_ActiveOverlay->width;
+        uint16_t* dstRow = rows + static_cast<size_t>(y - y0) * pitch;
+        for (int x = m_ActiveOverlay->spanLeft[y]; x < right; ++x)
+        {
+            const uint32_t argb = overlayRow[x];
+            if ((argb & 0xFF000000) == 0)
+            {
+                continue;
+            }
+            const uint16_t bg = swapped ? SwapBytes16(dstRow[x]) : dstRow[x];
+            const uint16_t out = BlendOverlayPixel(bg, argb);
+            dstRow[x] = swapped ? SwapBytes16(out) : out;
+        }
+    }
+}
+
+// Finds where row y of the overlay is not fully transparent.
+static void MeasureOverlayRow(const uint32_t* row, int width, uint16_t& left, uint16_t& right)
+{
+    int l = 0;
+    while (l < width && (row[l] & 0xFF000000) == 0)
+    {
+        ++l;
+    }
+    int r = width;
+    while (r > l && (row[r - 1] & 0xFF000000) == 0)
+    {
+        --r;
+    }
+    left = static_cast<uint16_t>(l);
+    right = static_cast<uint16_t>(r);
+}
+
+void LovyanGFXDisplay::OverlayChanged()
+{
+    // A frame with dirty-rect tracking sends only the rows it drew in, and one
+    // drawn in strips sends nothing of a strip where nothing moved: the rows
+    // the overlay covers, or covered, would keep what the panel shows now.
+    if (initialized)
+    {
+        Deki::Engine::GetInstance().RequestFullRefresh();
+    }
+}
+
 void LovyanGFXDisplay::PushRows(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format, int y0,
-                                int y1)
+                                int y1, bool blendOverlay)
 {
     if (!EnsureBands())
     {
@@ -457,6 +644,11 @@ void LovyanGFXDisplay::PushRows(const uint8_t* framebuffer, int width, int heigh
                 memset(dst, 0, static_cast<size_t>(w) * sizeof(uint16_t));
             }
         }
+        if (blendOverlay)
+        {
+            // The band is in the panel's byte order.
+            BlendOverlayRows(band, w, w, y, y + rows, m_SwapBytes);
+        }
 
         // Waits for the band before (setting the window waits for the bus),
         // then starts this one and returns while it is sent.
@@ -486,22 +678,22 @@ void LovyanGFXDisplay::FinishPresent()
 void LovyanGFXDisplay::PresentRegions(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format,
                                       const Deki::Rect* rects, int32_t count)
 {
-    if (!initialized || !framebuffer)
+    // Nothing changed on the panel, or (drawing in strips) every strip has
+    // been sent already: there is nothing to wait for either, so the strip
+    // the task is still sending goes on while the next frame is drawn.
+    if (!initialized || !framebuffer || count == 0)
+    {
+        return;
+    }
+    // One rectangle (a strip of a frame drawn in strips, or a frame where one
+    // thing moved) goes to the task on the other core, and the caller draws
+    // on while it is sent.
+    if (count == 1 && !rects[0].Empty() &&
+        PresentRowsAsync(framebuffer, width, height, format, rects[0].top, rects[0].bottom))
     {
         return;
     }
     WaitForAsyncPresent();
-    if (count == 0)
-    {
-        return;  // nothing changed on the panel
-    }
-
-    // The overlay is composited over the whole frame by the full path.
-    if (m_ActiveOverlay && m_ActiveOverlay->buffer)
-    {
-        Present(framebuffer, width, height, format);
-        return;
-    }
 
     // pushImage takes a packed rectangle, and the framebuffer's rows are only
     // contiguous at full width, so rectangles become row bands.
@@ -541,7 +733,7 @@ void LovyanGFXDisplay::PresentRegions(const uint8_t* framebuffer, int width, int
 
     for (const Deki::Rect& band : m_BandScratch)
     {
-        PushRows(framebuffer, width, height, format, band.top, band.bottom);
+        PushRows(framebuffer, width, height, format, band.top, band.bottom, true);
     }
 
     FinishPresent();
@@ -559,10 +751,13 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
         const int index = m_NextStaging;
         m_NextStaging = 1 - m_NextStaging;
         memcpy(m_Staging[index], framebuffer, Deki::FrameBufferBytes(format, width, height));
+        BlendOverlayRows(reinterpret_cast<uint16_t*>(m_Staging[index]), width, width, 0, height,
+                         Deki::kRGB565BigEndian);
         m_StagingWidth = width;
         m_StagingHeight = height;
         m_StagingFormat = format;
-        xQueueSend(static_cast<QueueHandle_t>(m_FrameReady), &index, portMAX_DELAY);
+        const PresentJob job{ index, 0, height, false };
+        xQueueSend(static_cast<QueueHandle_t>(m_FrameReady), &job, portMAX_DELAY);
         return;
     }
     // Any other present goes after the frames the task has: it uses the bus
@@ -578,7 +773,7 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
         // larger one would shear, a smaller one would be read past its end.
         // The engine sizes the framebuffer to this panel, so this only guards
         // a mismatch; the staging bands copy row by row and clamp to both.
-        PushRows(framebuffer, width, height, format, 0, height);
+        PushRows(framebuffer, width, height, format, 0, height, true);
         FinishPresent();
         return;
     }
@@ -718,38 +913,21 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
     // format is in the CPU's.
     const bool bufferBigEndian = Deki::kRGB565BigEndian && format == Deki::ColorFormat::RGB565;
 
-    // Composite the active UI overlay (ARGB8888) on top.
-    if (m_ActiveOverlay && m_ActiveOverlay->buffer)
+    // Composite the active UI overlay (ARGB8888) on top, in our own copy only.
+    const bool overlay = m_ActiveOverlay && m_ActiveOverlay->buffer;
+    if (overlay && !directBuffer)
     {
-        const int overlayWidth = m_ActiveOverlay->width < m_DisplayWidth ? m_ActiveOverlay->width : m_DisplayWidth;
-        const int overlayHeight =
-            m_ActiveOverlay->height < m_DisplayHeight ? m_ActiveOverlay->height : m_DisplayHeight;
-
-        for (int y = 0; y < overlayHeight; y++)
-        {
-            const uint32_t* overlayRow = m_ActiveOverlay->buffer + y * m_ActiveOverlay->width;
-            uint16_t* dstRow = conversionBuffer + y * m_DisplayWidth;
-            for (int x = 0; x < overlayWidth; x++)
-            {
-                const uint32_t argb = overlayRow[x];
-                if ((argb & 0xFF000000) == 0)
-                {
-                    continue;
-                }
-                const uint16_t bg = bufferBigEndian ? SwapBytes16(dstRow[x]) : dstRow[x];
-                const uint16_t out = BlendOverlayPixel(bg, argb);
-                dstRow[x] = bufferBigEndian ? SwapBytes16(out) : out;
-            }
-        }
+        BlendOverlayRows(conversionBuffer, m_DisplayWidth, m_DisplayWidth, 0, m_DisplayHeight, bufferBigEndian);
     }
 
     // A direct or passthrough buffer belongs to the engine: it renders into it
-    // and blends against its contents next frame, so a byte swap for the
-    // panel must not happen in place. Push through the staging bands, which
-    // swap while copying.
-    if (directBuffer && bufferBigEndian != m_SwapBytes)
+    // and blends against its contents next frame (and dirty-rect tracking
+    // keeps the pixels nothing drew over), so neither a byte swap for the
+    // panel nor the overlay may happen in place. Push through the staging
+    // bands, which swap and blend while copying.
+    if (directBuffer && (bufferBigEndian != m_SwapBytes || overlay))
     {
-        PushRows(framebuffer, width, height, format, 0, height);
+        PushRows(framebuffer, width, height, format, 0, height, true);
         FinishPresent();
         return;
     }
@@ -861,6 +1039,8 @@ void* LovyanGFXDisplay::CreateUIOverlay(int32_t width, int32_t height)
     }
 
     memset(overlay->buffer, 0, bufferSize);
+    overlay->spanLeft.assign(height, 0);
+    overlay->spanRight.assign(height, 0);
 
     DEKI_LOG_INTERNAL("LovyanGFXDisplay: Created UI overlay %dx%d (%zu bytes, ARGB8888 format)", width, height,
                       bufferSize);
@@ -889,6 +1069,12 @@ bool LovyanGFXDisplay::UpdateUIOverlay(void* overlay, int32_t x, int32_t y, int3
         uint32_t* dest = &uiOverlay->buffer[(y + row) * uiOverlay->width + x];
         const uint32_t* src = &buffer[row * width];
         memcpy(dest, src, width * sizeof(uint32_t));
+        MeasureOverlayRow(&uiOverlay->buffer[(y + row) * uiOverlay->width], uiOverlay->width,
+                          uiOverlay->spanLeft[y + row], uiOverlay->spanRight[y + row]);
+    }
+    if (uiOverlay == m_ActiveOverlay)
+    {
+        OverlayChanged();
     }
 
     return true;
@@ -911,7 +1097,11 @@ void LovyanGFXDisplay::DestroyUIOverlay(void* overlay)
 
     if (uiOverlay == m_ActiveOverlay)
     {
+        // Only the drawing core reads the overlay (the task sends copies it
+        // was blended over), so it can go now; the rows it covered are sent
+        // again without it.
         m_ActiveOverlay = nullptr;
+        OverlayChanged();
     }
 
     if (uiOverlay->buffer)
@@ -927,7 +1117,12 @@ void LovyanGFXDisplay::DestroyUIOverlay(void* overlay)
 
 void LovyanGFXDisplay::SetActiveUIOverlay(void* overlay)
 {
+    if (m_ActiveOverlay == (UIOverlay*)overlay)
+    {
+        return;
+    }
     m_ActiveOverlay = (UIOverlay*)overlay;
+    OverlayChanged();
 
     if (m_ActiveOverlay)
     {
@@ -949,6 +1144,8 @@ void LovyanGFXDisplay::ClearActiveUIOverlay()
 
     size_t bufferSize = m_ActiveOverlay->width * m_ActiveOverlay->height * sizeof(uint32_t);
     memset(m_ActiveOverlay->buffer, 0, bufferSize);
+    std::fill(m_ActiveOverlay->spanRight.begin(), m_ActiveOverlay->spanRight.end(), 0);
+    OverlayChanged();
 }
 
 uint8_t* LovyanGFXDisplay::GetRenderBuffer(int32_t* width, int32_t* height)
@@ -1029,6 +1226,10 @@ bool LovyanGFXDisplay::CanPresentAsync(const uint8_t*, int, int, Deki::ColorForm
 {
     return false;
 }
+bool LovyanGFXDisplay::PresentRowsAsync(const uint8_t*, int, int, Deki::ColorFormat, int, int)
+{
+    return false;
+}
 bool LovyanGFXDisplay::SupportsPartialPresent() const
 {
     return false;
@@ -1043,7 +1244,7 @@ bool LovyanGFXDisplay::EnsureBands()
 void LovyanGFXDisplay::FreeBands()
 {
 }
-void LovyanGFXDisplay::PushRows(const uint8_t*, int, int, Deki::ColorFormat, int, int)
+void LovyanGFXDisplay::PushRows(const uint8_t*, int, int, Deki::ColorFormat, int, int, bool)
 {
 }
 void LovyanGFXDisplay::FinishPresent()

@@ -47,6 +47,11 @@ private:
         uint32_t* buffer;  // ARGB8888 framebuffer
         int32_t width;
         int32_t height;
+        // Per row, the pixels [left, right) outside which the row is fully
+        // transparent (left >= right: all of it), so a blend reads only those
+        // from external memory.
+        std::vector<uint16_t> spanLeft;
+        std::vector<uint16_t> spanRight;
     };
     UIOverlay* m_ActiveOverlay;
 
@@ -117,8 +122,21 @@ private:
     void ConvertAndRenderFramebuffer(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format);
     bool EnsureBands();
     void FreeBands();
-    // Converts rows [y0, y1) of the framebuffer into staging bands and pushes them.
-    void PushRows(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format, int y0, int y1);
+    // Converts rows [y0, y1) of the framebuffer into staging bands and pushes
+    // them, with the active overlay over them when blendOverlay is set. Reads
+    // no other rows of the framebuffer.
+    void PushRows(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format, int y0, int y1,
+                  bool blendOverlay);
+    // Blends the active overlay over rows [y0, y1) of the frame, held in
+    // `rows` (RGB565, `pitch` pixels a row, `width` wide, row y0 first), whose
+    // pixels are byte-swapped from the CPU's order when `swapped` is set.
+    // Every present that has an overlay blends it over the copy it sends, so
+    // the frame (or strip) it is given is never changed and only the rows
+    // being sent are read.
+    void BlendOverlayRows(uint16_t* rows, size_t pitch, int width, int y0, int y1, bool swapped) const;
+    // Asks the engine for a full frame after the overlay changes: the frame's
+    // own dirty rectangles (and the strips they skip) know nothing of it.
+    void OverlayChanged();
     // Flips the render buffer (double buffering) or waits for DMA (single).
     void FinishPresent();
 
@@ -131,6 +149,32 @@ private:
     void WaitForAsyncPresent();
     // Whether this frame goes to the task (the full-frame, byte-swapped path).
     bool CanPresentAsync(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format) const;
+    // What the task sends: rows [top, bottom) of the frame in m_Staging[index],
+    // or, for a strip, the rows held from the start of m_Strip[index].
+    struct PresentJob
+    {
+        int index;
+        int top;
+        int bottom;
+        bool strip;
+    };
+    // Strip copies: two of a strip in internal DMA memory. The drawing core
+    // copies a strip there in one memcpy and the task sends it as it is (the
+    // byte swap, if any, done there in place), with no pass through the bands
+    // and no PSRAM. Sized by the first strip, grown for a taller one up to
+    // kMaxStripBytes each; anything taller goes through m_Staging.
+    static constexpr size_t kMaxStripBytes = 64 * 1024;
+    uint16_t* m_Strip[2] = { nullptr, nullptr };
+    int m_StripRows = 0;
+    bool EnsureStrips(int rows);
+    void FreeStrips();
+    void SendStrip(uint16_t* strip, int top, int rows);
+    // Copies rows [top, bottom) of the frame into a free staging copy, blends
+    // the overlay over the copy, and queues it for the task: a strip of a
+    // frame drawn in strips, sent while the next strip is drawn. False when
+    // this present cannot go that way.
+    bool PresentRowsAsync(const uint8_t* framebuffer, int width, int height, Deki::ColorFormat format, int top,
+                          int bottom);
     bool m_AsyncPresent = false;
     uint8_t* m_Staging[2] = { nullptr, nullptr };
     int m_NextStaging = 0;
@@ -139,7 +183,7 @@ private:
     int m_StagingHeight = 0;
     Deki::ColorFormat m_StagingFormat = Deki::ColorFormat::RGB565;
     void* m_PresentTask = nullptr;
-    void* m_FrameReady = nullptr;  // queue of staging indices to send
+    void* m_FrameReady = nullptr;  // queue of PresentJobs to send
     void* m_FreeStaging = nullptr; // counting semaphore: staging copies not in use
 };
 
