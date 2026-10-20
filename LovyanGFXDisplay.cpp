@@ -293,30 +293,49 @@ void LovyanGFXDisplay::PresentTaskMain(void* arg)
     }
 }
 
+// Swaps the bytes of `pixels` RGB565 pixels in place, two at a time.
+static void SwapPixels(uint16_t* p, size_t pixels)
+{
+    if (pixels == 0)
+    {
+        return;
+    }
+    if (reinterpret_cast<uintptr_t>(p) & 2)
+    {
+        *p = SwapBytes16(*p);
+        ++p;
+        --pixels;
+    }
+    auto* words = reinterpret_cast<uint32_t*>(p);
+    for (size_t i = 0; i < pixels / 2; ++i)
+    {
+        const uint32_t v = words[i];
+        words[i] = ((v >> 8) & 0x00FF00FF) | ((v & 0x00FF00FF) << 8);
+    }
+    if (pixels & 1)
+    {
+        p[pixels - 1] = SwapBytes16(p[pixels - 1]);
+    }
+}
+
 void LovyanGFXDisplay::SendStrip(uint16_t* strip, int top, int rows)
 {
     const int w = m_DisplayWidth;
-    if (m_SwapBytes != Deki::kRGB565BigEndian)  // the panel takes the other byte order
-    {
-        const size_t pixels = static_cast<size_t>(w) * rows;
-        auto* words = reinterpret_cast<uint32_t*>(strip);
-        for (size_t i = 0; i < pixels / 2; ++i)
-        {
-            const uint32_t v = words[i];
-            words[i] = ((v >> 8) & 0x00FF00FF) | ((v & 0x00FF00FF) << 8);
-        }
-        if (pixels & 1)
-        {
-            strip[pixels - 1] = SwapBytes16(strip[pixels - 1]);
-        }
-    }
+    const bool swap = m_SwapBytes != Deki::kRGB565BigEndian;  // the panel takes the other byte order
 
-    // One SPI transfer sends at most 32 KB; LovyanGFX sends a longer one in
-    // pieces with a 1 ms sleep between them. So the strip goes in chunks that
-    // fit, each started as the one before it ends, in whole pairs of rows for
-    // the panels that need them.
+    // The strip goes in chunks, each started as the one before it ends, in
+    // whole pairs of rows for the panels that need them. One SPI transfer
+    // sends at most 32 KB (LovyanGFX sends a longer one in pieces with a 1 ms
+    // sleep between them). With bytes to swap, the chunks are small and each
+    // is swapped while the one before it is on the wire, so a strip costs
+    // about its transfer instead of its swap and then its transfer.
     constexpr size_t kMaxTransfer = 32 * 1024;
+    constexpr int kSwapChunkRows = 8;
     int chunkRows = static_cast<int>(kMaxTransfer / (static_cast<size_t>(w) * sizeof(uint16_t)));
+    if (swap && chunkRows > kSwapChunkRows)
+    {
+        chunkRows = kSwapChunkRows;
+    }
     chunkRows -= chunkRows % m_RowAlign;
     chunkRows = chunkRows < m_RowAlign ? m_RowAlign : chunkRows;
 
@@ -324,7 +343,14 @@ void LovyanGFXDisplay::SendStrip(uint16_t* strip, int top, int rows)
     for (int y = 0; y < rows; y += chunkRows)
     {
         const int n = (rows - y < chunkRows) ? (rows - y) : chunkRows;
-        tft->pushImageDMA(0, top + y, w, n, strip + static_cast<size_t>(y) * w);
+        uint16_t* chunk = strip + static_cast<size_t>(y) * w;
+        if (swap)
+        {
+            SwapPixels(chunk, static_cast<size_t>(w) * n);  // while the chunk before is still being sent
+        }
+        // Waits for the chunk before (setting the window waits for the bus),
+        // then starts this one and returns while it is sent.
+        tft->pushImageDMA(0, top + y, w, n, chunk);
     }
     tft->endWrite();  // waits for the last chunk, so the copy is free again
 }
