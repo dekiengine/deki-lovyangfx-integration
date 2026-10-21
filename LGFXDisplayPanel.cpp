@@ -23,6 +23,43 @@ lgfx::LGFX_Device* LGFXDisplayPanel::GetLGFXDevice()
 
 static const char* TAG = "LGFXDisplay";
 
+namespace
+{
+// The LilyGO T-Deck's ST7789 module (DisplayPanelType::ST7789TDeck): the init
+// LilyGO's TFT_eSPI setup for the board sends (Setup210_LilyGo_T_Deck,
+// INIT_SEQUENCE_2), out of sleep first, with VCOM one step lower than
+// LilyGO's 0x1A: 0x19 is where a T-Deck Plus's panel ghosted least, tuned
+// live. LovyanGFX's ST7789 init sets VCOM to 0x28 and the gate high
+// voltage lower, and this panel then keeps a fading ghost of what it showed
+// before. Colour depth, inversion and rotation are sent by LovyanGFX as for
+// any panel; the LCM control (0x2C) swaps red and blue against LovyanGFX's,
+// so it takes rgbOrder on.
+struct Panel_ST7789TDeck : public lgfx::Panel_ST7789
+{
+    const uint8_t* getInitCommands(uint8_t listno) const override
+    {
+        static constexpr uint8_t kInit[] = {
+            CMD_SLPOUT,    CMD_INIT_DELAY, 120,
+            CMD_NORON,     0,
+            CMD_PORCTRL,   5, 0x0C, 0x0C, 0x00, 0x33, 0x33,
+            CMD_GCTRL,     1, 0x75,  // VGH 14.97 V, VGL -10.43 V
+            CMD_VCOMS,     1, 0x19,  // 0.725 V
+            CMD_LCMCTRL,   1, 0x2C,
+            CMD_VDVVRHEN,  1, 0x01,
+            CMD_VRHS,      1, 0x13,
+            CMD_VDVSET,    1, 0x20,
+            CMD_FRCTR2,    1, 0x0F,  // 60 Hz
+            CMD_PWCTRL1,   2, 0xA4, 0xA1,
+            CMD_PVGAMCTRL, 14, 0xD0, 0x0D, 0x14, 0x0D, 0x0D, 0x09, 0x38, 0x44, 0x4E, 0x3A, 0x17, 0x18, 0x2F, 0x30,
+            CMD_NVGAMCTRL, 14, 0xD0, 0x09, 0x0F, 0x08, 0x07, 0x14, 0x37, 0x44, 0x4D, 0x38, 0x15, 0x16, 0x2C, 0x3E,
+            CMD_DISPON,    CMD_INIT_DELAY, 120,
+            0xFF, 0xFF,
+        };
+        return listno == 0 ? kInit : nullptr;
+    }
+};
+}  // namespace
+
 // The package owns the LovyanGFXDisplay; this file-scope pointer keeps it
 // alive for the life of the program.
 static std::unique_ptr<LovyanGFXDisplay> s_LovyanGFXDisplay;
@@ -138,6 +175,7 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
             case DisplayPanelType::GC9A01: panel = new lgfx::Panel_GC9A01(); break;
             case DisplayPanelType::SSD1351: panel = new lgfx::Panel_SSD1351(); break;
             case DisplayPanelType::ST7789P3: panel = new lgfx::Panel_ST7789P3(); break;
+            case DisplayPanelType::ST7789TDeck: panel = new Panel_ST7789TDeck(); break;
             default:
                 DEKI_LOG_ERROR("LGFXDisplayPanel: Unknown panel type %d", static_cast<int>(panelType));
                 delete bus;
@@ -207,6 +245,7 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
             case DisplayPanelType::GC9A01: panel = new lgfx::Panel_GC9A01(); break;
             case DisplayPanelType::SSD1351: panel = new lgfx::Panel_SSD1351(); break;
             case DisplayPanelType::ST7789P3: panel = new lgfx::Panel_ST7789P3(); break;
+            case DisplayPanelType::ST7789TDeck: panel = new Panel_ST7789TDeck(); break;
             default:
                 DEKI_LOG_ERROR("LGFXDisplayPanel: Unknown panel type %d", static_cast<int>(panelType));
                 delete bus;
@@ -283,6 +322,7 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
             case DisplayPanelType::GC9A01: panel = new lgfx::Panel_GC9A01(); break;
             case DisplayPanelType::SSD1351: panel = new lgfx::Panel_SSD1351(); break;
             case DisplayPanelType::ST7789P3: panel = new lgfx::Panel_ST7789P3(); break;
+            case DisplayPanelType::ST7789TDeck: panel = new Panel_ST7789TDeck(); break;
             default:
                 DEKI_LOG_ERROR("LGFXDisplayPanel: Unknown panel type %d", static_cast<int>(panelType));
                 delete bus;

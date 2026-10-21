@@ -11,6 +11,10 @@ alongside one that has them.
 ## Unreleased
 
 ### Added
+- `ST7789TDeck` panel type: the LilyGO T-Deck's ST7789 module, started with
+  the voltages and gamma of LilyGO's own setup for it, and VCOM 0x19.
+  LovyanGFX's ST7789 init leaves this panel with a fading ghost of what it
+  showed before. It takes `rgbOrder` on.
 - Big-endian RGB565 (`DEKI_RGB565_BIG_ENDIAN`): an RGB565 frame is swapped only when
   the panel takes the other byte order than the build (`swapBytes` differs
   from `Deki::kRGB565BigEndian`), so a big-endian build sends frames to an

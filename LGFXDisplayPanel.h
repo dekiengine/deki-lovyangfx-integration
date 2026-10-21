@@ -20,7 +20,9 @@ class LGFX_Device;
 namespace DekiLovyanGfx
 {
 
-// RM67162 is an AMOLED controller that only speaks QSPI.
+// RM67162 is an AMOLED controller that only speaks QSPI. ST7789TDeck is the
+// LilyGO T-Deck's ST7789 module, with the voltages and gamma LilyGO set for
+// it; it takes rgbOrder on.
 enum class DisplayPanelType : uint8_t
 {
     ILI9341 = 0,
@@ -29,7 +31,8 @@ enum class DisplayPanelType : uint8_t
     GC9A01 = 3,
     SSD1351 = 4,
     ST7789P3 = 5,
-    RM67162 = 6
+    RM67162 = 6,
+    ST7789TDeck = 7
 };
 
 enum class DisplayBusType : uint8_t

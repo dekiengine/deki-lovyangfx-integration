@@ -30,6 +30,7 @@ Package Manager in the Deki Editor, or `DekiEditor --packages-add deki-lovyangfx
 
 `LGFXDisplayPanel` drives ILI9341, ST7789, ST7789P3, ST7735, GC9A01 and SSD1351
 panels over SPI or an 8/16-bit parallel bus, and the RM67162 AMOLED over QSPI.
+`ST7789TDeck` is the LilyGO T-Deck's ST7789 with the voltages its panel needs.
 `LGFXTouchPanel` reads FT5x06, GT911, CST816S/T and XPT2046 controllers.
 
 The RM67162 and the QSPI bus go together: set `busType` to `QSPI`, the clock on
