@@ -28,6 +28,16 @@ alongside one that has them.
 - A PSRAM display buffer was flushed from the cache before the byte swap
   wrote to it; it is flushed after.
 
+## 0.19.0
+
+### Changed
+- `minEngine` 0.19.0: built against engine 0.19.0, whose component metadata records the package each class is in. A build of this package from before does not load and is rebuilt.
+
+### Added
+- Japanese, Simplified Chinese and Korean: `editor/lang/ja.json`, `zh.json`
+  and `ko.json` translate the names, tooltips and enum values this
+  package's components show in the Inspector.
+
 ## 0.18.2
 
 ### Added
