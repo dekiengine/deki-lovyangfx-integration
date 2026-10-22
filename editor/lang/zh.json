@@ -165,5 +165,6 @@
     "Y Min": "Y 最小值",
     "Drives a display panel (ILI9341, ST7789, GC9A01, RM67162 AMOLED, ...) over SPI, QSPI or a parallel bus through LovyanGFX.": "通过 LovyanGFX，经由 SPI、QSPI 或并行总线驱动显示面板（ILI9341、ST7789、GC9A01、RM67162 AMOLED 等）。",
     "LovyanGFX": "LovyanGFX",
-    "Reads a touch controller (FT5x06, GT911, CST816S, XPT2046) through LovyanGFX.": "通过 LovyanGFX 读取触摸控制器（FT5x06、GT911、CST816S、XPT2046）。"
+    "Reads a touch controller (FT5x06, GT911, CST816S, XPT2046) through LovyanGFX.": "通过 LovyanGFX 读取触摸控制器（FT5x06、GT911、CST816S、XPT2046）。",
+    "ST7789TDeck": "ST7789TDeck"
 }

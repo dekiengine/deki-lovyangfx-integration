@@ -165,5 +165,6 @@
     "Y Min": "Y 최소",
     "Drives a display panel (ILI9341, ST7789, GC9A01, RM67162 AMOLED, ...) over SPI, QSPI or a parallel bus through LovyanGFX.": "LovyanGFX를 통해 SPI, QSPI 또는 병렬 버스로 디스플레이 패널(ILI9341, ST7789, GC9A01, RM67162 AMOLED 등)을 구동합니다.",
     "LovyanGFX": "LovyanGFX",
-    "Reads a touch controller (FT5x06, GT911, CST816S, XPT2046) through LovyanGFX.": "LovyanGFX를 통해 터치 컨트롤러(FT5x06, GT911, CST816S, XPT2046)를 읽습니다."
+    "Reads a touch controller (FT5x06, GT911, CST816S, XPT2046) through LovyanGFX.": "LovyanGFX를 통해 터치 컨트롤러(FT5x06, GT911, CST816S, XPT2046)를 읽습니다.",
+    "ST7789TDeck": "ST7789TDeck"
 }
