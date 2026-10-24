@@ -56,7 +56,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">deki-lovyangfx-integration<span id="projectnumber">&#160;0.19.0</span>
+   <div id="projectname">deki-lovyangfx-integration<span id="projectnumber">&#160;0.20.2</span>
    </div>
    <div id="projectbrief">Deki package reference</div>
   </td>
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <img src="deki-lovyangfx-integration.png" alt=""/>
 </div>
     <p>LovyanGFX display and touch panel integration</p>
-<p>Repository: <a href="https://github.com/dekiengine/deki-lovyangfx-integration">github.com/dekiengine/deki-lovyangfx-integration</a> · Latest release: 0.19.0 · Needs engine 0.19.0+ · Requires: <a href="https://dekiengine.github.io/deki-i2c/">deki-i2c</a>, <a href="https://dekiengine.github.io/deki-input/">deki-input</a></p>
+<p>Repository: <a href="https://github.com/dekiengine/deki-lovyangfx-integration">github.com/dekiengine/deki-lovyangfx-integration</a> · Latest release: 0.20.0 · Needs engine 0.19.0+ · Requires: <a href="https://dekiengine.github.io/deki-i2c/">deki-i2c</a>, <a href="https://dekiengine.github.io/deki-input/">deki-input</a></p>
 <p>Install with <span class="tt">DekiEditor --packages-add deki-lovyangfx-integration &lt;project&gt;</span>, or from the Package Manager. The engine's own components and C++ API are in the <a href="https://dekiengine.github.io/docs/">Deki docs</a>.</p>
 <p>Shown in the editor as <b>LovyanGFX Integration</b>.</p>
 <h1 class="doxsection"><a class="anchor" id="components"></a>
@@ -148,7 +148,7 @@ LGFXDisplayPanel</h2>
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Property  </th><th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Constraints  </th><th class="markdownTableHeadNone">Description  </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">panelType</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"ILI9341"</span>  </td><td class="markdownTableBodyNone"><span class="tt">ILI9341</span>, <span class="tt">ST7789</span>, <span class="tt">ST7735</span>, <span class="tt">GC9A01</span>, <span class="tt">SSD1351</span>, <span class="tt">ST7789P3</span>, <span class="tt">RM67162</span>  </td><td class="markdownTableBodyNone">Display panel driver IC  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">panelType</span>  </td><td class="markdownTableBodyNone">enum  </td><td class="markdownTableBodyNone"><span class="tt">"ILI9341"</span>  </td><td class="markdownTableBodyNone"><span class="tt">ILI9341</span>, <span class="tt">ST7789</span>, <span class="tt">ST7735</span>, <span class="tt">GC9A01</span>, <span class="tt">SSD1351</span>, <span class="tt">ST7789P3</span>, <span class="tt">RM67162</span>, <span class="tt">ST7789TDeck</span>  </td><td class="markdownTableBodyNone">Display panel driver IC  </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><span class="tt">panelWidth</span>  </td><td class="markdownTableBodyNone">int32  </td><td class="markdownTableBodyNone"><span class="tt">320</span>  </td><td class="markdownTableBodyNone">1 to 1024  </td><td class="markdownTableBodyNone">Display width in pixels  </td></tr>
 <tr class="markdownTableRowOdd">
@@ -289,40 +289,34 @@ LGFXTouchPanel</h2>
 <h1 class="doxsection"><a class="anchor" id="changelog"></a>
 Changelog</h1>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md0"></a>
-0.19.0</h2>
+0.20.0</h2>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md1"></a>
+Added</h2>
+<ul>
+<li><span class="tt">ST7789TDeck</span> panel type: the LilyGO T-Deck's ST7789 module, started with the voltages and gamma of LilyGO's own setup for it, and VCOM 0x19. LovyanGFX's ST7789 init leaves this panel with a fading ghost of what it showed before. It takes <span class="tt">rgbOrder</span> on.</li>
+<li>Big-endian RGB565 (<span class="tt">DEKI_RGB565_BIG_ENDIAN</span>): an RGB565 frame is swapped only when the panel takes the other byte order than the build (<span class="tt">swapBytes</span> differs from <span class="tt">Deki::kRGB565BigEndian</span>), so a big-endian build sends frames to an SPI panel without a swap. <span class="tt">asyncPresent</span> works in such a build.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
+Fixed</h2>
+<ul>
+<li>With a UI overlay showing, a frame the engine draws straight into (direct or passthrough) was byte-swapped in place for the panel, so the next frame blended against swapped pixels. It goes through the staging bands, which swap while copying, as it does without an overlay.</li>
+<li>A PSRAM display buffer was flushed from the cache before the byte swap wrote to it; it is flushed after.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
+0.19.0</h2>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
 Changed</h2>
 <ul>
 <li><span class="tt">minEngine</span> 0.19.0: built against engine 0.19.0, whose component metadata records the package each class is in. A build of this package from before does not load and is rebuilt.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
 Added</h2>
 <ul>
 <li>Japanese, Simplified Chinese and Korean: <span class="tt">editor/lang/ja.json</span>, <span class="tt">zh.json</span> and <span class="tt">ko.json</span> translate the names, tooltips and enum values this package's components show in the Inspector.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
-0.18.2</h2>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
-Added</h2>
-<ul>
-<li><span class="tt">asyncPresent</span> on the display panel: a frame is sent from the other core while the next is drawn, through two staging buffers in PSRAM. Drawing and sending each fit in a 60 Hz frame on a LilyGO T-Deck, one after the other they did not. On ESP32 with two cores; off by default.</li>
-</ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
-Changed</h2>
-<ul>
-<li>A frame goes to the panel by DMA, in bands within one transaction: each band is converted while the one before is being sent. Each band used to be fed to the SPI FIFO by the CPU and waited for before the next was converted, the conversion and the transfer one after the other.</li>
-</ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md6"></a>
-Fixed</h2>
-<ul>
-<li>An I2C touch panel no longer shares the display's bus. Shared, each touch read ended the display's SPI transaction, which broke a frame being sent from the other core.</li>
-<li>The backlight starts at full brightness (<span class="tt">blBrightness</span>, 255 by default), as it is after waking from sleep. It started at LovyanGFX's 127, a 1.2 kHz PWM wave, and a backlight driver that dims by counting pulses, as the LilyGO T-Deck's does, read every cycle of it as a step down and flickered.</li>
-<li>The touch panel's bounds group was labelled "Touch Panel
-  DekiParticles::Bounds". The bounds' tooltips say they run along the panel before the display is rotated, and <span class="tt">offsetRotation</span>'s that it is added to the display rotation (it is not the display rotation).</li>
-</ul>
 <p>Earlier releases: <a href="https://github.com/dekiengine/deki-lovyangfx-integration/blob/master/CHANGELOG.md">CHANGELOG.md</a>.</p>
 <hr  />
-<p>Generated from the package's reflection data (engine 0.19.0). Property names are the keys used in scene files. Renames keep an alias (<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">compatibility</a>). </p>
+<p>Generated from the package's reflection data (engine 0.20.2). Property names are the keys used in scene files. Renames keep an alias (<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">compatibility</a>). </p>
 </div></div><!-- PageDoc -->
 <a href="doxygen_crawl.html"></a>
 </div><!-- contents -->
