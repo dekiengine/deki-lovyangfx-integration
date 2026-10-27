@@ -591,8 +591,7 @@ static void MeasureOverlayRow(const uint32_t* row, int width, uint16_t& left, ui
 
 void LovyanGFXDisplay::OverlayChanged()
 {
-    // A frame with dirty-rect tracking sends only the rows it drew in, and one
-    // drawn in strips sends nothing of a strip where nothing moved: the rows
+    // A frame that redraws only what changed sends only those parts: the rows
     // the overlay covers, or covered, would keep what the panel shows now.
     if (initialized)
     {
@@ -947,8 +946,8 @@ void LovyanGFXDisplay::ConvertAndRenderFramebuffer(const uint8_t* framebuffer, i
     }
 
     // A direct or passthrough buffer belongs to the engine: it renders into it
-    // and blends against its contents next frame (and dirty-rect tracking
-    // keeps the pixels nothing drew over), so neither a byte swap for the
+    // and blends against its contents next frame (and redrawing only what
+    // changed keeps the pixels nothing drew over), so neither a byte swap for the
     // panel nor the overlay may happen in place. Push through the staging
     // bands, which swap and blend while copying.
     if (directBuffer && (bufferBigEndian != m_SwapBytes || overlay))

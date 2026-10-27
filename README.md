@@ -48,8 +48,8 @@ to RGB565 and byte-swapped for big-endian panels there). The same staging path
 now serves full presents of a direct or passthrough buffer with `swapBytes`
 on, so the engine's framebuffer is no longer byte-swapped in place. Written
 in September 2026 against the API the full path already used and compile-checked
-only: run a project with the Rendering setting `dirtyTileTracking` on and
-report what you see.
+only: run a project with the Rendering setting `redrawChanges` on and report
+what you see.
 
 ## License
 

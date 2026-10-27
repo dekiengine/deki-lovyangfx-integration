@@ -134,8 +134,8 @@ private:
     // the frame (or strip) it is given is never changed and only the rows
     // being sent are read.
     void BlendOverlayRows(uint16_t* rows, size_t pitch, int width, int y0, int y1, bool swapped) const;
-    // Asks the engine for a full frame after the overlay changes: the frame's
-    // own dirty rectangles (and the strips they skip) know nothing of it.
+    // Asks the engine for a full frame after the overlay changes: the parts of
+    // the frame that changed know nothing of it.
     void OverlayChanged();
     // Flips the render buffer (double buffering) or waits for DMA (single).
     void FinishPresent();
@@ -183,8 +183,8 @@ private:
     int m_StagingHeight = 0;
     Deki::ColorFormat m_StagingFormat = Deki::ColorFormat::RGB565;
     void* m_PresentTask = nullptr;
-    void* m_FrameReady = nullptr;  // queue of PresentJobs to send
-    void* m_FreeStaging = nullptr; // counting semaphore: staging copies not in use
+    void* m_FrameReady = nullptr;   // queue of PresentJobs to send
+    void* m_FreeStaging = nullptr;  // counting semaphore: staging copies not in use
 };
 
 }  // namespace DekiLovyanGfx
