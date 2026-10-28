@@ -8,6 +8,12 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
+## 0.21.0
+
+### Changed
+- Async Present's tooltip says which core the sender runs on and at
+  what priority, so a task of your own can be placed around it.
+
 ## 0.20.0
 
 ### Added
