@@ -57,7 +57,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">deki-lovyangfx-integration<span id="projectnumber">&#160;0.20.2</span>
+   <div id="projectname">deki-lovyangfx-integration<span id="projectnumber">&#160;0.21.0</span>
    </div>
    <div id="projectbrief">Deki 패키지 레퍼런스</div>
   </td>
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded',() => { initNavTree('index.html',''
 <img src="deki-lovyangfx-integration.png" alt=""/>
 </div>
     <p>LovyanGFX 1.2.19를 통한 임베디드 디스플레이와 터치. 일반적인 SPI/병렬 TFT와 FT6336U 정전식 터치 패널을 구동합니다.</p>
-<p>저장소: <a href="https://github.com/dekiengine/deki-lovyangfx-integration">github.com/dekiengine/deki-lovyangfx-integration</a> · 최신 릴리스: 0.20.0 · 엔진 0.19.0 이상 필요 · 의존: <a href="https://dekiengine.github.io/deki-i2c/ko/">deki-i2c</a>, <a href="https://dekiengine.github.io/deki-input/ko/">deki-input</a></p>
+<p>저장소: <a href="https://github.com/dekiengine/deki-lovyangfx-integration">github.com/dekiengine/deki-lovyangfx-integration</a> · 최신 릴리스: 0.21.0 · 엔진 0.19.0 이상 필요 · 의존: <a href="https://dekiengine.github.io/deki-i2c/ko/">deki-i2c</a>, <a href="https://dekiengine.github.io/deki-input/ko/">deki-input</a></p>
 <p><span class="tt">DekiEditor --packages-add deki-lovyangfx-integration &lt;project&gt;</span> 또는 패키지 관리자로 설치합니다. 엔진 자체의 컴포넌트와 C++ API는 <a href="https://dekiengine.github.io/docs/ko/">Deki 문서</a>에 있습니다.</p>
 <p>에디터에는 <b>LovyanGFX Integration</b>(으)로 표시됩니다.</p>
 <h1 class="doxsection"><a class="anchor" id="components"></a>
@@ -249,7 +249,7 @@ LGFXDisplayPanel</h2>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><span class="tt">doubleBuffer</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">비동기 DMA에 더블 버퍼링을 사용합니다 (렌더링과 디스플레이 전송을 겹쳐서 수행)  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">asyncPresent</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">다음 프레임을 그리는 동안 칩의 다른 코어에서 각 프레임을 전송합니다. 한 프레임에 드는 시간이 그리기와 전송의 합이 아니라 둘 중 긴 쪽이 됩니다. 외부 메모리(PSRAM) 2프레임 분량과 듀얼 코어 칩이 필요합니다. 프레임 전체를 표시하는, 바이트 순서를 바꾸는 패널(swapBytes)용입니다.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">asyncPresent</span>  </td><td class="markdownTableBodyNone">bool  </td><td class="markdownTableBodyNone"><span class="tt">false</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">다음 프레임을 그리는 동안 칩의 다른 코어에서 각 프레임을 전송합니다. 한 프레임에 드는 시간이 그리기와 전송의 합이 아니라 둘 중 긴 쪽이 됩니다. 외부 메모리(PSRAM) 2프레임 분량과 듀얼 코어 칩이 필요합니다. 프레임 전체를 표시하는, 바이트 순서를 바꾸는 패널(swapBytes)용입니다. 보내기는 게임이 쓰지 않는 코어에서 우선순위 5로 실행됩니다. 그 코어에서 우선순위 5보다 높은 직접 만든 태스크가 먼저 실행됩니다.  </td></tr>
 </table>
 <h2 class="doxsection"><a class="anchor" id="c-lgfxtouchpanel"></a>
 LGFXTouchPanel</h2>
@@ -291,34 +291,29 @@ LGFXTouchPanel</h2>
 변경 내역</h1>
 <p>변경 내역은 영어로 되어 있습니다.</p>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md0"></a>
-0.20.0</h2>
+0.21.0</h2>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md1"></a>
+Changed</h2>
+<ul>
+<li>Async Present's tooltip says which core the sender runs on and at what priority, so a task of your own can be placed around it.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
+0.20.0</h2>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
 Added</h2>
 <ul>
 <li><span class="tt">ST7789TDeck</span> panel type: the LilyGO T-Deck's ST7789 module, started with the voltages and gamma of LilyGO's own setup for it, and VCOM 0x19. LovyanGFX's ST7789 init leaves this panel with a fading ghost of what it showed before. It takes <span class="tt">rgbOrder</span> on.</li>
 <li>Big-endian RGB565 (<span class="tt">DEKI_RGB565_BIG_ENDIAN</span>): an RGB565 frame is swapped only when the panel takes the other byte order than the build (<span class="tt">swapBytes</span> differs from <span class="tt">Deki::kRGB565BigEndian</span>), so a big-endian build sends frames to an SPI panel without a swap. <span class="tt">asyncPresent</span> works in such a build.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
 Fixed</h2>
 <ul>
 <li>With a UI overlay showing, a frame the engine draws straight into (direct or passthrough) was byte-swapped in place for the panel, so the next frame blended against swapped pixels. It goes through the staging bands, which swap while copying, as it does without an overlay.</li>
 <li>A PSRAM display buffer was flushed from the cache before the byte swap wrote to it; it is flushed after.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
-0.19.0</h2>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
-Changed</h2>
-<ul>
-<li><span class="tt">minEngine</span> 0.19.0: built against engine 0.19.0, whose component metadata records the package each class is in. A build of this package from before does not load and is rebuilt.</li>
-</ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
-Added</h2>
-<ul>
-<li>Japanese, Simplified Chinese and Korean: <span class="tt">editor/lang/ja.json</span>, <span class="tt">zh.json</span> and <span class="tt">ko.json</span> translate the names, tooltips and enum values this package's components show in the Inspector.</li>
-</ul>
 <p>이전 릴리스: <a href="https://github.com/dekiengine/deki-lovyangfx-integration/blob/master/CHANGELOG.md">CHANGELOG.md</a></p>
 <hr  />
-<p>패키지의 리플렉션 데이터에서 생성했습니다(엔진 0.20.2). 속성 이름은 씬 파일에서 쓰는 키입니다. 이름을 바꿔도 별칭이 유지됩니다(<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">호환성</a>). </p>
+<p>패키지의 리플렉션 데이터에서 생성했습니다(엔진 0.21.0). 속성 이름은 씬 파일에서 쓰는 키입니다. 이름을 바꿔도 별칭이 유지됩니다(<a href="https://github.com/dekiengine/deki-editor/blob/master/COMPATIBILITY.md">호환성</a>). </p>
 </div></div><!-- PageDoc -->
 <a href="doxygen_crawl.html"></a>
 </div><!-- contents -->
