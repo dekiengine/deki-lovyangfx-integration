@@ -133,7 +133,7 @@
     "Rotation": "회전",
     "Rs Pin": "RS 핀",
     "Rst Pin": "RST 핀",
-    "Send each frame from the chip's other core while the next is drawn: a frame costs the longer of drawing and sending instead of both. Takes two frames of external memory (PSRAM) and a dual-core chip; for a byte-swapped panel (swapBytes) presenting whole frames.": "다음 프레임을 그리는 동안 칩의 다른 코어에서 각 프레임을 전송합니다. 한 프레임에 드는 시간이 그리기와 전송의 합이 아니라 둘 중 긴 쪽이 됩니다. 외부 메모리(PSRAM) 2프레임 분량과 듀얼 코어 칩이 필요합니다. 프레임 전체를 표시하는, 바이트 순서를 바꾸는 패널(swapBytes)용입니다.",
+    "Send each frame from the chip's other core while the next is drawn: a frame costs the longer of drawing and sending instead of both. Takes two frames of external memory (PSRAM) and a dual-core chip; for a byte-swapped panel (swapBytes) presenting whole frames. The sender runs on the core the game does not, at priority 5: a task of your own on that core above priority 5 runs first.": "다음 프레임을 그리는 동안 칩의 다른 코어에서 각 프레임을 전송합니다. 한 프레임에 드는 시간이 그리기와 전송의 합이 아니라 둘 중 긴 쪽이 됩니다. 외부 메모리(PSRAM) 2프레임 분량과 듀얼 코어 칩이 필요합니다. 프레임 전체를 표시하는, 바이트 순서를 바꾸는 패널(swapBytes)용입니다. 보내기는 게임이 쓰지 않는 코어에서 우선순위 5로 실행됩니다. 그 코어에서 우선순위 5보다 높은 직접 만든 태스크가 먼저 실행됩니다.",
     "SPI": "SPI",
     "SPI chip select pin (-1 = not used)": "SPI 칩 셀렉트 핀 (-1 = 사용 안 함)",
     "SPI clock pin": "SPI 클럭 핀",

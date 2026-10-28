@@ -133,7 +133,7 @@
     "Rotation": "旋转",
     "Rs Pin": "RS 引脚",
     "Rst Pin": "RST 引脚",
-    "Send each frame from the chip's other core while the next is drawn: a frame costs the longer of drawing and sending instead of both. Takes two frames of external memory (PSRAM) and a dual-core chip; for a byte-swapped panel (swapBytes) presenting whole frames.": "在绘制下一帧的同时，由芯片的另一个核心发送当前帧：每帧耗时为绘制和发送中较长的一项，而不是两者之和。需要两帧大小的外部内存 (PSRAM) 和双核芯片；适用于呈现整帧、需要交换字节 (swapBytes) 的面板。",
+    "Send each frame from the chip's other core while the next is drawn: a frame costs the longer of drawing and sending instead of both. Takes two frames of external memory (PSRAM) and a dual-core chip; for a byte-swapped panel (swapBytes) presenting whole frames. The sender runs on the core the game does not, at priority 5: a task of your own on that core above priority 5 runs first.": "在绘制下一帧的同时，由芯片的另一个核心发送当前帧：每帧耗时为绘制和发送中较长的一项，而不是两者之和。需要两帧大小的外部内存 (PSRAM) 和双核芯片；适用于呈现整帧、需要交换字节 (swapBytes) 的面板。发送在游戏不使用的那个核心上以优先级 5 运行：该核心上优先级高于 5 的自有任务会先运行。",
     "SPI": "SPI",
     "SPI chip select pin (-1 = not used)": "SPI 片选引脚（-1 = 不使用）",
     "SPI clock pin": "SPI 时钟引脚",

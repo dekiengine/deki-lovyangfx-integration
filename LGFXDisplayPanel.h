@@ -369,7 +369,8 @@ public:
     DEKI_EXPORT
     DEKI_TOOLTIP("Send each frame from the chip's other core while the next is drawn: a frame costs the longer of "
                  "drawing and sending instead of both. Takes two frames of external memory (PSRAM) and a dual-core "
-                 "chip; for a byte-swapped panel (swapBytes) presenting whole frames.")
+                 "chip; for a byte-swapped panel (swapBytes) presenting whole frames. The sender runs on the core "
+                 "the game does not, at priority 5: a task of your own on that core above priority 5 runs first.")
     bool asyncPresent = false;
 
     // ========== SetupComponent ==========
