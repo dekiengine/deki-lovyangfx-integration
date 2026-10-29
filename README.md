@@ -51,6 +51,10 @@ in September 2026 against the API the full path already used and compile-checked
 only: run a project with the Rendering setting `redrawChanges` on and report
 what you see.
 
+## Community
+
+Questions, ideas and what you made with Deki: [the Deki Discord](https://dekiengine.com/discord/).
+
 ## License
 
 Apache 2.0. See [LICENSE](LICENSE).
