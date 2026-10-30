@@ -8,6 +8,12 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
+## Unreleased
+
+### Changed
+- Translations are keyed by the editor's names with their acronyms ("I2C Port",
+  "SPI Host" rather than "I 2c Port", "Spi Host"), which the 0.22 editor shows.
+
 ## 0.21.0
 
 ### Changed
