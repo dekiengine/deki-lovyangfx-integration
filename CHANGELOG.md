@@ -8,11 +8,13 @@ breaking change bumps the minor across the editor, the engine and every
 package together, so a package with no changes of its own is still released
 alongside one that has them.
 
-## Unreleased
+## 0.22.0
 
 ### Changed
 - Translations are keyed by the editor's names with their acronyms ("I2C Port",
   "SPI Host" rather than "I 2c Port", "Spi Host"), which the 0.22 editor shows.
+- `minEngine` 0.22.0: built against engine 0.22.0. A build of this package
+  from before does not load and is rebuilt.
 
 ## 0.21.0
 
