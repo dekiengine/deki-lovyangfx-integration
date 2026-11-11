@@ -74,7 +74,8 @@ static uint16_t* AllocateDisplayBuffer(size_t bufferBytes, bool usePSRAM, const 
 
     if (buf)
     {
-        DEKI_LOG_INTERNAL("LovyanGFX: Allocated %s (%zu bytes, psram=%d)", label, bufferBytes, (int)usePSRAM);
+        DEKI_LOG_INTERNAL("LovyanGFX: Allocated %s (%zu bytes, psram=%d)", label, bufferBytes,
+                          static_cast<int>(usePSRAM));
     }
     else
     {
@@ -241,13 +242,13 @@ bool LovyanGFXDisplay::SetAsyncPresent(bool on)
         {
             m_PresentTask = task;
             m_AsyncPresent = true;
-            DEKI_LOG_INFO("LovyanGFX: frames are sent from core %d while the next is drawn", (int)core);
+            DEKI_LOG_INFO("LovyanGFX: frames are sent from core %d while the next is drawn", static_cast<int>(core));
             return true;
         }
     }
     DEKI_LOG_ERROR("LovyanGFX: cannot send frames from the other core (no external memory for two %u-byte copies, or "
                    "no task); they are sent as they are drawn",
-                   (unsigned)bytes);
+                   static_cast<unsigned>(bytes));
     SetAsyncPresent(false);
     return false;
 #else

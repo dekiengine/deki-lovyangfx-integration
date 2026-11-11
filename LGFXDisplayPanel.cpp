@@ -67,9 +67,9 @@ static std::unique_ptr<LovyanGFXDisplay> s_LovyanGFXDisplay;
 void LGFXDisplayPanel::Setup(SetupCallback onComplete)
 {
     ESP_LOGI(TAG, "Setting up display (panel=%d, bus=%d, %dx%d)", static_cast<int>(panelType),
-             static_cast<int>(busType), (int)panelWidth, (int)panelHeight);
+             static_cast<int>(busType), static_cast<int>(panelWidth), static_cast<int>(panelHeight));
     DEKI_LOG_INFO("LGFXDisplayPanel: Setting up display (panel=%d, bus=%d, %dx%d)", static_cast<int>(panelType),
-                  static_cast<int>(busType), (int)panelWidth, (int)panelHeight);
+                  static_cast<int>(busType), static_cast<int>(panelWidth), static_cast<int>(panelHeight));
 
     auto* device = new lgfx::LGFX_Device();
     // Kept by the device and applied by init(), which starts the backlight at
@@ -80,26 +80,32 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
     device->setBrightness(static_cast<uint8_t>(blBrightness < 0 ? 0 : (blBrightness > 255 ? 255 : blBrightness)));
 
     // Log the whole config, to check what the scene file held.
-    ESP_LOGI(TAG, "Panel config: invert=%d, rgbOrder=%d, swapBytes=%d", (int)invertColor, (int)rgbOrder,
-             (int)swapBytes);
-    ESP_LOGI(TAG, "Memory: %dx%d, offset: %d,%d, rotation=%d", (int)memoryWidth, (int)memoryHeight, (int)offsetX,
-             (int)offsetY, (int)rotation);
-    ESP_LOGI(TAG, "Control pins: CS=%d, RST=%d, BL=%d", (int)csPin, (int)rstPin, (int)blPin);
+    ESP_LOGI(TAG, "Panel config: invert=%d, rgbOrder=%d, swapBytes=%d", static_cast<int>(invertColor),
+             static_cast<int>(rgbOrder), static_cast<int>(swapBytes));
+    ESP_LOGI(TAG, "Memory: %dx%d, offset: %d,%d, rotation=%d", static_cast<int>(memoryWidth),
+             static_cast<int>(memoryHeight), static_cast<int>(offsetX), static_cast<int>(offsetY),
+             static_cast<int>(rotation));
+    ESP_LOGI(TAG, "Control pins: CS=%d, RST=%d, BL=%d", static_cast<int>(csPin), static_cast<int>(rstPin),
+             static_cast<int>(blPin));
     if (busType == DisplayBusType::Parallel8bit || busType == DisplayBusType::Parallel16bit)
     {
-        ESP_LOGI(TAG, "Parallel pins: RS=%d, WR=%d, RD=%d", (int)rsPin, (int)wrPin, (int)rdPin);
-        ESP_LOGI(TAG, "Data pins: D0=%d D1=%d D2=%d D3=%d D4=%d D5=%d D6=%d D7=%d", (int)d0Pin, (int)d1Pin, (int)d2Pin,
-                 (int)d3Pin, (int)d4Pin, (int)d5Pin, (int)d6Pin, (int)d7Pin);
+        ESP_LOGI(TAG, "Parallel pins: RS=%d, WR=%d, RD=%d", static_cast<int>(rsPin), static_cast<int>(wrPin),
+                 static_cast<int>(rdPin));
+        ESP_LOGI(TAG, "Data pins: D0=%d D1=%d D2=%d D3=%d D4=%d D5=%d D6=%d D7=%d", static_cast<int>(d0Pin),
+                 static_cast<int>(d1Pin), static_cast<int>(d2Pin), static_cast<int>(d3Pin), static_cast<int>(d4Pin),
+                 static_cast<int>(d5Pin), static_cast<int>(d6Pin), static_cast<int>(d7Pin));
     }
     else if (busType == DisplayBusType::SPI)
     {
-        ESP_LOGI(TAG, "SPI pins: MOSI=%d, MISO=%d, CLK=%d, DC=%d, host=%d, freq=%d", (int)mosiPin, (int)misoPin,
-                 (int)clkPin, (int)dcPin, (int)spiPort, (int)spiWriteHz);
+        ESP_LOGI(TAG, "SPI pins: MOSI=%d, MISO=%d, CLK=%d, DC=%d, host=%d, freq=%d", static_cast<int>(mosiPin),
+                 static_cast<int>(misoPin), static_cast<int>(clkPin), static_cast<int>(dcPin),
+                 static_cast<int>(spiPort), static_cast<int>(spiWriteHz));
     }
     else if (busType == DisplayBusType::QSPI)
     {
-        ESP_LOGI(TAG, "QSPI pins: CLK=%d, IO0=%d, IO1=%d, IO2=%d, IO3=%d, host=%d, freq=%d", (int)clkPin, (int)io0Pin,
-                 (int)io1Pin, (int)io2Pin, (int)io3Pin, (int)spiPort, (int)spiWriteHz);
+        ESP_LOGI(TAG, "QSPI pins: CLK=%d, IO0=%d, IO1=%d, IO2=%d, IO3=%d, host=%d, freq=%d", static_cast<int>(clkPin),
+                 static_cast<int>(io0Pin), static_cast<int>(io1Pin), static_cast<int>(io2Pin), static_cast<int>(io3Pin),
+                 static_cast<int>(spiPort), static_cast<int>(spiWriteHz));
     }
 
     // The RM67162 speaks only QSPI, and it is the one QSPI panel here.
@@ -127,8 +133,9 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         cfg.spi_mode = 0;
         cfg.freq_write = spiWriteHz;
         bus->config(cfg);
-        DEKI_LOG_INFO("LGFXDisplayPanel: QSPI bus configured (CLK=%d, IO0..3=%d,%d,%d,%d)", (int)clkPin, (int)io0Pin,
-                      (int)io1Pin, (int)io2Pin, (int)io3Pin);
+        DEKI_LOG_INFO("LGFXDisplayPanel: QSPI bus configured (CLK=%d, IO0..3=%d,%d,%d,%d)", static_cast<int>(clkPin),
+                      static_cast<int>(io0Pin), static_cast<int>(io1Pin), static_cast<int>(io2Pin),
+                      static_cast<int>(io3Pin));
 
         auto* panel = new lgfx::Panel_RM67162();
         auto panelCfg = panel->config();
@@ -162,8 +169,8 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         bus->config(cfg);
         device->setPanel(nullptr);  // clear before setting the bus
         // The bus is set on the panel below.
-        DEKI_LOG_INFO("LGFXDisplayPanel: SPI bus configured (MOSI=%d, CLK=%d, DC=%d)", (int)mosiPin, (int)clkPin,
-                      (int)dcPin);
+        DEKI_LOG_INFO("LGFXDisplayPanel: SPI bus configured (MOSI=%d, CLK=%d, DC=%d)", static_cast<int>(mosiPin),
+                      static_cast<int>(clkPin), static_cast<int>(dcPin));
 
         // Create panel and set bus
         lgfx::Panel_Device* panel = nullptr;
@@ -232,8 +239,9 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         cfg.pin_d6 = d6Pin;
         cfg.pin_d7 = d7Pin;
         bus->config(cfg);
-        DEKI_LOG_INFO("LGFXDisplayPanel: Parallel8 bus configured (RS=%d, WR=%d, RD=%d, D0=%d..D7=%d)", (int)rsPin,
-                      (int)wrPin, (int)rdPin, (int)d0Pin, (int)d7Pin);
+        DEKI_LOG_INFO("LGFXDisplayPanel: Parallel8 bus configured (RS=%d, WR=%d, RD=%d, D0=%d..D7=%d)",
+                      static_cast<int>(rsPin), static_cast<int>(wrPin), static_cast<int>(rdPin),
+                      static_cast<int>(d0Pin), static_cast<int>(d7Pin));
 
         // Create panel and set bus
         lgfx::Panel_Device* panel = nullptr;
@@ -309,8 +317,9 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
         cfg.pin_d14 = d14Pin;
         cfg.pin_d15 = d15Pin;
         bus->config(cfg);
-        DEKI_LOG_INFO("LGFXDisplayPanel: Parallel16 bus configured (RS=%d, WR=%d, D0=%d..D15=%d)", (int)rsPin,
-                      (int)wrPin, (int)d0Pin, (int)d15Pin);
+        DEKI_LOG_INFO("LGFXDisplayPanel: Parallel16 bus configured (RS=%d, WR=%d, D0=%d..D15=%d)",
+                      static_cast<int>(rsPin), static_cast<int>(wrPin), static_cast<int>(d0Pin),
+                      static_cast<int>(d15Pin));
 
         // Create panel and set bus
         lgfx::Panel_Device* panel = nullptr;
@@ -373,7 +382,8 @@ void LGFXDisplayPanel::Setup(SetupCallback onComplete)
     }
 
     device->setRotation(static_cast<uint8_t>(rotation));
-    ESP_LOGI(TAG, "Display initialized (%dx%d, rotation=%d)", (int)panelWidth, (int)panelHeight, (int)rotation);
+    ESP_LOGI(TAG, "Display initialized (%dx%d, rotation=%d)", static_cast<int>(panelWidth),
+             static_cast<int>(panelHeight), static_cast<int>(rotation));
 
     s_LGFXDevice = device;
 
