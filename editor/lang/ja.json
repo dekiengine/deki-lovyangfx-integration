@@ -133,7 +133,6 @@
     "Rotation": "回転",
     "Rs Pin": "RS ピン",
     "RST Pin": "RST ピン",
-    "Send each frame from the chip's other core while the next is drawn: a frame costs the longer of drawing and sending instead of both. Takes two frames of external memory (PSRAM) and a dual-core chip; for a byte-swapped panel (swapBytes) presenting whole frames. The sender runs on the core the game does not, at priority 5: a task of your own on that core above priority 5 runs first.": "次のフレームを描画している間に、チップのもう一方のコアから各フレームを送信します。1 フレームにかかる時間は描画と送信の合計ではなく、長いほうだけになります。外部メモリ (PSRAM) 2 フレーム分とデュアルコアのチップが必要です。フレーム全体を表示する、バイトを入れ替えるパネル (swapBytes) 向けです。 送信はゲームが使わないほうのコアで優先度 5 で動きます。そのコアで優先度 5 より高い自分のタスクは先に動きます。",
     "SPI": "SPI",
     "SPI chip select pin (-1 = not used)": "SPI のチップセレクトピン (-1 = 使用しない)",
     "SPI clock pin": "SPI のクロックピン",
@@ -166,5 +165,6 @@
     "Drives a display panel (ILI9341, ST7789, GC9A01, RM67162 AMOLED, ...) over SPI, QSPI or a parallel bus through LovyanGFX.": "LovyanGFX を通して、SPI、QSPI、パラレルバスでディスプレイパネル (ILI9341、ST7789、GC9A01、RM67162 AMOLED など) を駆動します。",
     "LovyanGFX": "LovyanGFX",
     "Reads a touch controller (FT5x06, GT911, CST816S, XPT2046) through LovyanGFX.": "LovyanGFX を通して、タッチコントローラー (FT5x06、GT911、CST816S、XPT2046) を読み取ります。",
-    "ST7789TDeck": "ST7789TDeck"
+    "ST7789TDeck": "ST7789TDeck",
+    "Send each frame from the chip's other core while the next is drawn: a frame costs the longer of drawing and sending instead of both. Takes two frames of external memory (PSRAM) and a dual-core chip; for a byte-swapped panel (swapBytes) presenting whole frames.": "次のフレームを描画している間に、チップのもう一方のコアから各フレームを送信します。1 フレームにかかる時間は描画と送信の合計ではなく、長いほうだけになります。外部メモリ (PSRAM) 2 フレーム分とデュアルコアのチップが必要です。フレーム全体を表示する、バイトを入れ替えるパネル (swapBytes) 向けです。"
 }
