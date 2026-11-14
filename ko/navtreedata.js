@@ -32,9 +32,9 @@ var NAVTREE =
       [ "LGFXTouchPanel", "index.html#c-lgfxtouchpanel", null ]
     ] ],
     [ "변경 내역", "index.html#changelog", [
-      [ "0.22.0", "index.html#autotoc_md0", null ],
+      [ "0.40.0", "index.html#autotoc_md0", null ],
       [ "Changed", "index.html#autotoc_md1", null ],
-      [ "0.21.0", "index.html#autotoc_md2", null ],
+      [ "0.22.0", "index.html#autotoc_md2", null ],
       [ "Changed", "index.html#autotoc_md3", null ]
     ] ]
   ] ]
